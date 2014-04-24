@@ -11,7 +11,7 @@ and open the template in the editor.
     </head>
     <body>
         <?php
-        echo "testing ajay project";// put your code here
+        echo "testing ajay project2";// put your code here
         ?>
     </body>
 </html>

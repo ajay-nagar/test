@@ -110,6 +110,7 @@ public with sharing class VolunteerJoinMembershipInfoController extends SobjectE
 
         counterUnableToLockRow = 0;
         tremsflag = false;
+        isLifetime = false;
 
         booleanContactEmailOptIn = true;
         booleanGrantRequested = false;
@@ -329,12 +330,16 @@ public with sharing class VolunteerJoinMembershipInfoController extends SobjectE
             string membershipYear = '';
             if(priceBookEntry != null && priceBookEntry.Product2.rC_Giving__End_Date__c != null)
                 membershipYear = string.valueOf(priceBookEntry.Product2.rC_Giving__End_Date__c.year());
+                system.debug('***membershipYear***'+membershipYear);
             if(membershipYear !=null && membershipYear != '') {
-                List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:contact.ID and Active__c=true];
+                List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:contact.ID];
+                    system.debug('***lstCM***'+lstCM);
                 if(lstCM.size()>0) {
                     for(campaignmember cm : lstCM) {
+                         system.debug('***cm.Membership__r.Membership_year__c***'+cm.Membership__r.Membership_year__c);  
                         if(cm.Membership__r.Membership_year__c == membershipYear)
-                            return addErrorMessage('This membership is already active, Please select another membership.');
+                            return addErrorMessageAndRollback(savepoint,'This membership is already active, Please select another membership.');
+                            system.debug('***after error***');
                     }
                 }
             }

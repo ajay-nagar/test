@@ -50,9 +50,6 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
     public decimal donationPriseAmount;
     public String campaignMemberIds;
 
-    public String primaryContactFullName;
-    public String primaryContactEmail;
-    
     public String amount {get;set;}
     public boolean acceptGSPromiseAndLaw {get;set;}
     public List<Opportunity> opportunityTransactionList {get; set;}
@@ -62,7 +59,6 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
     private map<Id, PricebookEntry> priceBookEntryMap;
     private PricebookEntry donationPricebookEntry;
     private Account councilAccount;
-    private Contact contact;
     private static Integer counterUnableToLockRow = 0;
 
     public Boolean confirmTransactions { set; get; }
@@ -115,23 +111,6 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
 
         if (Apexpages.currentPage().getParameters().containsKey('CampaignMemberIds'))
             campaignMemberIds = Apexpages.currentPage().getParameters().get('CampaignMemberIds');
-
-        if(contactId != null) {
-            List<Contact> contactList = [
-                Select Id
-                     , Name
-                     , Email
-                     , LastName
-                     , AccountId
-                     , VolunteerPage1URL__c
-                     , IsVoluntter1stPageDone__c
-                  from Contact
-                 Where Id = :contactId
-            ];
-            contact = (contactList != null && contactList.size() > 0) ? contactList[0]: new Contact();
-            primaryContactFullName = contact.Name;
-            primaryContactEmail = contact.Email;
-        }
 
         if(opportunityId != null && opportunityId != '')
             membershipOpportunity = [
@@ -202,6 +181,7 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
 
             total = donationPriseAmount;
             total = total + amountValue;
+            Contact contact = [Select LastName, Id, AccountId From Contact where Id = :contactId limit 1];
 
             //if(amountValue != null && amountValue.trim() != '' && contactId != null && contactId != '')
             if(amountValue != null && amountValue > 0 && contactId != null && contactId != '') {
@@ -287,36 +267,36 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
                         insert opportunityContactRole;
 
                         //Insert opp line item
-                        OpportunityLineItem donationLineItem = new OpportunityLineItem();
-                        donationLineItem.PricebookEntryId = donationPricebookEntry.Id;
-                        donationLineItem.OpportunityId = oppSaveResult[0].getId();
-                        donationLineItem.Quantity = 1;
-                        donationLineItem.UnitPrice = amountValue;                    
-                        insert donationLineItem;
+                      OpportunityLineItem donationLineItem = new OpportunityLineItem();
+                      donationLineItem.PricebookEntryId = donationPricebookEntry.Id;
+                      donationLineItem.OpportunityId = oppSaveResult[0].getId();
+                      donationLineItem.Quantity = 1;
+                      donationLineItem.UnitPrice = amountValue;                    
+                      insert donationLineItem;
 
-                        /****** Update owner of Transactions ******/
+                    /****** Update owner of Transactions ******/
                         for(Database.Saveresult saveResult : oppSaveResult) {
-                            opportunityIdSet.add(saveResult.getId());
-                        }
-                        if(opportunityIdSet != null && opportunityIdSet.size() > 0) {
-                            List<Opportunity> OpportunityList = [
-                                Select RecordType.Name
-                                     , RecordTypeId
-                                     , rC_Giving__Parent__c
-                                     , rC_Giving__Parent__r.Id
-                                     , rC_Giving__Parent__r.OwnerId
-                                  From Opportunity
-                                 where RecordType.Name = 'Transaction'
-                                   and rC_Giving__Parent__c IN : opportunityIdSet
-                            ];
-    
-                            if(OpportunityList.size() > 0) {
-                                for(Opportunity opp : OpportunityList) {
-                                    opp.OwnerId = opp.rC_Giving__Parent__r.OwnerId;
-                                }
-                                new WithoutSharing().updateData(OpportunityList);
-                            }
-                        }
+                          opportunityIdSet.add(saveResult.getId());
+                      }
+                      if(opportunityIdSet != null && opportunityIdSet.size() > 0) {
+                          List<Opportunity> OpportunityList = [
+                              Select RecordType.Name
+                                   , RecordTypeId
+                                   , rC_Giving__Parent__c
+                                   , rC_Giving__Parent__r.Id
+                                   , rC_Giving__Parent__r.OwnerId
+                                From Opportunity
+                               where RecordType.Name = 'Transaction'
+                                 and rC_Giving__Parent__c IN : opportunityIdSet
+                          ];
+  
+                          if(OpportunityList.size() > 0) {
+                              for(Opportunity opp : OpportunityList) {
+                                  opp.OwnerId = opp.rC_Giving__Parent__r.OwnerId;
+                              }
+                              new WithoutSharing().updateData(OpportunityList);
+                          }
+                      }
                     }
             }
         }catch(System.exception pException) {
@@ -391,15 +371,12 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_NUMBER => cardNumber,
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_CVV2 => securityCode,
                     PaymentServicer_PaypalTransaction.FULLNAME => cardHolderName,
-                    PaymentServicer_PaypalTransaction.CUSTOM_VAR => primaryContactFullName,
                     PaymentServicer_PaypalTransaction.ADDRESS => address,
                     PaymentServicer_PaypalTransaction.ADDR_CITY => city,
                     PaymentServicer_PaypalTransaction.ADDR_STATE => state,
                     PaymentServicer_PaypalTransaction.ADDR_COUNTRY_CODE => 'US',
                     PaymentServicer_PaypalTransaction.ZIPCODE => zipCode,
-                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount,
-                    PaymentServicer_PaypalTransaction.INVOICE_ID => '' + opportunityTransaction.id,
-                    PaymentServicer_PaypalTransaction.CONTACT_EMAIL => primaryContactEmail
+                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount
                 }, opportunityTransaction.rC_Giving__Parent__r.CampaignId);
 
                 // Success/failure?
@@ -418,7 +395,6 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
                 opportunityTransaction.rC_Connect__Response_Date_Time__c = DateTime.now();
                 opportunityTransaction.rC_Connect__Response_Message__c = transactionResult.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
             }
-            /*
             List<Contact> contactList = [
             Select Id
                 , Name
@@ -428,7 +404,6 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
              Where Id = :contactId
             ];
             Contact contact = (contactList != null && contactList.size() > 0) ? contactList[0]: new Contact();
-            */
             if(sendReciept) {
                 SendReceipt SR = new SendReceipt();
                 SR.sendEmail(donationMap,contact.Id,'noGirl',total);
@@ -453,7 +428,7 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
             return null;
         }
 
-        /*/ Done
+        // Done
         List<Contact> contactList = [
             Select Id
                 , Name
@@ -463,7 +438,6 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
              Where Id = :contactId
         ];
         Contact contact = (contactList != null && contactList.size() > 0) ? contactList[0]: new Contact();
-        */
 
         if(contact != null && contact.Id != null)
             VolunteerRegistrationUtilty.updateSiteURLAndContact('Volunteer_DemographicsInformation' + '?ContactId='+contactId + '&CouncilId='+CouncilId+'&CampaignMemberIds='+campaignMemberIds+'&OpportunityId='+opportunityId, contact);

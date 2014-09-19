@@ -2,7 +2,7 @@
      <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
      <script type="text/javascript" language="javascript">
 function DisableBackButton() {
@@ -13,36 +13,36 @@ window.onload = DisableBackButton;
 window.onpageshow = function(evt) { if (evt.persisted) DisableBackButton() }
 window.onunload = function() { void (0) }
 </script>
-    <!--
+    <!-- 
      <apex:includeScript value="https://code.jquery.com/jquery-1.9.1.min.js" />
     <apex:includeScript value="https://code.jquery.com/ui/1.10.3/jquery-ui.js" />
  <apex:includeScript value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/js/bootstrap.js')}" />
     <apex:includeScript value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/js/bootstrap.min.js')}" />
-    <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap.css')}" />
-    <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap.css')}" /> 
+    <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap.min.css')}" />  
 <apex:stylesheet value="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" />
 
 
     <apex:includeScript value="{!URLFOR($Resource.JQuery, '/jquery/jquery-1.9.1.min.js')}" />
     <apex:includeScript value="{!URLFOR($Resource.JQuery, '/jquery/jquery-ui.js')}" />
-
+    
     -->
-
+    
        <apex:includeScript value="https://code.jquery.com/jquery-1.9.1.min.js" />
             <apex:includeScript value="https://code.jquery.com/ui/1.10.3/jquery-ui.js" />
             <apex:stylesheet value="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" />
-
+          
             <apex:includeScript value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/js/bootstrap.js')}" />
             <apex:includeScript value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/js/bootstrap.min.js')}" />
-
-
+            
+            
     <!--
     <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap.css')}" />
     <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap.min.css')}" />
-
+    
     <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap-theme.css')}" />
     <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap-theme.min.css')}" />
-
+    
     -->
      <apex:stylesheet value="{!$Resource.ScreenCss}" />
     <!-- for DateTimePicker -->
@@ -74,18 +74,18 @@ window.onunload = function() { void (0) }
       width:14%!important;
       }
     </style>
-
+    
     <apex:outputPanel styleClass="isSiteDownPanel" html-isSiteDown="{!$Setup.Site_Maintenance_Setting__c.Volunteer_Registration_Maintenance__c}" />
     <script>
     var cachebuster = Math.round(new Date().getTime() / 1000);
         $("body").hide();
-
-        if ( $(".isSiteDownPanel").attr("isSiteDown") == "true") {
+        
+        if ( $(".isSiteDownPanel").attr("isSiteDown") == "true") { 
               var baseUrl = "{!$Site.CurrentSiteUrl}";
               window.location.href = baseUrl + 'InMaintenance';
         }
         $("body").show();
-     </script>
+    </script>
 
     <apex:form styleClass="form-horizontal">
     <c:VolunteerRegistrationHeader />
@@ -99,23 +99,23 @@ window.onunload = function() { void (0) }
 <!--                     <apex:outputLabel value="YES! I would like to make a donation today that directly benefits girls in our area." id="fiLabel2" styleClass="col-sm-12 control-label myFirstName"  style="text-align: left;"/> -->
                 </div>
                 <br/>
-
+                
                 <div class="row">
                     <apex:outputLabel value="Here's what your tax-deductible donation can do:"  id="fiLabel11" styleClass="col-sm-10 " style="padding-left:0px;text-align: left;"/>
                 </div>
-
+                
                 <div class="row">
                     <apex:outputLabel value="$15 helps with her membership fee." id="fiLabel12" styleClass="col-sm-10 "  style="text-align: left; margin-left: 6px;"/>
                 </div>
-
+                    
                 <div class="row">
                     <apex:outputLabel value="$50 helps her buy a uniform." id="fiLabel13" styleClass="col-sm-10 "  style="text-align: left; margin-left: 6px;"/>
                 </div>
-
+                
                 <div class="row">
                     <apex:outputLabel value="$150 helps with membership fees for a troop of 10." id="fiLabel14" styleClass="col-sm-10 "  style="text-align: left; margin-left: 6px;"/>
                 </div>
-
+                
        <div class="form-group">
             <br/>
             <apex:outputPanel layout="none" rendered="{!AND(NOT(confirmTransactions))}"> <!-- opportunityTransactionList == null -->
@@ -123,7 +123,7 @@ window.onunload = function() { void (0) }
             <div class="tobehide" style="height: 13px"></div>
             <table class="table-responsive"  width="100%">
                 <tr style="margin-top:5px">
-                    <td style="background-color:#fff !important; width: 8%;">
+                    <td style="background-color:#fff !important; width: 8%;"> 
                         <input type="radio" name="optionsRadios" id="DonationRadios1" value="{!option1Value}" onclick="onPaymentCheked(event,this,this.value)" class = "textValue" />
                         <apex:outputLabel value="${!option1Value}" id="donationFillLabel1" style="margin-left:10px; "  />
                     </td>
@@ -135,7 +135,7 @@ window.onunload = function() { void (0) }
                         <input type="radio" name="optionsRadios" id="DonationRadios3" value="{!option3Value}" onclick="onPaymentCheked(event,this,this.value)" class = "textValue" />
                         <apex:outputLabel value="${!option3Value}" id="donationFillLabel3" style="margin-left:10px; "  />
                     </td>
-                    <td style="background-color:#fff !important; width: 8%;">
+                    <td style="background-color:#fff !important; width: 8%;"> 
                         <input type="radio" name="optionsRadios" id="DonationRadios4" value="{!option4Value}" onclick="onPaymentCheked(event,this,this.value)" class = "textValue" />
                         <apex:outputLabel value="${!option4Value}" id="donationFillLabel4" style="margin-left:10px; "  />
                     </td>
@@ -149,7 +149,7 @@ window.onunload = function() { void (0) }
                     </td>
                 </tr>
             </table>
-
+            
             <table class="table-responsive"  width="100%">
                 <tr style="margin-top:5px">
                     <td style="background-color:#fff !important; width: 32%;">
@@ -223,33 +223,33 @@ window.onunload = function() { void (0) }
     <!--             <span>&nbsp;</span> -->
     <!--             <apex:commandButton value="Back" id="nextBtnBack" action="{!processPaypalTransactionsUndo}" styleClass="button_reg submitButton" status="buttons_group_status" style="display: inline-block;"></apex:commandButton> -->
            <!-- </div> -->
-
+         
           <div class="col-sm-3" style="margin-bottom: 30px!important;">
             <apex:commandButton value="Back" id="nextBtnBack" action="{!processPaypalTransactionsUndo}" styleClass="btn button_reg" style="width:100%!important;"/>
           </div>
           <div class="col-sm-3" style="margin-bottom: 30px!important;">
             <apex:commandButton value="Process Charges" id="test" action="{!processPaypalTransactions}" styleClass="btn button_reg submitButton2" style="width:100%!important;"/>
-          <apex:commandButton value="Processing..." disabled="true" styleClass="btn button_reg submitButtonprocessing2" style="width:100%!important;display:none;"/>
+          <apex:commandButton value="Processing..." disabled="true" styleClass="btn button_reg submitButtonprocessing2" style="width:100%!important;display: none;"/>
           </div>
-
+         
         </apex:outputPanel>
 
-
-
+        
+        
         <apex:outputPanel layout="none" rendered="{!NOT(confirmTransactions)}">
-
+            
             <div class="form-group" >
-
+                
                     <h4> <strong>
                     <div class="col-sm-3"></div>
                         <apex:outputLabel value="Billing Address" id="billingLabel" styleClass="col-sm-2 myFirstName" style="text-align:right;padding-right:30px;"/>
                     </strong></h4>
-
+                
                 <div class="col-sm-3">
-                    <apex:outputLink id="commandTxt" value="" onclick="fillMailingAddress(); return false;"> <strong> <U> Same as my Mailing Address </U> </strong></apex:outputLink>
+                    <apex:outputLink id="commandTxt" value="" onclick="fillMailingAddress(); return false;"> <strong> <U> Same as my Mailing Address </U> </strong></apex:outputLink> 
                 </div>
             </div>
-
+            
        <apex:outputPanel id="paymentAddressPnl">
             <div class="form-group">
             <div class="col-sm-3"></div>
@@ -257,24 +257,24 @@ window.onunload = function() { void (0) }
 <!--                 <div class="col-sm-1" style="font-size: 180%;color: red; text-align:left;"></div> -->
                 <div class="col-sm-3">
                     <apex:inputText id="addressTxt"  styleClass="form-control myAddress" value="{!address}"/>
-
+                    
                 </div>
-               <div style="font-size: 180%;color: red; text-align:left;">*</div>
+               <div style="font-size: 180%;color: red; text-align:left;">*</div> 
             </div>
-
+        
             <div class="form-group">
             <div class="col-sm-3"></div>
                 <apex:outputLabel value="City :" id="cityLabel" styleClass="col-sm-2 control-label"/>
 <!--                 <div class="col-sm-1" style="font-size: 180%;color: red; text-align:left;"></div> -->
                 <div class="col-sm-3">
                     <apex:inputText id="cityTxt"  styleClass="form-control myCity" value="{!city}"/>
-
+                
                 </div>
-             <div style="font-size: 180%;color: red; text-align:left;">*</div>
+             <div style="font-size: 180%;color: red; text-align:left;">*</div> 
             </div>
+            
 
-
-
+        
 <!--         <apex:outputPanel id="
 "> -->
             <div class="form-group">
@@ -284,9 +284,9 @@ window.onunload = function() { void (0) }
                 <div class="col-sm-3">
                     <apex:inputText value="{!state}"  id="stateTxt" styleClass="form-control stateClass">
                        </apex:inputText>
-
+                
                 </div>
-              <div style="font-size: 180%;color: red; text-align:left;">*</div>
+              <div style="font-size: 180%;color: red; text-align:left;">*</div> 
             </div>
 <!--         </apex:outputPanel> -->
             <div class="form-group">
@@ -295,62 +295,62 @@ window.onunload = function() { void (0) }
 <!--                 <div class="col-sm-1" style="font-size: 180%;color: red; text-align:left;"></div> -->
                 <div class="col-sm-3">
                     <apex:inputText id="zipcode"  styleClass="form-control myZipCode" value="{!zipCode}"/> <!-- if you want small sizeer textbos add "input-sm" in styleClass -->
-
+                    
                 </div>
-              <div style="font-size: 180%;color: red; float: left;margin-left: 15px;">*</div>
+              <div style="font-size: 180%;color: red; float: left;margin-left: 15px;">*</div> 
             </div>
              </apex:outputPanel>
-
+             
             <!--             <apex:outputPanel id="country"> -->
             <div class="form-group">
             <div class="col-sm-3"></div>
                 <apex:outputLabel value="Country :" id="countryLabel" styleClass="col-sm-2 control-label" />
-
+                
                 <div class="col-sm-3">
                     <apex:selectList value="{!country}" multiselect="false" size="1" styleClass="form-control countryClass select-list ">
                         <apex:selectOptions value="{!listCountryItems}"/>
                     </apex:selectList>
-
+                    
                 </div>
-             <div style="font-size: 180%;color: red; text-align:left;">*</div>
+             <div style="font-size: 180%;color: red; text-align:left;">*</div> 
             </div>
 <!--         </apex:outputPanel> -->
-
+        
             <div class="form-group">
             <div class="col-sm-3"></div>
                 <apex:outputLabel value="Card Holder Name :" id="cardNameLabel" styleClass="col-sm-2 control-label"/>
-
+                
                 <div class="col-sm-3">
                     <apex:inputText id="cardNameTxt"  styleClass="form-control myCardHolderName" value="{!cardHolderName}"/>
-
+                
                 </div>
-               <div style="font-size: 180%;color: red; text-align:left;">*</div>
+               <div style="font-size: 180%;color: red; text-align:left;">*</div> 
             </div>
-
+        
             <div class="form-group">
             <div class="col-sm-3"></div>
                 <apex:outputLabel value="Card Number :" id="cardNumberLabel" styleClass="col-sm-2 control-label"/>
-
+                
                 <div class="col-sm-3">
                     <apex:inputText id="cardNumberTxt"  styleClass="form-control myCardNumber" value="{!cardNumber}"/>
-
+                    
                 </div>
-               <div  style="font-size: 180%;color: red; text-align:left;">*</div>
+               <div  style="font-size: 180%;color: red; text-align:left;">*</div> 
             </div>
-
+            
             <div class="form-group">
             <div class="col-sm-3"></div>
                 <apex:outputLabel value="Expiration Month:" id="expirationLabel" styleClass="col-sm-2 control-label"/>
-
+                
                 <div class= "col-sm-3">
                     <apex:selectList value="{!expMonth}" multiselect="false" size="1" styleClass="form-control expMonthClass select-list">
-                         <apex:selectOptions value="{!listexpMonth}"/>
+                         <apex:selectOptions value="{!listexpMonth}"/> 
                     </apex:selectList>
-
+                    
                 </div>
                <div style="font-size: 180%;color: red; text-align:left;">*</div>
             </div>
-
+              
             <div class="form-group">
             <div class="col-sm-3"></div>
                 <apex:outputLabel value="Expiration Year:" id="expirationLabel1" styleClass="col-sm-2 control-label"/>
@@ -358,28 +358,28 @@ window.onunload = function() { void (0) }
                     <div class="col-sm-3">
                         <div  id='datetimepicker5' data-date-format="YYYY/MM/DD">
                         <apex:selectList value="{!expYear}" multiselect="false" size="1" styleClass="form-control expYearClass select-list">
-                            <apex:selectOptions value="{!listexpYear}"/>
+                            <apex:selectOptions value="{!listexpYear}"/>  
                         </apex:selectList>
-
+                       
                     </div>
                 </div>
-               <div style="font-size: 180%;color: red; text-align:left;">*</div>
+               <div style="font-size: 180%;color: red; text-align:left;">*</div> 
             </div>
-
+            
             <div class="form-group">
             <div class="col-sm-3" id="securityCodeDivId"></div>
                 <apex:outputLabel value="Security Code :" id="securityLabel" styleClass="col-sm-2 control-label"/>
                 <div class="col-sm-3">
                     <apex:inputText id="securityTxt"  styleClass="form-control mySecurityCode" value="{!securityCode}"/>
                 </div>
-              <div style="font-size: 180%;color: red; text-align:left;">*</div>
+              <div style="font-size: 180%;color: red; text-align:left;">*</div> 
             </div>
-
+        
             <div class="form-group">
                 <div class="col-sm-4"></div>
                 <div class="col-sm-3">
                     <apex:commandButton value="Confirm" id="nextBtn" action="{!processMyOrder}" styleClass="button_reg submitButton" style="width: 280px!important;Margin-left: 95px!important;" status="buttons_group_status"/>
-                    <apex:commandButton value="Processing..." disabled="true" styleClass="button_reg submitButtonprocessing" style="width: 280px!important;Margin-left: 95px!important;display:none;" />
+                    <apex:commandButton value="Processing..." disabled="true" styleClass="button_reg submitButtonprocessing" style="width: 280px!important;Margin-left: 95px!important;display: none;" />
                 </div>
             </div>
             </apex:outputPanel>
@@ -390,10 +390,10 @@ window.onunload = function() { void (0) }
              <apex:param name="param1" value="" assignTo="{!otherPayment}"/>
          </apex:actionFunction>
          <!-- GSA-1695 : End -->
-
-
+         
+         
 <!--          rerender="paymentAddressPnl" -->
-        <!--<apex:outputLink id="nextBtn" styleClass="btn btn-default submitBtnClk" style="margin-left: 80%;">Next</apex:outputLink>-->
+        <!--<apex:outputLink id="nextBtn" styleClass="btn btn-default submitBtnClk" style="margin-left: 80%;">Next</apex:outputLink>-->        
     </apex:form>
     <div class="modal fade" id="mybtnPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
             <div class="modal-dialog_ksadjfhdkjh" >
@@ -401,12 +401,12 @@ window.onunload = function() { void (0) }
             <img  class="waitingImage" src="/img/loading.gif" title="Please Wait..." /><span style="color:#ffffff;" class="waitingDescription">Loading...</span>
             </div>
             </div>
-            </div>
+            </div>  
 <script>
     $(document).ready(function() {
 
         var selectedAmount = $("#donationAmount").val();
-
+        
         var isOptionValue1 = '{!optionValue1}';
         var isOptionValue2 = '{!optionValue2}';
         var isOptionValue3 = '{!optionValue3}';
@@ -472,7 +472,7 @@ window.onunload = function() { void (0) }
                 $(this).removeClass(".alert alert-danger");
             }
         });
-
+        
         $(".myAddress").on('blur',function(){
             var address = $(this).val();
             if(address === null || address === '') {
@@ -495,7 +495,7 @@ window.onunload = function() { void (0) }
                  $(this).removeClass(".alert alert-danger");
             }
        });
-
+       
          $(".stateClass").on('blur',function(){
           var state = $(this).val();
             if(state === null || state === '') {
@@ -503,13 +503,13 @@ window.onunload = function() { void (0) }
                 $(this).after("<div> State is Required.</div>");
                 $(this).addClass(".alert alert-danger");
             } else {
-
+               
                  $(this).siblings("div").remove();
                 $(this).removeClass(".alert alert-danger");
-
+           
             }
        });
-
+       
        $(".expMonthClass").on('blur',function(){
             var membershipProduct = $(this).val();
             if(membershipProduct === '--None--' || membershipProduct === '--None--') {
@@ -572,19 +572,19 @@ window.onunload = function() { void (0) }
                         console.log('===: ' + cardNumber);
                         $(this).siblings("div").remove();
                         $(this).removeClass(".alert alert-danger");
-
+                        
                         var securityCode = $(".mySecurityCode").val();
                         console.log('securityCode : ' + securityCode + ' : ' + securityCode.length);
                         if(securityCode.length > 0){
-
+                            
                             console.log('cardType : ' + cardType);
-
+                            
                             $(this).siblings("div").remove();
                             $(this).removeClass(".alert alert-danger");
-
+                            
                             $(".mySecurityCode").siblings("div").remove();
                             $(".mySecurityCode").removeClass(".alert alert-danger");
-
+                            
                             if(cardType == "amex" && securityCode.length != 4) {
                                 $(".mySecurityCode").after("<div>Security Code must be 4 digits.</div>");
                                 $(".mySecurityCode").addClass(".alert alert-danger");
@@ -596,7 +596,7 @@ window.onunload = function() { void (0) }
                         }
                     }
                 });
-
+                
                 $(".expirationCode").on('blur',function(){
                     console.log('validating expiration Code....');
                     var expirationCode = $(this).val();
@@ -628,7 +628,7 @@ window.onunload = function() { void (0) }
                         $(this).removeClass(".alert alert-danger");
                     }
                 });
-
+                
                 $(".mySecurityCode").on('blur',function(){
                     console.log('validating SecurityCode....');
                     var security = $(this).val();
@@ -645,7 +645,7 @@ window.onunload = function() { void (0) }
                         if(creditCardNo.length == 0){
                             $(".myCardNumber").siblings("div").remove();
                             $(".myCardNumber").removeClass(".alert alert-danger");
-
+                            
                             $(".myCardNumber").after("<div>Please enter card number.</div>");
                             $(".myCardNumber").addClass(".alert alert-danger");
                         }else {
@@ -667,7 +667,7 @@ window.onunload = function() { void (0) }
                         }
                     }
                 });
-
+              
                 $(".myEmail").on('blur',function(){
                     console.log('validating email id....');
                     var email = $(this).val();
@@ -677,7 +677,7 @@ window.onunload = function() { void (0) }
                         $(".input-group").after("<div>Email is Required.</div>");
                           $(this).addClass(".alert alert-danger");
                     }else {
-                        $(this).siblings("div").remove();
+                        $(this).siblings("div").remove(); 
                          $(".input-group").siblings("div").remove();
                         $(this).removeClass(".alert alert-danger");
                     }
@@ -696,7 +696,7 @@ window.onunload = function() { void (0) }
                         $(this).removeClass(".alert alert-danger");
                     }
                 });
-
+                
                 $(".submitButton").on('click',function(){
                     $(".submitButton").hide();
                     $(".submitButtonprocessing").show();
@@ -719,7 +719,7 @@ window.onunload = function() { void (0) }
                             return false;
                         }
                     }
-                });
+                });                
    });
     $(".submitButton2").on('click',function(){
      $(".submitButton2").hide();
@@ -756,20 +756,20 @@ window.onunload = function() { void (0) }
             var cardNumber = $(".myCardNumber").val();
                 cardNumber = $.trim(cardNumber);
             var expirationCode = $(".expirationCode").val();
-            var zipCode = $(".myZipCode").val();
+            var zipCode = $(".myZipCode").val();    
             var security = $(".mySecurityCode").val();
-            var email =   $(".myEmail").val();
-            var amount = $(".myAmount").val();
+            var email =   $(".myEmail").val();    
+            var amount = $(".myAmount").val(); 
             var address = $(".myAddress").val();
             var country = $(".countryClass").val();
-            var expMonth =   $(".expMonthClass").val();
-            var expYear = $(".expYearClass").val();
+            var expMonth =   $(".expMonthClass").val();    
+            var expYear = $(".expYearClass").val(); 
             var city = $(".myCity").val();
             var state = $(".stateClass").val();
-            var amountToDonate = $(".otherPayment").val();
+            var amountToDonate = $(".otherPayment").val();   
             var returnVal = true;
             var cardType = getCardType(cardNumber);
-
+            
             if(country === '--None--' || country === '--None--') {
                 $(".countryClass").siblings("div").remove();
                 $(".countryClass").after("<div>Country is Required.</div>");
@@ -794,43 +794,43 @@ window.onunload = function() { void (0) }
                 $(".stateClass").addClass(".alert alert-danger");
                 returnVal = false;
             }
-
+            
             if(expMonth === '--None--' || expMonth === '--None--') {
                 $(".expMonthClass").siblings("div").remove();
                 $(".expMonthClass").after("<div>Month is Required.</div>");
                 $(".expMonthClass").addClass(".alert alert-danger");
                 returnVal = false;
             }
-
+            
             if(expYear === '--None--' || expYear === '--None--') {
                 $(".expYearClass").siblings("div").remove();
                 $(".expYearClass").after("<div>Year is Required.</div>");
                 $(".expYearClass").addClass(".alert alert-danger");
                 returnVal = false;
             }
-
-
+            
+            
             if(firstName === null || firstName === '') {
                 $(".firstName").siblings("div").remove();
                 $(".firstName").after("<div>First Name is Required.</div>");
                 $(".firstName").addClass(".alert alert-danger");
                 returnVal = false;
-            }
-
+            } 
+             
             if(lastName === null || lastName === '') {
                 $(".lastName").siblings("div").remove();
                 $(".lastName").after("<div>Last Name is Required.</div>");
                 $(".lastName").addClass(".alert alert-danger");
                 returnVal = false;
             }
-
+            
             if(carHolderName === null || carHolderName === '') {
                 $(".myCardHolderName").siblings("div").remove();
                 $(".myCardHolderName").after("<div> Card Holder Name is Required.</div>");
                  $(".myCardHolderName").addClass(".alert alert-danger");
                  returnVal = false;
             }
-
+            
             if(cardNumber === null || cardNumber === '') {
                 $(".myCardNumber").siblings("div").remove();
                 $(".myCardNumber").after("<div> Card Number is Required.</div>");
@@ -891,7 +891,7 @@ window.onunload = function() { void (0) }
                 if(cardNumber.length == 0){
                     $(".myCardNumber").siblings("div").remove();
                     $(".myCardNumber").removeClass(".alert alert-danger");
-
+                    
                     $(".myCardNumber").after("<div>Please enter card number.</div>");
                     $(".myCardNumber").addClass(".alert alert-danger");
                     returnVal = false;
@@ -949,7 +949,7 @@ window.onunload = function() { void (0) }
   }
 
 </script>
-
+    
  <style>
 /*              table,th,td */
 /*              { */
@@ -973,46 +973,46 @@ window.onunload = function() { void (0) }
          text-indent: 0.01px;
          text-overflow: "";
          appearence:none;
-
-
+         
+        
     }
         select::-ms-expand {
             display: none;
     }
-
-     .messageCell   {
+    
+     .messageCell   { 
         background-color: #ffc !important;
-     }
-     .container{
-         margin-top: 10px;
-     }
-    .message {
-      background-color: #ffc !important;
-      border-style: solid !important;
-      border-width: 1px !important;
-      color: #000 !important;
-      padding: 6px 8px 6px 6px !important;
-      margin: 4px 20px !important;
-      }
-      .warningM3 {
-          border-color: #f90 !important;
-     }
-
+     } 
+     .container{ 
+         margin-top: 10px; 
+     } 
+    .message {  
+      background-color: #ffc !important;  
+      border-style: solid !important; 
+      border-width: 1px !important; 
+      color: #000 !important; 
+      padding: 6px 8px 6px 6px !important; 
+      margin: 4px 20px !important; 
+      }  
+      .warningM3 { 
+          border-color: #f90 !important;  
+     }  
+        
        </style>
-
-
+    
+    
     <script type="text/javascript">
-
+         
              /*   function onPaymentCheked(val){
                     pymentCheckedAction(val);
                 }
-
+         
                 function getOtherTextValue(){
                     //$( ".otherRadio" ).trigger( "click" );
-                    var otherTextBoxValue = $(".otherCheckBox").val();
+                    var otherTextBoxValue = $(".otherCheckBox").val();  
                     onPaymentCheked(otherTextBoxValue);
                 }
-
+                
                 */
                 function onPaymentCheked(event,ref,val){
                     //var messageBox = this || event.target || event.srcElement;
@@ -1029,14 +1029,14 @@ window.onunload = function() { void (0) }
                         //$(".otherCheckBox").attr("disabled","disabled").val("");
                         pymentCheckedAction(amountVal);
                     }
-
+                    
                 }
-
+         
                 function getOtherTextValue(event,ref){
                     //alert(ref.className);
                     //$( ".otherRadio" ).trigger( "click" );
                     var otherTextBoxValue = $(".otherCheckBox").val();
-
+                    
                     onPaymentCheked(event,ref, otherTextBoxValue);
                 }
             </script>

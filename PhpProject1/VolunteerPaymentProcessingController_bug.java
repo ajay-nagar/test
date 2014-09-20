@@ -50,6 +50,9 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
     public decimal donationPriseAmount;
     public String campaignMemberIds;
 
+    public String primaryContactFullName;
+    public String primaryContactEmail;
+    
     public String amount {get;set;}
     public boolean acceptGSPromiseAndLaw {get;set;}
     public List<Opportunity> opportunityTransactionList {get; set;}
@@ -59,6 +62,7 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
     private map<Id, PricebookEntry> priceBookEntryMap;
     private PricebookEntry donationPricebookEntry;
     private Account councilAccount;
+    private Contact contact;
     private static Integer counterUnableToLockRow = 0;
 
     public Boolean confirmTransactions { set; get; }
@@ -111,6 +115,23 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
 
         if (Apexpages.currentPage().getParameters().containsKey('CampaignMemberIds'))
             campaignMemberIds = Apexpages.currentPage().getParameters().get('CampaignMemberIds');
+
+        if(contactId != null) {
+            List<Contact> contactList = [
+                Select Id
+                     , Name
+                     , Email
+                     , LastName
+                     , AccountId
+                     , VolunteerPage1URL__c
+                     , IsVoluntter1stPageDone__c
+                  from Contact
+                 Where Id = :contactId
+            ];
+            contact = (contactList != null && contactList.size() > 0) ? contactList[0]: new Contact();
+            primaryContactFullName = contact.Name;
+            primaryContactEmail = contact.Email;
+        }
 
         if(opportunityId != null && opportunityId != '')
             membershipOpportunity = [
@@ -181,7 +202,6 @@ public with sharing class VolunteerPaymentProcessingController extends SobjectEx
 
             total = donationPriseAmount;
             total = total + amountValue;
-            Contact contact = [Select LastName, Id, AccountId From Contact where Id = :contactId limit 1];
 
             //if(amountValue != null && amountValue.trim() != '' && contactId != null && contactId != '')
             if(amountValue != null && amountValue > 0 && contactId != null && contactId != '') {

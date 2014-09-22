@@ -1,52 +1,24 @@
 <apex:page sidebar="false" showHeader="false" standardStylesheets="false" controller="Girl_TroopGroupRoleSearchController" cache="false">
-    
-    
+
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script>  
-     $.noConflict();
-jQuery(document).ready(function(){
-         //alert('test');
-           // jQuery(".btnnextsure").show();
-           jQuery(".btnnextsureprocessing").hide();
-    
-            jQuery(".btnnextsure").click(function(){
-               
-                jQuery(".btnnextsure").hide();
-                jQuery(".btnnextsureprocessing").show();
-               jQuery('#mynextbtnPopup').modal('toggle');
-            });
-            
-            jQuery(".btnnextunsure").show();
-           jQuery(".btnnextunsureprocessing").hide();
-    
-           jQuery(".btnnextunsure").click(function(){
-                    jQuery(".btnnextunsure").hide();
-                    jQuery(".btnnextunsureprocessing").show();
-                
-                var whyUnsure = jQuery(".whyAreYouUnsureClass").val();
-                if (whyUnsure === null || whyUnsure === '') {
-                    jQuery(".btnnextunsure").show();
-                    jQuery(".btnnextunsureprocessing").hide();
-                } 
-            }); 
-            });
-            </script>
-     <script type="text/javascript" language="javascript">
-function DisableBackButton() {
-window.history.forward()
-}
-DisableBackButton();
-window.onload = DisableBackButton;
-window.onpageshow = function(evt) { if (evt.persisted) DisableBackButton() }
-window.onunload = function() { void (0) }
-</script>
+
+   
+    <script type="text/javascript" language="javascript">
+        function DisableBackButton() {
+            window.history.forward()
+        }
+        DisableBackButton();
+        window.onload = DisableBackButton;
+        window.onpageshow = function(evt) { if (evt.persisted) DisableBackButton() }
+        window.onunload = function() { void (0) }
+    </script>
     <apex:includeScript value="https://code.jquery.com/jquery-1.9.1.min.js" />
     <apex:includeScript value="https://code.jquery.com/ui/1.10.3/jquery-ui.js" />
-    
+
     <apex:includeScript value="{!URLFOR($Resource.timezone_lib, '/moment/moment.min.js')}" />
     <apex:includeScript value="{!URLFOR($Resource.timezone_lib, '/jstz/jstz.min.js')}" />
     <apex:includeScript value="{!URLFOR($Resource.timezone_lib, '/moment/moment-timezone-with-data.min.js')}" />
@@ -56,108 +28,102 @@ window.onunload = function() { void (0) }
 
     <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap-theme.css')}" />
     <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap-theme.min.css')}" />
- 
+
     <apex:includeScript value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/js/bootstrap.js')}" />
     <apex:includeScript value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/js/bootstrap.min.js')}" />
-    
-    <!-- for DateTimePicker -->
-    <!--     <apex:includeScript value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/js/moment.js')}" /> -->
+
     <apex:includeScript value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/js/bootstrap-datetimepicker.js')}" />
     <apex:stylesheet value="{!URLFOR($Resource.Bootstrap, '/Bootstrap/css/bootstrap-datetimepicker.css')}" />
-    
+
     <apex:stylesheet value="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" />
-    
-   <apex:stylesheet value="{!$Resource.ScreenCss}" />
- 
-    
+    <apex:stylesheet value="{!$Resource.ScreenCss}" />
+
     <style>
-.form-control {
-    background-image: none;
-    !
-    important
-}
+        .form-control {
+            background-image: none;
+            !important
+        }
 
-.select-list {
-    -webkit-appearance: none;
-    border-radius: 3px;
-    background-image: url("{!$Resource.DownArrow}");
-    background-repeat: no-repeat;
-    background-position: 98% 10px;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    text-indent: 0.01px;
-    text-overflow: "";
-    appearence: none;
-  
-}
-   .button_reg{
-        font-family:Open Sans,Arial!important;
-        font-size: 16px!important;
-        font-weight:bold!important;
-        padding: 6px 10px 6px 8px!important;
-        height: 35px!important;
-        color: #fff!important;
-        text-decoration: none!important;
-        text-align: center!important;
-        background: #00AE58!important;
-        width:100%!important;
-       }
+        .select-list {
+            -webkit-appearance: none;
+            border-radius: 3px;
+            background-image: url("{!$Resource.DownArrow}");
+            background-repeat: no-repeat;
+            background-position: 98% 10px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            text-indent: 0.01px;
+            text-overflow: "";
+            appearence: none;
+        }
+        .button_reg{
+            font-family:Open Sans,Arial!important;
+            font-size: 16px!important;
+            font-weight:bold!important;
+            padding: 6px 10px 6px 8px!important;
+            height: 35px!important;
+            color: #fff!important;
+            text-decoration: none!important;
+            text-align: center!important;
+            background: #00AE58!important;
+            width:100%!important;
+        }
 
+        .select-list1 {
+            -webkit-appearance: none;
+            border-radius: 3px;
+            background-image: url("{!$Resource.DownArrow}");
+            background-repeat: no-repeat;
+            background-position: 93% 10px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            text-indent: 0.01px;
+            text-overflow: "";
+            appearence: none;
+        }
 
-.select-list1 {
-    -webkit-appearance: none;
-    border-radius: 3px;
-    background-image: url("{!$Resource.DownArrow}");
-    background-repeat: no-repeat;
-    background-position: 93% 10px;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    text-indent: 0.01px;
-    text-overflow: "";
-    appearence: none;
-  
-}
+        select::-ms-expand {
+            display: none;
+        }
 
-select::-ms-expand {
-    display: none;
-}
+        .active a {
+            background-color: #00AE58 !important;
+            color: white !important;
+        }
 
-.active a {
-    background-color: #00AE58 !important;
-    color: white !important;
-}
-
-.pagination li a {
-    color: #00AE58;
-}
-.messageCell   { 
-        background-color: #ffc !important;
-     } 
-     .container{ 
-         margin-top: 10px; 
-     } 
-    .message {  
-      background-color: #ffc !important;  
-      border-style: solid !important; 
-      border-width: 1px !important; 
-      color: #000 !important; 
-      padding: 6px 8px 6px 6px !important; 
-      margin: 4px 20px !important; 
-      }  
-      .warningM3 { 
-          border-color: #f90 !important;  
-     }
-     .ui-autocomplete { 
-        height: 200px; 
-        overflow-y: scroll; 
-        overflow-x: hidden;
+        .pagination li a {
+            color: #00AE58;
+        }
+        .messageCell   { 
+            background-color: #ffc !important;
+        }
+        .container{ 
+            margin-top: 10px; 
+        }
+        .message {  
+            background-color: #ffc !important;  
+            border-style: solid !important; 
+            border-width: 1px !important; 
+            color: #000 !important; 
+            padding: 6px 8px 6px 6px !important; 
+            margin: 4px 20px !important; 
+        }
+        .warningM3 { 
+            border-color: #f90 !important;  
+        }
+        .ui-autocomplete { 
+            height: 200px; 
+            overflow-y: scroll; 
+            overflow-x: hidden;
         }
         .font_style{font-family:'Open Sans','Arial',sans-bold;
-            font-size:15px;line-height:1.428571429;color:#000000;}
-  
-  .font_heading{font-family:'Open Sans','Arial',sans-bold;
-            font-size:15px;line-height:1.428571429;color:#000000;font-weight:bold;}
-</style>
+            font-size:15px;line-height:1.428571429;color:#000000;
+        }
+
+        .font_heading{font-family:'Open Sans','Arial',sans-bold;
+            font-size:15px;line-height:1.428571429;color:#000000;font-weight:bold;
+        }
+    </style>
 
     <apex:outputPanel styleClass="isSiteDownPanel" html-isSiteDown="{!$Setup.Site_Maintenance_Setting__c.Girl_Registration_Maintenance__c}" />
     <script>
@@ -177,11 +143,10 @@ select::-ms-expand {
             <div class="container">
              <apex:actionStatus id="myStatus2" startText="Processing..."  stopText="" startStyleClass="statusStyle" >
                      <apex:facet name="start">
-                   <div class="waitingSearchDiv" id="el_loading" style="background-color: #222;
-                   height:230%; opacity:.75;width:100%; z-index:1041; position: absolute;"> 
+                   <div class="waitingSearchDiv" id="el_loading" style="height:230%; opacity:.75;width:100%; z-index:1041; position: absolute;"> 
                     <div class="waitingHolder" style="position: fixed;top: 50%;left: 50%;">
                     <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
-                    <span class="waitingDescription">Loading...</span>
+                    <span class="waitingDescription"></span>
                     </div>
                 </div> </apex:facet>
                  </apex:actionStatus>
@@ -304,14 +269,10 @@ select::-ms-expand {
                                     </apex:column>
                                    
 
-                                    <apex:column styleClass="CampTitle">
+                                    <apex:column value="{!campaignWrapper2.childCampaignName}">
                                         <!--                                                    <apex:outputLink value="{!campaignWrapper2.childCampaignName}" onclick="openPopup();return false;">{!campaignWrapper2.childCampaignName}</apex:outputLink> -->
                                         <!--                                                         <apex:outputLink value="" StyleClass="popupCls">{!campaignWrapper2.childCampaignName}</apex:outputLink>  -->
-                                        <apex:inputHidden value="{!campaignWrapper2.campaignId}"
-                                            id="theHiddenInput" />
-                                        <apex:outputLink value=""
-                                            onclick="showPopup(document.getElementById('{!$Component.theHiddenInput}').value)"
-                                            StyleClass="popupCls">{!campaignWrapper2.childCampaignName}</apex:outputLink>
+                                        
                                         <apex:facet name="header">Title</apex:facet>
                                     </apex:column>
                                     <!--                                             <apex:column value="{!campaignWrapper2.childCampaignName}" styleClass="CampTitle"> -->
@@ -397,8 +358,9 @@ select::-ms-expand {
                                         <apex:inputHidden value="{!campaignWrapper.campaignId}"
                                             id="theHiddenInput" />
                                         <apex:outputLink value=""
-                                            onmousedown="showPopup(document.getElementById('{!$Component.theHiddenInput}').value); rightClickPopup(document.getElementById('{!$Component.theHiddenInput}').value)"
+                                            onclick="showPopup(document.getElementById('{!$Component.theHiddenInput}').value);"
                                             StyleClass="popupCls">{!campaignWrapper.childCampaignName}</apex:outputLink>
+                                            <!-- onmousedown="showPopup(document.getElementById('{!$Component.theHiddenInput}').value); rightClickPopup(document.getElementById('{!$Component.theHiddenInput}').value)" -->
                                         <apex:facet name="header">Title</apex:facet>
                                     </apex:column>
                                     <!--                                             <apex:column value="{!campaignWrapper.childCampaignName}" styleClass="CampTitle"> -->
@@ -683,17 +645,15 @@ select::-ms-expand {
             reRender="outPn2" status="myStatus">
             <apex:param name="arg1" value="val" assignTo="{!campaignDetailsId}" />
         </apex:actionFunction>
-        
-        
-        <apex:actionFunction name="showPopup1" action="{!showDetails}"
-            reRender="outPnl" status="myStatus">
+
+        <apex:actionFunction name="showPopup1" action="{!showDetails}" reRender="outPnl" status="myStatus">
             <apex:param name="arg1" value="val" assignTo="{!campaignDetailsId}" />
         </apex:actionFunction>
-        
+
         <apex:actionFunction name="whyAreYouUnsureFun" action="{!createCampaignMemberOnUnsureCheck}" reRender="abc" >
             <apex:param name="unsureParam1"  value="val" assignTo="{!whyAreYouUnsure}"/>
         </apex:actionFunction>
-    
+
      <div class="modal fade" id="mynextbtnPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
             <div class="modal-dialog_none" >
             <div style="top:50%; left:50%; position:absolute;">
@@ -715,8 +675,29 @@ select::-ms-expand {
             }    
         }  
     </script>
-
+<script type="text/javascript" language="javascript">
+        $(function() {
+            $('.popupCls').bind("contextmenu", function(e) {
+                if (e.which == 3)
+                {
+                    e.preventDefault();
+                    //$('.popupCls').click(); // simulate left click
+                    $(this).click();
+                }
+            });
+        }); 
+    </script>
     <script>
+     $(".unsureCls").on('click',function(){
+     alert('test01');
+      $('#myModal').modal('toggle');
+                    return false;
+            });
+             $(".btnnextsure").on('click',function(){
+                $(".btnnextsure").hide();
+                $(".btnnextsureprocessing").show();
+             
+            });
      var ln=$('.table2 tr').length;
         if(ln==1){ 
         $(".btnnextsure").hide();
@@ -817,7 +798,16 @@ select::-ms-expand {
         }
         
          function bindevents2(){ 
-              
+          $(".unsureCls").on('click',function(){
+          alert('test0');
+      $('#myModal').modal('toggle');
+                    return false;
+            });
+               $(".btnnextsure").on('click',function(){
+                $(".btnnextsure").hide();
+                $(".btnnextsureprocessing").show();
+             
+            });
             var ln2=$('.table2 tr').length;
             if(ln2==1){ 
             $(".btnnextsure").hide();
@@ -833,10 +823,9 @@ select::-ms-expand {
              $(':checkbox').each(function() { 
                 this.checked = false;                      
             }); 
-             $(".unsureCls").on('click',function(){
-      $('#myModal').modal('toggle');
-                    return false;
-            });
+            
+            
+           
        } 
         //For bindidng events when we select pagesize picklist
         function bindevents() {
@@ -878,17 +867,16 @@ select::-ms-expand {
             
             $(document).on('ready', function(){
                 $("li.target").first().addClass("active");
+                
             });
             
             $(".chkBoxClass").on('change', function() {
                 $(".chkBoxClass").not(this).prop('checked', false);  
             });
             
-            $(".unsureCls").on('click',function(){
-                    //alert('=====cls');
-                   
-                    $('#myModal').modal('toggle');
-            });
+          //  $(".unsureCls").on('click',function(){
+        //  $('#myModal').modal('toggle');
+        //    });
             
         
             $(".close").on('click',function(){
@@ -932,11 +920,7 @@ select::-ms-expand {
         }
         
       
-            $(".unsureCls").on('click',function(){
-                    //alert('====');
-                    
-                    $('#myModal').modal('toggle');
-            });
+           
             
         
             $(".close").on('click',function(){

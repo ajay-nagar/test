@@ -26,7 +26,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
      public Boolean isunsure { get; set; }
      public ID deleteselectedrecordid { get; set; }
      public ID selectedcampaignidd {get; set; }
-
+     
     public Community_Girl_TroopGroupRoleSearch () {
         //isunsure =false;
         showselectedcampaign =false;
@@ -100,7 +100,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
             if(newTempWrapperList == null || newTempWrapperList.size() == 0) {
                 pagerFlag = false;
                 return addErrorMessage('No Troop exist with given zip code');
-            }
+            }   
 
             if(newTempWrapperList != null && newTempWrapperList.size() > 0) {
 
@@ -140,10 +140,11 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                      , Description
                      , Grade__c
                      , Parent.Grade__c
-                     , Volunteers_Needed_to_Start__c
-                     , GS_Volunteers_Required__c
+                     , Volunteers_Needed_to_Start__c  
+                     , GS_Volunteers_Required__c 
                      , rC_Volunteers__Required_Volunteer_Count__c
-                  From Campaign
+                     ,Description_Detail__c
+                  From Campaign 
                  where Id =: campaignDetailsId
                    and Display_on_Website__c = true
             ];
@@ -185,11 +186,11 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
         return radius;
     }
 
-    public double calcDistance(double latA, double longA, double latB, double longB) {
-        double radian = 57.295;
+    public double calcDistance(double latA, double longA, double latB, double longB) { 
+        double radian = 57.295; 
         double theDistance = (Math.sin(latA/radian) * Math.sin(latB/radian) + Math.cos(latA/radian) * Math.cos(latB/radian) * Math.cos((longA - longB)/radian));
         double dis = (Math.acos(theDistance)) * 69.09 * radian;
-        return dis;
+        return dis; 
     }
 
     public PageReference nextButtonClick() {
@@ -221,33 +222,33 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
         return null;
     }
-
-
+        
+        
         public PageReference deleteselectedrecord(){
             Integer ii=0;
             if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
                     for(Integer i=0;i< parentCampaignWrapperList2.size();i++) {
                             if(parentCampaignWrapperList2[i].campaignId==deleteselectedrecordid)
                             {
-
+                            
                             parentCampaignWrapperList2.remove(i);
-
+                            
                             }
-
-
+                            
+                            
                        }
                  }
-
+                 
              return null;
             }
-
+            
  public PageReference displayselectedcampaign(){
     showselectedcampaign =true;
     system.debug('displayselectedcampaign==>run');
     if(parentCampaignWrapperList != null && parentCampaignWrapperList.size() > 0 ) {
             for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
                 if(wrapper.campaignId==selectedcampaignidd ){
-
+                       
                               if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
                                         for(ParentCampaignWrapper wrapper2 : parentCampaignWrapperList2) {
                                             if(wrapper2.campaignId==selectedcampaignidd ){
@@ -255,7 +256,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                                             }
                                         }
                                         if(showselectedcampaign ==true){
-
+                                        
                                                 if(wrapper.childCampaignName == 'Unsure')
                                                 {
                                                          parentCampaignWrapperList2.clear();
@@ -277,11 +278,11 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                                                           parentCampaignWrapperList2.remove(l);
                                                              l--;
                                                                  }
-
+                                                                
                                                           }
-
+                                                    
                                                          }
-                                                     }
+                                                     } 
                                                 }
                                                if((wrapper.campaignParticipationType == 'Troop') && (wrapper.childCampaignName != 'Unsure') )
                                                 {    isunsure =false;
@@ -289,33 +290,33 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                                                     {
                                                           for(Integer j=0;j< parentCampaignWrapperList2.size();j++) {
                                                           if(parentCampaignWrapperList2[j].campaignParticipationType == 'IRM' || parentCampaignWrapperList2[j].childCampaignName == 'Unsure'){
-
+                                                            
                                                              parentCampaignWrapperList2.remove(j);
                                                             }
-
+                                                        
                                                            }
                                                     }
                                                 }
-
-
+                                        
+                                        
                                              parentCampaignWrapperList2.add(wrapper);
                                         }
-
+                            
                                  }else{     if(wrapper.childCampaignName == 'Unsure')
                                                 {
                                                         isunsure =true;
                                                 }else{   isunsure =false;                    }
                                         parentCampaignWrapperList2.add(wrapper);
-                                 }
-                }
+                                 }                           
+                }  
             }
         }
         system.debug('unsure===>'+isunsure);
         system.debug('parentCampaignWrapperList2 ==>run'+parentCampaignWrapperList2);
     return null;
     }
-
-
+    
+    
     public PageReference displayResultsOnPageNumberSelection() {
         Savepoint savepoint = Database.setSavepoint();
 
@@ -330,7 +331,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
                 allParentCampaignWrapperList = obtainParentCampaignWrapperList();
                 fillRolesToDisplayPerPage(allParentCampaignWrapperList.size());
-
+                
                 for(Integer recordNumberTostart = 0; recordNumberTostart < pageSize ; recordNumberTostart++) {
                     if((recordAllreadyDisplayed + recordNumberTostart) < allParentCampaignWrapperList.size()) {
                         ParentCampaignWrapper wrapper = allParentCampaignWrapperList[recordAllreadyDisplayed + recordNumberTostart];
@@ -384,14 +385,14 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
             }
         }else{
         return addErrorMessage('Please select Troop');
-
+        
         }
-        if (!Test.isRunningTest()) {
+        if (!Test.isRunningTest()) { 
         if(!isCampaignSelected) {
            // return addErrorMessage('Please select Troop');
         }
         }
-
+        
             if(girlContactId != null && girlContactId != '') {
 
                 List<Campaign> allChildCampaign = new List<Campaign>();
@@ -405,7 +406,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                 Boolean isPrimaryCampaignMemberForSelection = false;
                 Boolean isTroopContainsIRM = false;
 
-                List<Contact> conactList = [Select Name, Id from Contact where Id = :girlContactId];
+                List<Contact> conactList = [Select Name, Id from Contact where Id = :girlContactId]; 
                 Contact contact = (conactList != null && conactList.size() > 0) ? conactList[0] : new Contact();
 
                 List<Campaign> allVolunteerProjectCampaignList = GirlRegistrationUtilty.getAllVolunteerProjectCampaign();
@@ -420,7 +421,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                         Select Primary__c
                              , Active__c
                              , ContactId
-                             , CampaignId
+                             , CampaignId 
                           From CampaignMember
                          where CampaignId= :allVolunteerProjectCampaignSet
                            and ContactId = :girlContactId
@@ -441,7 +442,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
                 for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
 
-
+                    
 
                         campaignIdSet.add(wrapper.campaignId);
 
@@ -461,7 +462,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                                         campaignMemberList.add(campaignMember);
                                 }
                             }
-
+                         
                      }
                 }
 
@@ -475,8 +476,8 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                     Select Id
                          , ContactId
                          , CampaignId
-                      from CampaignMember
-                     where ContactId = :girlContactId
+                      from CampaignMember 
+                     where ContactId = :girlContactId 
                        and CampaignId IN :campaignIdSet
                 ];
 
@@ -512,7 +513,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                 }
 
                 if(newCampaignMemberList != null && newCampaignMemberList.size() > 0) {
-                    for(CampaignMember campaignMember : newCampaignMemberList)
+                    for(CampaignMember campaignMember : newCampaignMemberList) 
                         campaignMemberIds = campaignMemberIds == '' ?  string.valueOf(campaignMember.Id) : campaignMemberIds + ',' + string.valueOf(campaignMember.Id);
                 }
                 if(System.currentPagereference().getParameters().get('cmID') != null){
@@ -533,7 +534,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                             return JoinMembershipInformationPage;
                         }
                         else {
-                            String errorMessage = '';
+                            String errorMessage = '';                
                             for(Database.Error err : sr.getErrors()) {
                                 System.debug('The following error has occurred.');
                                 System.debug(err.getStatusCode() + ': ' + err.getMessage());
@@ -581,7 +582,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
         try {
             if(girlContactId != null && girlContactId != '') {
 
-                List<Contact> conactList = [Select Name, OwnerId, Id from Contact where Id = :girlContactId];
+                List<Contact> conactList = [Select Name, OwnerId, Id from Contact where Id = :girlContactId]; 
                 Contact contact = (conactList != null && conactList.size() > 0) ? conactList[0] : new Contact();
 
                 List<Campaign> allChildCampaign = new List<Campaign>();
@@ -597,7 +598,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
                 for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
 
-
+                   
                         campaignIdSet.add(wrapper.campaignId);
                         CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId); //RecordTypeId = RT_SHEDULED_VOLUNTEER_ID
 
@@ -608,15 +609,15 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
                         Task task = new Task(Subject = 'Unsure-'+ contact.Name , WhoId = girlContactId,  OwnerId = contact.OwnerId, WhatId = wrapper.campaignId);
                         taskList.add(task);
-
+                    
                 }
 
                 List<CampaignMember> existingCampaignMemberList = [
                     Select Id
                          , ContactId
                          , CampaignId
-                      from CampaignMember
-                     where ContactId = :girlContactId
+                      from CampaignMember 
+                     where ContactId = :girlContactId 
                        and CampaignId IN :campaignIdSet
                 ];
 
@@ -638,7 +639,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                     campaignMemberSaveresultList= Database.insert(newCampaignMemberList);
 
                     if(taskList <> Null && taskList.size() > 0)
-                        insert taskList;
+                        insert taskList; 
 
                     contact.Get_Involved_Complete__c = true;
                     update contact;
@@ -677,7 +678,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                         else {
                             String errorMessage = '';
                             for(Database.Error err : sr.getErrors()) {
-                                System.debug('The following error has occurred.');
+                                System.debug('The following error has occurred.');                    
                                 System.debug(err.getStatusCode() + ': ' + err.getMessage());
                                 System.debug('Account fields that affected this error: ' + err.getFields());
                                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.WARNING, err.getMessage() ));
@@ -710,7 +711,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
             pageNumberSet.clear();
             Integer pageNumberToDisplay = (totalRecordSize / Integer.valueOf(selectedPageSize));
-
+                
             if(math.mod(totalRecordSize, Integer.valueOf(selectedPageSize)) != 0)
                 pageNumberToDisplay = pageNumberToDisplay + 1;
 
@@ -732,13 +733,13 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                      , Grade__c
                      , Meeting_Day_s__c
                      , Meeting_Location__c
-                     , Volunteers_Needed_to_Start__c
+                     , Volunteers_Needed_to_Start__c 
                      , Display_on_Website__c
                      , Meeting_Start_Date_time__c
                      , Zip_Code__c
                      , Account__c
                      , Girl_Openings_Remaining__c
-                  From Campaign
+                  From Campaign 
                  where Zip_Code__c != null
                    and Name = :troopOrGroupName
                    and Display_on_Website__c = true
@@ -753,7 +754,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                 Select Grade__c
                      , Meeting_Day_s__c
                      , Meeting_Location__c
-                     , Volunteers_Needed_to_Start__c
+                     , Volunteers_Needed_to_Start__c 
                      , Display_on_Website__c
                      , Meeting_Start_Date_time__c
                      , Account__c
@@ -762,17 +763,17 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                      , Id
                      , Name
                      , RecordTypeId
-                     , Council_Code__c
-                  From Campaign
+                     , Council_Code__c 
+                  From Campaign 
                  where Name = :troopOrGroupName
                    and Display_on_Website__c = true
                    and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
             ];
 
             if(allCampaignList != null && allCampaignList.size() > 0) {
-                for(Campaign campaign : allCampaignList)
+                for(Campaign campaign : allCampaignList)                     
                     innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Start_Date_time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start__c ), campaign.Id, campaign.Participation__c));
-
+                  
                   innerParentCampaignWrapperList.sort();
             }
 
@@ -785,7 +786,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                 Select Grade__c
                      , Meeting_Day_s__c
                      , Meeting_Location__c
-                     , Volunteers_Needed_to_Start__c
+                     , Volunteers_Needed_to_Start__c 
                      , Display_on_Website__c
                      , Meeting_Start_Date_time__c
                      , Account__c
@@ -795,7 +796,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                      , Name
                      , Zip_Code__c
                      , Council_Code__c
-                  From Campaign
+                  From Campaign 
                  where Zip_Code__c != null
                    and Display_on_Website__c = true
                    and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
@@ -923,16 +924,16 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                 Select Name
                      , Id
                      , MailingPostalCode
-                     , Grade__c
-                  from Contact
+                     , Grade__c 
+                  from Contact 
                   where Id = :girlContactId
-            ];
+            ]; 
 
             contact = (conactList != null && conactList.size() > 0) ? conactList[0] : new Contact();
         }
         return contact;
     }
-
+    
     public List<ParentCampaignWrapper> addUnsureCampaign() {
         List<Campaign> parentCampaignRecordList = new List<Campaign>();
         List<ParentCampaignWrapper> unsureCampaignRecordList = new List<ParentCampaignWrapper>();
@@ -941,7 +942,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
             Select Grade__c
                  , Meeting_Day_s__c
                  , Meeting_Location__c
-                 , Volunteers_Needed_to_Start__c
+                 , Volunteers_Needed_to_Start__c 
                  , Display_on_Website__c
                  , Meeting_Start_Date_time__c
                  , Girl_Openings_Remaining__c
@@ -950,8 +951,8 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                  , Participation__c
                  , Id
                  , Name
-                 , Council_Code__c
-              From Campaign
+                 , Council_Code__c 
+              From Campaign 
              where (Name = 'Unsure')
                and Display_on_Website__c = true
                and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
@@ -973,7 +974,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
             Select Grade__c
                  , Meeting_Day_s__c
                  , Meeting_Location__c
-                 , Volunteers_Needed_to_Start__c
+                 , Volunteers_Needed_to_Start__c 
                  , Display_on_Website__c
                  , Meeting_Start_Date_time__c
                  , Girl_Openings_Remaining__c
@@ -983,7 +984,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                  , Id
                  , Name
                  , Council_Code__c
-              From Campaign
+              From Campaign 
              where Display_on_Website__c = true
                and Participation__c = 'IRM'
                and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
@@ -1013,7 +1014,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
         public Id campaignId { get; set; }
         public String campaignParticipationType { get; set; }
          public String campaignMeetingStartDatetimeStd { get; set; }
-        @TestVisible public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strcampaignOpeningsRemaining, String strParentCampaignName, String strAccountId, String strVolunteers, String strCampaignId, String strCampaignParticipation) {//String strChildCampaignId,String strParticipation
+        @TestVisible public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strcampaignOpeningsRemaining, String strParentCampaignName, String strAccountId, String strVolunteers, String strCampaignId, String strCampaignParticipation) {//String strChildCampaignId,String strParticipation 
             isCampaignChecked = campaignChecked;
             campaignDistance = strCampaignDistance;
             childCampaignName = strChildCampaignName;
@@ -1029,7 +1030,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
             campaignParticipationType = strCampaignParticipation;
               if(strCampaignMeetingStartDatetime!=null)
           campaignMeetingStartDatetimeStd = String.valueOf(strCampaignMeetingStartDatetime.getTime());
-
+        
         }
 
         public Integer compareTo(Object compareTo) {

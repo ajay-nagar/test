@@ -14,6 +14,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
     public Campaign campaignPopup { get; set; }
     public List<Campaign> campaignList { get; set; }
     public List<ParentCampaignWrapper> parentCampaignWrapperList { get; set; }
+     public List<ParentCampaignWrapper> parentCampaignWrapperList2 { get; set; }
     public String year{ get; set; }
     private String contactId;
     private String girlContactId;
@@ -21,9 +22,14 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
     private String councilId;
     private static Integer counterUnableToLockRow = 0;
     public Boolean showTroopDetails { get; set; }
-    
-    
+    public Boolean showselectedcampaign { get; set; }
+     public Boolean isunsure { get; set; }
+     public ID deleteselectedrecordid { get; set; }
+     public ID selectedcampaignidd {get; set; }
+     
     public Community_Girl_TroopGroupRoleSearch () {
+        //isunsure =false;
+        showselectedcampaign =false;
         year = Label.Grade_As_Of_Fall_Year;
         selectedPageSize = '10';
         showSearchResultTable = false;
@@ -32,6 +38,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
         counterUnableToLockRow = 0;
         pageNumberSet = new List<Integer>();
         parentCampaignWrapperList = new List<ParentCampaignWrapper>();
+        parentCampaignWrapperList2 = new List<ParentCampaignWrapper>();
 
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
             girlContactId = Apexpages.currentPage().getParameters().get('GirlContactId');
@@ -136,7 +143,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                      , Volunteers_Needed_to_Start__c  
                      , GS_Volunteers_Required__c 
                      , rC_Volunteers__Required_Volunteer_Count__c
-                     , Description_Detail__c
+                     ,Description_Detail__c
                   From Campaign 
                  where Id =: campaignDetailsId
                    and Display_on_Website__c = true
@@ -153,6 +160,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
     public PageReference clearSelections() {
         pagerFlag = false;
         parentCampaignWrapperList.clear();
+        parentCampaignWrapperList2.clear();
         zipCode = '';
         troopOrGroupName = '';
         return null;
@@ -214,7 +222,101 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
         return null;
     }
-
+        
+        
+        public PageReference deleteselectedrecord(){
+            Integer ii=0;
+            if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
+                    for(Integer i=0;i< parentCampaignWrapperList2.size();i++) {
+                            if(parentCampaignWrapperList2[i].campaignId==deleteselectedrecordid)
+                            {
+                            
+                            parentCampaignWrapperList2.remove(i);
+                            
+                            }
+                            
+                            
+                       }
+                 }
+                 
+             return null;
+            }
+            
+ public PageReference displayselectedcampaign(){
+    showselectedcampaign =true;
+    system.debug('displayselectedcampaign==>run');
+    if(parentCampaignWrapperList != null && parentCampaignWrapperList.size() > 0 ) {
+            for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
+                if(wrapper.campaignId==selectedcampaignidd ){
+                       
+                              if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
+                                        for(ParentCampaignWrapper wrapper2 : parentCampaignWrapperList2) {
+                                            if(wrapper2.campaignId==selectedcampaignidd ){
+                                               showselectedcampaign =false;
+                                            }
+                                        }
+                                        if(showselectedcampaign ==true){
+                                        
+                                                if(wrapper.childCampaignName == 'Unsure')
+                                                {
+                                                         parentCampaignWrapperList2.clear();
+                                                        isunsure =true;
+                                                }
+                                                 if(wrapper.campaignParticipationType == 'IRM')
+                                                {       // to remove other , unsure
+                                                    isunsure =false;
+                                                   if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                     { Integer k=0;
+                                                    Integer ssize=parentCampaignWrapperList2.size();
+                                                    //system.debug('outsideirm list size'+parentCampaignWrapperList2.size());
+                                                     for(Integer l=0;l< ssize ;l++) {
+                                                      if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                     {
+                                                        // system.debug('outside irm i:'+l);
+                                                           if(parentCampaignWrapperList2[l].campaignParticipationType == 'Troop' || parentCampaignWrapperList2[l].childCampaignName == 'Unsure')
+                                                               {
+                                                          parentCampaignWrapperList2.remove(l);
+                                                             l--;
+                                                                 }
+                                                                
+                                                          }
+                                                    
+                                                         }
+                                                     } 
+                                                }
+                                               if((wrapper.campaignParticipationType == 'Troop') && (wrapper.childCampaignName != 'Unsure') )
+                                                {    isunsure =false;
+                                                   if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                    {
+                                                          for(Integer j=0;j< parentCampaignWrapperList2.size();j++) {
+                                                          if(parentCampaignWrapperList2[j].campaignParticipationType == 'IRM' || parentCampaignWrapperList2[j].childCampaignName == 'Unsure'){
+                                                            
+                                                             parentCampaignWrapperList2.remove(j);
+                                                            }
+                                                        
+                                                           }
+                                                    }
+                                                }
+                                        
+                                        
+                                             parentCampaignWrapperList2.add(wrapper);
+                                        }
+                            
+                                 }else{     if(wrapper.childCampaignName == 'Unsure')
+                                                {
+                                                        isunsure =true;
+                                                }else{   isunsure =false;                    }
+                                        parentCampaignWrapperList2.add(wrapper);
+                                 }                           
+                }  
+            }
+        }
+        system.debug('unsure===>'+isunsure);
+        system.debug('parentCampaignWrapperList2 ==>run'+parentCampaignWrapperList2);
+    return null;
+    }
+    
+    
     public PageReference displayResultsOnPageNumberSelection() {
         Savepoint savepoint = Database.setSavepoint();
 
@@ -276,15 +378,18 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
         Savepoint savepoint = Database.setSavepoint();
         try {
         Boolean isCampaignSelected = false;
-        if(parentCampaignWrapperList != null && parentCampaignWrapperList.size() > 0 ) {
-            for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
+        if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
+            for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
                 if(wrapper.isCampaignChecked)
                     isCampaignSelected = true;
             }
+        }else{
+        return addErrorMessage('Please select Troop');
+        
         }
         if (!Test.isRunningTest()) { 
         if(!isCampaignSelected) {
-            return addErrorMessage('Please select Troop');
+           // return addErrorMessage('Please select Troop');
         }
         }
         
@@ -329,15 +434,15 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                     }
                 }
 
-                for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
+                for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
                     if(wrapper.campaignParticipationType != null && wrapper.campaignParticipationType != '')
                         if(wrapper.campaignParticipationType.equalsIgnoreCase('IRM'))
                             isTroopContainsIRM = true;
                 }
 
-                for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
+                for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
 
-                    if(wrapper.isCampaignChecked) {
+                    
 
                         campaignIdSet.add(wrapper.campaignId);
 
@@ -357,7 +462,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                                         campaignMemberList.add(campaignMember);
                                 }
                             }
-                         }
+                         
                      }
                 }
 
@@ -491,9 +596,9 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                 List<Database.Saveresult> campaignMemberSaveresultList;
                 String campaignMemberIds = '';
 
-                for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
+                for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
 
-                    if(wrapper.isCampaignChecked) {
+                   
                         campaignIdSet.add(wrapper.campaignId);
                         CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId); //RecordTypeId = RT_SHEDULED_VOLUNTEER_ID
 
@@ -504,7 +609,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
                         Task task = new Task(Subject = 'Unsure-'+ contact.Name , WhoId = girlContactId,  OwnerId = contact.OwnerId, WhatId = wrapper.campaignId);
                         taskList.add(task);
-                    }
+                    
                 }
 
                 List<CampaignMember> existingCampaignMemberList = [

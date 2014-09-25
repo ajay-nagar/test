@@ -42,13 +42,14 @@ public without sharing class VolunteerRegistrationUtilty {
     public static Zip_Code__c getZipCode(String zipCode) {
         List<Zip_Code__c> zipCodeList;
         if(zipCode.length() > 5){
+            String zipCodeToSearch = zipCode.substring(0, 5) + '%';
             zipCodeList =[
               Select geo_location__Longitude__s
                  , geo_location__Latitude__s
                  , Zip_Code_Unique__c
                  , Name
                 From Zip_Code__c 
-                where Zip_Code_Unique__c = :zipCode.substring(0, 5)
+                where Zip_Code_Unique__c like :zipCodeToSearch //zipCode.substring(0, 5)
              ];
         }else{
             zipCodeList =[

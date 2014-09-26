@@ -105,7 +105,8 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
     public static final string LIFETIME_MEMBERSHIP  = 'Lifetime Membership';
     
     private Opportunity opportunityServicefee;
-    
+    private String membershipYear = '';
+    private string oldCampaign = '';
     public Community_Girl_JoinMembershipInfo() {
         booleanOppMembershipOnPaper = false;
         booleanOpportunityGrantRequested = false;
@@ -125,7 +126,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         PricebookEntryList = new PricebookEntry[]{};
         fillPricebookEntryList();
         councilAccount = new Account();
-        
+        systemAdminUser = GirlRegistrationUtilty.getSystemAdminUser();
         if(Apexpages.currentPage().getParameters().containsKey('ParentContactId'))
             parentContactId = Apexpages.currentPage().getParameters().get('ParentContactId');
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
@@ -171,15 +172,6 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         girlAddress = [Select Id,rC_Bios__City__c,rC_Bios__Country__c,rC_Bios__County__c,rC_Bios__Postal_Code__c,rC_Bios__State__c,rC_Bios__Street_Line_1__c,rC_Bios__Street_Line_2__c from rC_Bios__Address__c where ID = :girlContact.rC_Bios__Preferred_Mailing_Address__c];
         
         if(parentContact != null) {
-            systemAdminUser = [Select Id
-                 , LastName
-                 , IsActive
-                 , Profile.Name
-                 , Profile.Id
-                 , ProfileId  from User where Id = :parentContact.Account.OwnerId
-               and IsActive = true 
-               and UserRoleId != null
-            limit 1];
             primaryFirstName = parentContact.FirstName;
             primaryLastName = parentContact.LastName;
             primaryEmail = parentContact.rC_Bios__Home_Email__c;            
@@ -386,7 +378,6 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
                  , LastName
                  , Birthdate
                  , AccountId
-                 , Account.OwnerId
                  , Account.rC_Bios__Preferred_Contact__c
                  , rC_Bios__Home_Email__c
                  , rC_Bios__Gender__c
@@ -819,7 +810,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
 
             if(campaignMembers != null && campaignMembers != '') {
                 campaignMemberIdList = campaignMembers.trim().split(',');
-
+                oldCampaign = campaignMemberIdList[campaignMemberIdList.size()-1];
                 for(String campaignMember : campaignMemberIdList)
                     campaignMemberIdSet.add(campaignMember.trim());
             }
@@ -837,11 +828,11 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             if(priceBookEntry != null && priceBookEntry.Product2.rC_Giving__End_Date__c != null)
             membershipYear = string.valueOf(priceBookEntry.Product2.rC_Giving__End_Date__c.year());
             if(membershipYear !=null && membershipYear != '') {
-            List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:girlContact.ID and Active__c=true];
+            List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:girlContact.ID];// and Active__c=true];
             if(lstCM.size()>0) {
             for(campaignmember cm:lstCM) {
             if(cm.Membership__r.Membership_year__c == membershipYear)
-            return addErrorMessage('This membership is already active, Please select another membership.');
+             return addErrorMessageAndRollback(savepoint,'This membership is already active, Please select another membership.');
             }
             }
             }
@@ -962,10 +953,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             councilAccount = GirlRegistrationUtilty.getCouncilAccount(zip[0].Council__c);            
             }
             if (booleanOppMembershipOnPaper || booleanOpportunityGrantRequested) {
-                if (!Test.isRunningTest()) {
-                if(parentContact != null && parentContact.Id != null && councilAccount.Id != null)
-                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_ThankYou' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id+'&FinancialAidRequired='+String.valueOf(booleanOpportunityGrantRequested)+'&CashOrCheck='+String.valueOf(booleanOppMembershipOnPaper), parentContact);
-                }
+                
                 Pagereference landingPage = System.Page.Community_Girl_ThankYou;//new Pagereference('/apex/');
                 if(booleanOpportunityGrantRequested != null)
                     landingPage.getParameters().put('FinancialAidRequired',String.valueOf(booleanOpportunityGrantRequested));
@@ -986,11 +974,17 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
                 return landingPage;
             }
             
-            if (!Test.isRunningTest()) {
-            if(parentContact != null && parentContact.Id != null && councilAccount.Id != null)
-                GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id, parentContact);
+            if(girlContact != null && girlContact.Id != null && councilAccount.Id != null) {
+                string paymenturl = '/Community_Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id;
+                if(opportunityServicefee.Id != null)
+                paymenturl = '/Community_Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id+'&OpportunityServicefeeId='+opportunityServicefee.Id;
+                string paymenturlFinal = membershipYear + Label.community_login_URL + paymenturl;
+                
+                CampaignMember oldCampaignMember = [Select Id,Pending_Payment_URL__c from CampaignMember where ID = :oldCampaign]; 
+                oldCampaignMember.Pending_Payment_URL__c = paymenturlFinal;
+                update oldCampaignMember;
             }
-            Pagereference paymentProcessingPage = System.Page.Community_Girl_PaymentProcessing;//new Pagereference('/apex/');
+            Pagereference paymentProcessingPage = System.Page.Community_Girl_PaymentProcessing;
             paymentProcessingPage.getParameters().put('GirlContactId', girlContact.Id);
             paymentProcessingPage.getParameters().put('CampaignMemberIds',campaignMembers);
 
@@ -1127,7 +1121,7 @@ system.debug('mailingPostalCodeToZipCodeMap#######'+mailingPostalCodeToZipCodeMa
     
     public Opportunity createMembershipOpportunity(String recordTypeId, Contact contact,PricebookEntry priceBookEntry) {
         String campaignName = '';
-        String membershipYear = string.valueOf(system.today().year());
+        membershipYear = string.valueOf(system.today().year());
 
         if(priceBookEntry != null && priceBookEntry.Product2.Name.toUpperCase().contains('LIFETIME')) {
             campaignName = LIFETIME_MEMBERSHIP;
@@ -1207,7 +1201,7 @@ system.debug('mailingPostalCodeToZipCodeMap#######'+mailingPostalCodeToZipCodeMa
            os.OpportunityId = opportunity.id; // *** ERROR - not writable ***
            os.OpportunityAccessLevel = 'Read';
            os.UserOrGroupId = UserInfo.getUserId();
-           insert os;
+           //insert os;
         
         updateOpportunityType(opportunity, priceBookEntry, contact);   
         

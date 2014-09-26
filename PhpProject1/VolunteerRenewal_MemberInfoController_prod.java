@@ -72,7 +72,8 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
     private static String getOppRecordTypeId(String name) {
        return (OPPORTUNITY_RECORDTYPE_INFO_MAP.get(name) != null) ? OPPORTUNITY_RECORDTYPE_INFO_MAP.get(name).getRecordTypeId() : null;
     }
-
+    private String membershipYear = '';
+    private string oldCampaign = '';
     public List<SelectOption> getmembershipProductList() {
 
         List<SelectOption> membershipProducts = new List<SelectOption>();
@@ -155,7 +156,7 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
         grantRequested = 'I request financial assistance for membership registration';
         thankYou = 'Value that specifies whether this checkbox 10.0 global should /n 2.value that specifies whether this checkbox 10.0 global should';
 
-        
+        defaultSystemAdminUser = VolunteerRegistrationUtilty.getSystemAdminUser();
 
         priceBookEntryMap = new map<Id, PricebookEntry>();
         PricebookEntryList = new PricebookEntry[]{};
@@ -182,15 +183,6 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
                 councilAccount = VolunteerRenewalUtility.getCouncilAccount(zipCodeFromContactPostalCode.Council__c);
                 VolunteerController.councilAccount = councilAccount;
             }
-            defaultSystemAdminUser = [Select Id
-                 , LastName
-                 , IsActive
-                 , Profile.Name
-                 , Profile.Id
-                 , ProfileId  from User where Id = :contact.Account.OwnerId
-               and IsActive = true 
-               and UserRoleId != null
-            limit 1];
         }
 
         if (councilAccount != null) {
@@ -414,24 +406,45 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
                 campaignMembers = Apexpages.currentPage().getParameters().get('CampaignMemberIds');
             }
 
-            system.debug('membershipProduct ===:' + membershipProduct + '|');
+            system.debug('membershipProduct ===:' + membershipProduct);
             if (priceBookEntryMap != null && priceBookEntryMap.size() > 0) {
                if ( membershipProduct != null && !membershipProduct.toUpperCase().contains('NONE') && priceBookEntryMap.containsKey(membershipProduct.trim()))
                    priceBookEntry = priceBookEntryMap.get(membershipProduct.trim());
             }
             system.debug('priceBookEntry ===: ' + priceBookEntry);
-
+            
+            
+            // Added to avoid duplicate membership
+            membershipYear = '';
+            if(priceBookEntry != null && priceBookEntry.Product2.rC_Giving__End_Date__c != null)
+                membershipYear = string.valueOf(priceBookEntry.Product2.rC_Giving__End_Date__c.year());
+            if(membershipYear !=null && membershipYear != '') {
+                system.debug('***membershipYear***'+membershipYear);
+                List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:contact.ID];
+                system.debug('***lstCM***'+lstCM);
+                if(lstCM.size()>0) {
+                    for(campaignmember cm : lstCM) {
+                        system.debug('****** cm.Membership__r.Membership_year__c'+ cm.Membership__r.Membership_year__c);
+                        if(cm.Membership__r.Membership_year__c == membershipYear){
+                            
+                            system.debug('&&&& before error');
+                            return addErrorMessageAndRollback(savepoint, 'This membership is already active, Please select another membership.');
+                        }
+                        system.debug('**** after error');
+                    }
+                }
+            }
             String[] campaignMemberIdList;
 
             if (campaignMembers != null && campaignMembers != '') {
                 campaignMemberIdList = campaignMembers.trim().split(',');
+                oldCampaign = campaignMemberIdList[0];
                 for(String campaignMember : campaignMemberIdList)
                     campaignMemberIdSet.add(campaignMember.trim());
             }
 
             Zip_Code__c[] zipCodeList = new Zip_Code__c[] {};
-            String zipCodeToMatch = (zipCode != null && zipCode.length() > 5) ? zipCode.substring(0, 5) + '%' : zipCode + '%';
-            if(zipCodeToMatch != null && zipCodeToMatch != '') {
+            if(zipCode != null && zipCode != '') {
                 zipCodeList = [
                     Select Id
                          , Name
@@ -442,7 +455,7 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
                          , Recruiter__r.IsActive
                          , Recruiter__r.UserRoleId
                       From Zip_Code__c
-                     where Zip_Code_Unique__c like :zipCodeToMatch limit 1
+                     where Zip_Code_Unique__c like :zipCode limit 1
                 ];
             }
 
@@ -576,7 +589,16 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
                 return landingPage;
 
             }
-
+            if(contact != null && contact.Id != null && councilAccount.Id != null) {
+                string paymenturl = '/VolunteerRenewal_Payment' + '?ContactId='+contact.Id + '&CouncilId='+councilAccount.Id+ '&CampaignMemberIds='+campaignMemberIds+'&OpportunityId='+newOpportunity.Id;
+                if(oldOpportunity != null)
+                paymenturl = '/VolunteerRenewal_Payment' + '?ContactId='+contact.Id  + '&CouncilId='+councilAccount.Id + '&CampaignMemberIds='+campaignMemberIds+'&OpportunityId='+newOpportunity.Id+'&OldOpportunityId='+oldOpportunity.Id;
+                string paymenturlFinal = membershipYear + Label.community_login_URL + paymenturl;
+                system.debug('urlDetails...' +paymenturlFinal + '***CM '+oldCampaign);
+                CampaignMember oldCampaignMember = [Select Id,Pending_Payment_URL__c from CampaignMember where ID = :oldCampaign]; 
+                oldCampaignMember.Pending_Payment_URL__c = paymenturlFinal;
+                update oldCampaignMember;
+            }
             PageReference paymentProcessingPage = Page.VolunteerRenewal_Payment;
             if(contact != null && contact.Id != null)
                 paymentProcessingPage.getParameters().put('ContactId', contact.Id);
@@ -1094,7 +1116,7 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
            os.OpportunityId = opportunity.id; // *** ERROR - not writable ***
            os.OpportunityAccessLevel = 'Read';
            os.UserOrGroupId = UserInfo.getUserId();
-           insert os;
+           //insert os;
         }
        /** Code moved from here  **/
         return opportunity;
@@ -1223,9 +1245,8 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
 
         if (renewedCampaignMemberList != null && renewedCampaignMemberList.size() > 0 ) {
             for(CampaignMember campaignMember : renewedCampaignMemberList){
-                if(isLifetime == true) {
+                if(isLifetime == true)
                     campaignMember.Display_Renewal__c = false;
-                }    
                 campaignMember.Membership__c = opportunity.Id;
                 updateCampaignMemberList.add(campaignMember);
             }
@@ -1236,9 +1257,6 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
             for(CampaignMember campaignMember : campaignMemberList){
                 if(campaignMember.Display_Renewal__c == null || campaignMember.Display_Renewal__c == false){
                     campaignMember.Membership__c = opportunity.Id;
-                    if(isLifetime == true) {
-                    campaignMember.Active__c = true;
-                    }
                     updateCampaignMemberList.add(campaignMember);
                 }
             }

@@ -196,7 +196,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
            girlLastName = (girlContact.LastName != null) ? girlContact.LastName : '';
        }
        secondaryPreferredEmail = 'Email';
-       secondaryPreferredPhone = 'Home Phone'; 
+       secondaryPreferredPhone = 'Home Phone';
     }
 
     public pageReference calculateGirlAge() {
@@ -499,8 +499,8 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
         List<SelectOption> custodialCareInfo = new List<SelectOption>();
         List<Contact> adultContactList;
         if(girlContact != null && girlContact.AccountId != null)
-            adultContactList = new List<Contact>([select Id from Contact 
-                                                            where rC_Bios__Role__c = 'Adult' 
+            adultContactList = new List<Contact>([select Id from Contact
+                                                            where rC_Bios__Role__c = 'Adult'
                                                             AND AccountId =: girlContact.AccountId]);
         if(adultContactList!=null && adultContactList.size()>1){
             custodialCareInfo.add(new Selectoption('--None--', '--None--'));
@@ -515,7 +515,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
             custodialCareInfo.add(new SelectOption('Guardian', 'Guardian'));
             custodialCareInfo.add(new SelectOption('Guardian and Secondary Contact', 'Guardian and Secondary Contact'));
         }
-        
+
         return custodialCareInfo;
     }
 
@@ -825,7 +825,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
                         OpportunityLineItemInsertList.add(oppLineItem);
                     }
                 }
-                
+
                 if(OpportunityLineItemInsertList != null && OpportunityLineItemInsertList.size() > 0) {
                     insert OpportunityLineItemInsertList;
                 }
@@ -925,7 +925,8 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
 
             if(parentContact != null && parentContact.Id != null && girlContact != null && girlContact.Id != null && councilAccount != null && councilAccount.Id != null && newOpportunity != null && newOpportunity.Id != null)
             {
-                 if(councilMembershipOpp == null){
+            
+              if(councilMembershipOpp == null){
                 GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id + '&ParentContactId='+parentContact.Id, parentContact);
                 }else{
                 GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id + '&ParentContactId='+parentContact.Id+'&CouncilMembershipOppId='+councilMembershipOpp.Id, parentContact);
@@ -933,7 +934,9 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
             
             
             
+            
             }
+
             Pagereference paymentProcessingPage = Page.Girl_PaymentProcessing;
             paymentProcessingPage.getParameters().put('GirlContactId', girlContact.Id);
             paymentProcessingPage.getParameters().put('CampaignMemberIds',campaignMembers);
@@ -1028,9 +1031,9 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
               From Zip_Code__c
              where Zip_Code_Unique__c IN :zipCodeSet
         ];
-        
+
         system.debug('zipCodeList#######'+zipCodeList);
-        
+
         if(zipCodeList.size() > 0) {
             for(Zip_Code__c zipCode : zipCodeList)
                 mailingPostalCodeToZipCodeMap.put(zipCode.Zip_Code_Unique__c, zipCode);

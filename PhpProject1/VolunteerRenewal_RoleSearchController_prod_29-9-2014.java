@@ -9,7 +9,7 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
     public Boolean pagerFlag {get; set;}
     public List<Campaign> campaignList { get; set;} 
     public List<Campaign> parentCampaignList { get; set;}
-
+    public List<ParentCampaignWrapper> parentCampaignWrapperList2{ get; set;}
     public List<ParentCampaignWrapper> parentCampaignWrapperList { get; set;}
     public Boolean showSearchResultTable {get; set;}
     public List<Integer> pageNumberSet {get; set;}
@@ -18,7 +18,10 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
     public Contact loggedInContact;
     public Zip_Code__c zipCodeCouncilAccount;
     public boolean searchByCampaignName ;
-    
+     public ID deleteselectedrecordid { get; set; }
+     public ID selectedcampaignidd {get; set; }
+     public Boolean showselectedcampaign { get; set; }
+     public Boolean isunsure { get; set; }
     private String contactId;
     private String councilId;
     private List<ParentCampaignWrapper> unsureCampaignRecordList;
@@ -68,11 +71,12 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
         counterUnableToLockRow = 0;
         selectedPageSize = '10';
         showSearchResultTable = false;
+        showselectedcampaign =false;
         whyAreYouUnsure = '';
         pagerFlag = false;
         loggedInContact = new Contact();
         campaignMemberIds = '';
-        
+        parentCampaignWrapperList2= new List<ParentCampaignWrapper>();
         pageNumberSet = new List<Integer>();
         parentCampaignWrapperList = new List<ParentCampaignWrapper>();
         unsureCampaignRecordList = new List<ParentCampaignWrapper>();
@@ -183,8 +187,8 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
 
             campaignPopup = (campaignList.size() > 0 && campaignList != null) ? campaignList[0] : null;
 
-            if(campaignPopup != null && campaignPopup.Parent != null && campaignPopup.Parent.Grade__c != null)
-                campaignPopup.Grade__c = campaignPopup.Parent.Grade__c;
+           // if(campaignPopup != null && campaignPopup.Parent != null && campaignPopup.Grade__c != null)
+              //  campaignPopup.Grade__c = campaignPopup.Grade__c;
         } catch(System.exception pException) {
             return addErrorMessageAndRollback(savepoint, pException);
         }        
@@ -197,6 +201,7 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
         try {
             pagerFlag = false;
             parentCampaignWrapperList.clear();
+             parentCampaignWrapperList2.clear();
             zipCode = '';
             troopOrGroupName = '';
         } catch(System.exception pException) {
@@ -228,6 +233,12 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
 
         double radian = 57.295; 
         double theDistance = (Math.sin(latA/radian) * Math.sin(latB/radian) + Math.cos(latA/radian) * Math.cos(latB/radian) * Math.cos((longA - longB)/radian));
+           if(theDistance >1.0){
+             theDistance=1.0;
+          }  
+          if(theDistance <-1.0){
+             theDistance=-1.0;
+          } 
         double dis = (Math.acos(theDistance)) * 69.09 * radian;
         return dis; 
     }
@@ -329,13 +340,112 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
 
         return null;
     }
-
+public PageReference deleteselectedrecord(){
+            Integer ii=0;
+            if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
+                    for(Integer i=0;i< parentCampaignWrapperList2.size();i++) {
+                            if(parentCampaignWrapperList2[i].campaignId==deleteselectedrecordid)
+                            {
+                            
+                            parentCampaignWrapperList2.remove(i);
+                            
+                            }
+                            
+                            
+                       }
+                 }
+                 
+             return null;
+            }
+            
+ public PageReference displayselectedcampaign(){
+    showselectedcampaign =true;
+    system.debug('displayselectedcampaign==>run');
+    if(parentCampaignWrapperList != null && parentCampaignWrapperList.size() > 0 ) {
+            for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
+                if(wrapper.campaignId==selectedcampaignidd ){
+                       
+                              if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
+                                        for(ParentCampaignWrapper wrapper2 : parentCampaignWrapperList2) {
+                                            if(wrapper2.campaignId==selectedcampaignidd ){
+                                               showselectedcampaign =false;
+                                            }
+                                        }
+                                        if(showselectedcampaign ==true){
+                                        
+                                                if(wrapper.childCampaignName == 'Unsure')
+                                                {
+                                                         parentCampaignWrapperList2.clear();
+                                                        isunsure =true;
+                                                }
+                                                 if(wrapper.campaignParticipationType == 'IRM')
+                                                {       // to remove other , unsure
+                                                    isunsure =false;
+                                                   if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                     { Integer k=0;
+                                                    Integer ssize=parentCampaignWrapperList2.size();
+                                                    //system.debug('outsideirm list size'+parentCampaignWrapperList2.size());
+                                                     for(Integer l=0;l< ssize ;l++) {
+                                                      if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                     {
+                                                        // system.debug('outside irm i:'+l);
+                                                           if(parentCampaignWrapperList2[l].campaignParticipationType == 'Troop' || parentCampaignWrapperList2[l].childCampaignName == 'Unsure')
+                                                               {
+                                                          parentCampaignWrapperList2.remove(l);
+                                                             l--;
+                                                                 }
+                                                                
+                                                          }
+                                                    
+                                                         }
+                                                     } 
+                                                }
+                                               if((wrapper.campaignParticipationType == 'Troop') && (wrapper.childCampaignName != 'Unsure') )
+                                                {    isunsure =false;
+                                                        system.debug('enters inside1');
+                                                   if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                    {       system.debug('enters inside2');
+                                                          for(Integer j=0;j< parentCampaignWrapperList2.size();j++) {
+                                                              system.debug('enters inside3');
+                                                          if(parentCampaignWrapperList2[j].campaignParticipationType == 'IRM' || parentCampaignWrapperList2[j].childCampaignName == 'Unsure'){
+                                                             system.debug('enters inside4');
+                                                             parentCampaignWrapperList2.remove(j);
+                                                            }
+                                                        
+                                                           }
+                                                    }
+                                                }
+                                        
+                                                 system.debug('enters inside5wrapper.campaignParticipationType'+wrapper.campaignParticipationType);
+                                             parentCampaignWrapperList2.add(wrapper);
+                                        }
+                            
+                                 }else{    
+                                                if(wrapper.childCampaignName == 'Unsure')
+                                                {
+                                                        isunsure =true;
+                                                }else{   isunsure =false;      
+                                                }
+                                                system.debug('enters inside6');
+                                        parentCampaignWrapperList2.add(wrapper);
+                                 }                           
+                }  
+            }
+        }
+        system.debug('unsure===>'+isunsure);
+        system.debug('parentCampaignWrapperList2 ==>run'+parentCampaignWrapperList2);
+    return null;
+    }
     public Pagereference addCampaignMember() {
 
         counterUnableToLockRow++;
         Savepoint savepoint = Database.setSavepoint();
+          if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) { }
+       else {
+             return addErrorMessageAndRollback(savepoint,'Please select Troop');
+            }
         system.debug('== 1. campaignMemberIds ===:  ' + campaignMemberIds);
-         system.debug('==== parentCampaignWrapperList.size() : ' + parentCampaignWrapperList.size());
+         system.debug('==== parentCampaignWrapperList2.size() : ' + parentCampaignWrapperList2.size());
         try {
             
             if(contactId != null && contactId != '') {
@@ -351,23 +461,24 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
                 Set<Id> campaignMemberIdSet = new Set<Id>();
                 map<String, CampaignMember> contactIdCampaignId_CampaignMemberMap = new map<String, CampaignMember>();
 
-                system.debug('==parentCampaignWrapperList===> ' + parentCampaignWrapperList);
+                system.debug('==parentCampaignWrapperList2===> ' + parentCampaignWrapperList2);
                 
-                if(parentCampaignWrapperList !=  null && parentCampaignWrapperList.size() > 0) {
-                    for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
-                        if(wrapper.isCampaignChecked) {
+                if(parentCampaignWrapperList2 !=  null && parentCampaignWrapperList2.size() > 0) {
+                    for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
+                        
                             campaignIdSet.add(wrapper.childCampaignId);
 
                             system.debug('=== wrapper.parentCampaignName ===:  ' + wrapper.parentCampaignAccountId);
                             if(wrapper.parentCampaignAccountId != null) {
                                 CampaignMember campaignMember = new CampaignMember(ContactId = contactId, CampaignId= wrapper.childCampaignId, Account__c = wrapper.parentCampaignAccountId); //RecordTypeId = RT_SHEDULED_VOLUNTEER_ID
+                               // campaignMember.Continue_This_Position__c = 'Yes';
                                 if(campaignMember != null)
                                     campaignMemberList.add(campaignMember);
                             }
                             else {
                                  return addErrorMessageAndRollback(savepoint,'Please contact the council for help with the \'' + wrapper.parentCampaignName + '\' role. Thank You.');
                             }
-                        }
+                       
                     }
                 }
                 system.debug('== campaignIdSet ===:  ' + campaignIdSet);
@@ -485,9 +596,9 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
                 List<Task> taskList = new List<Task>();
                 List<Database.Saveresult> campaignMemberSaveresultList;
 
-                if(parentCampaignWrapperList != null && parentCampaignWrapperList.size() > 0) {
-                    for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
-                        if(wrapper != null && wrapper.isCampaignChecked) {
+                if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0) {
+                    for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
+                        if(wrapper != null ) {
                             CampaignMember campaignMember = new CampaignMember(ContactId = contactId, CampaignId= wrapper.childCampaignId); //RecordTypeId = RT_SHEDULED_VOLUNTEER_ID
 
                             if(campaignMember != null && whyAreYouUnsure != null && whyAreYouUnsure != '') {
@@ -641,7 +752,8 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
                      , Parent.Display_on_Website__c
                      , Parent.Meeting_Start_Date_time__c
                      , Parent.Account__c
-                     , Id
+                     , Id 
+                     ,Parent.Participation__c
                      , Name
                      , Council_Code__c 
                      , GS_Volunteers_Required__c 
@@ -655,7 +767,7 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
                 searchByCampaignName = false;
                 for(Campaign campaign : allCampaignList)
                     if(campaign != null && campaign.Id != null)
-                        innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.GS_Volunteers_Required__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id));
+                        innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.GS_Volunteers_Required__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
 
                 if(unsureCampaignRecordList != null && unsureCampaignRecordList.size() > 0) {
                     for(ParentCampaignWrapper wrapper : unsureCampaignRecordList) {
@@ -718,7 +830,7 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
             for(Campaign campaign : allChildCampaignWithZipCodeList) {
                 if(campaign != null && campaign.Id != null) {
                     if(parentCampaignIdVSDistanceMap.ContainsKey(campaign.Parent.Id)) {
-                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, parentCampaignIdVSDistanceMap.get(campaign.Parent.Id), campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.GS_Volunteers_Required__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id));
+                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, parentCampaignIdVSDistanceMap.get(campaign.Parent.Id), campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.GS_Volunteers_Required__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
                     }
                 }
             }
@@ -830,7 +942,7 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
                  , Meeting_Start_Date_time__c
                  , Meeting_Day_s__c
                  , GS_Volunteers_Required__c 
-                 , rC_Volunteers__Required_Volunteer_Count__c
+                 , rC_Volunteers__Required_Volunteer_Count__c ,Parent.Participation__c
               From Campaign
              where Display_on_Website__c = true
                and Zip_Code__c != null
@@ -855,6 +967,7 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
                  , Parent.Zip_Code__c
                  , Parent.Account__c
                  , Id
+                ,Parent.Participation__c
                  , Name
                  , Zip_Code__c
                  , Council_Code__c
@@ -868,7 +981,7 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
         if(parentCampaignRecordList != null && parentCampaignRecordList.size() > 0) {
             for(Campaign childCampaign :parentCampaignRecordList)
             if(childCampaign != null)
-                unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', childCampaign.Name, childCampaign.Parent.Grade__c, childCampaign.Parent.Meeting_Location__c,  childCampaign.Parent.Meeting_Day_s__c, childCampaign.Parent.Meeting_Start_Date_time__c, String.valueOf(childCampaign.GS_Volunteers_Required__c), childCampaign.Parent.Name, childCampaign.Parent.Account__c, childCampaign.Id));
+                unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', childCampaign.Name, childCampaign.Parent.Grade__c, childCampaign.Parent.Meeting_Location__c,  childCampaign.Parent.Meeting_Day_s__c, childCampaign.Parent.Meeting_Start_Date_time__c, String.valueOf(childCampaign.GS_Volunteers_Required__c), childCampaign.Parent.Name, childCampaign.Parent.Account__c, childCampaign.Id,childCampaign.Parent.Participation__c));
         }
     }
     public User getCurrentUser() {
@@ -902,10 +1015,10 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
         public String campaignVolunteersRequired { get; set; }
         public String parentCampaignName { get; set; }
         public String campaignMeetingStartDatetimeStd { get; set; }
-
+        public Id campaignId { get; set; }
         public String parentCampaignAccountId;
-
-        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strCampaignVolunteersRequired, String strParentCampaignName, String strAccountId, String strChildCampaignId) {
+         public String campaignParticipationType { get; set; }
+        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strCampaignVolunteersRequired, String strParentCampaignName, String strAccountId, String strChildCampaignId,String strCampaignParticipation) {
             isCampaignChecked = campaignChecked;
             campaignDistance = strCampaignDistance;
             childCampaignName = strChildCampaignName;
@@ -917,7 +1030,8 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
             parentCampaignName = strParentCampaignName;
             parentCampaignAccountId = strAccountId;
             childCampaignId = strChildCampaignId;
-            
+              campaignId = strChildCampaignId;
+              campaignParticipationType = strCampaignParticipation;
             if(strCampaignMeetingStartDatetime!=null)
                 campaignMeetingStartDatetimeStd = String.valueOf(strCampaignMeetingStartDatetime.getTime());
         }

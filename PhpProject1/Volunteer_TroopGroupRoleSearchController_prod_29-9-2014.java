@@ -12,7 +12,11 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
     public List<Campaign> parentCampaignList { get; set;}
     public boolean searchByCampaignName ;
     public static Boolean isCouncilHeaderAvailable { get; set; }
-    
+     public Boolean showselectedcampaign { get; set; }
+     public Boolean isunsure { get; set; }
+     public ID deleteselectedrecordid { get; set; }
+     public ID selectedcampaignidd {get; set; }
+     public List<ParentCampaignWrapper> parentCampaignWrapperList2 { get; set;}
     public List<ParentCampaignWrapper> parentCampaignWrapperList { get; set;}
     public Boolean showSearchResultTable {get; set;}
     public List<Integer> pageNumberSet {get; set;}
@@ -51,6 +55,9 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
     private static String getAccountRecordTypeId(String name) {
        return (ACCOUNT_RECORDTYPE_INFO_MAP.get(name) != null) ? ACCOUNT_RECORDTYPE_INFO_MAP.get(name).getRecordTypeId() : null;
     }
+    
+  
+    
 
     public Volunteer_TroopGroupRoleSearchController() {
         counterUnableToLockRow = 0;
@@ -60,7 +67,8 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
         pagerFlag = false;
         searchByCampaignName = false;
         isCouncilHeaderAvailable = false;
-
+            showselectedcampaign =false;
+        parentCampaignWrapperList2 = new List<ParentCampaignWrapper>();
         pageNumberSet = new List<Integer>();
         parentCampaignWrapperList = new List<ParentCampaignWrapper>();
         unsureCampaignRecordList = new List<ParentCampaignWrapper>();
@@ -84,7 +92,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
         system.debug('addUnsureCampaign 1--->');
         addUnsureCampaign();
     }
-
+    
     public PageReference searchTroopORGroupRoleByNameORZip() {
         Savepoint savepoint = Database.setSavepoint();
 
@@ -199,6 +207,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
 
         try {
             pagerFlag = false;
+             parentCampaignWrapperList2.clear();
             parentCampaignWrapperList.clear();
             zipCode = '';
             troopOrGroupName = '';
@@ -231,6 +240,12 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
 
         double radian = 57.295; 
         double theDistance = (Math.sin(latA/radian) * Math.sin(latB/radian) + Math.cos(latA/radian) * Math.cos(latB/radian) * Math.cos((longA - longB)/radian));
+          if(theDistance >1.0){
+             theDistance=1.0;
+          }  
+          if(theDistance <-1.0){
+             theDistance=-1.0;
+          } 
         double dis = (Math.acos(theDistance)) * 69.09 * radian;
         return dis; 
     }
@@ -332,6 +347,100 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
 
         return null;
     }
+    
+
+ public PageReference deleteselectedrecord(){
+            Integer ii=0;
+            if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
+                    for(Integer i=0;i< parentCampaignWrapperList2.size();i++) {
+                            if(parentCampaignWrapperList2[i].campaignId==deleteselectedrecordid)
+                            {
+                            
+                            parentCampaignWrapperList2.remove(i);
+                            
+                            }
+                            
+                            
+                       }
+                 }
+                 
+             return null;
+            }
+            
+ public PageReference displayselectedcampaign(){
+    showselectedcampaign =true;
+    system.debug('displayselectedcampaign==>run');
+    if(parentCampaignWrapperList != null && parentCampaignWrapperList.size() > 0 ) {
+            for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
+                if(wrapper.campaignId==selectedcampaignidd ){
+                       
+                              if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 ) {
+                                        for(ParentCampaignWrapper wrapper2 : parentCampaignWrapperList2) {
+                                            if(wrapper2.campaignId==selectedcampaignidd ){
+                                               showselectedcampaign =false;
+                                            }
+                                        }
+                                        if(showselectedcampaign ==true){
+                                        
+                                                if(wrapper.childCampaignName == 'Unsure')
+                                                {
+                                                         parentCampaignWrapperList2.clear();
+                                                        isunsure =true;
+                                                }
+                                                 if(wrapper.campaignParticipationType == 'IRM')
+                                                {       // to remove other , unsure
+                                                    isunsure =false;
+                                                   if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                     { Integer k=0;
+                                                    Integer ssize=parentCampaignWrapperList2.size();
+                                                    //system.debug('outsideirm list size'+parentCampaignWrapperList2.size());
+                                                     for(Integer l=0;l< ssize ;l++) {
+                                                      if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                     {
+                                                        // system.debug('outside irm i:'+l);
+                                                           if(parentCampaignWrapperList2[l].campaignParticipationType == 'Troop' || parentCampaignWrapperList2[l].childCampaignName == 'Unsure')
+                                                               {
+                                                          parentCampaignWrapperList2.remove(l);
+                                                             l--;
+                                                                 }
+                                                                
+                                                          }
+                                                    
+                                                         }
+                                                     } 
+                                                }
+                                               if((wrapper.campaignParticipationType == 'Troop') && (wrapper.childCampaignName != 'Unsure') )
+                                                {    isunsure =false;
+                                                   if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0 )                                                       //remove unsure , irm
+                                                    {
+                                                          for(Integer j=0;j< parentCampaignWrapperList2.size();j++) {
+                                                          if(parentCampaignWrapperList2[j].campaignParticipationType == 'IRM' || parentCampaignWrapperList2[j].childCampaignName == 'Unsure'){
+                                                            
+                                                             parentCampaignWrapperList2.remove(j);
+                                                            }
+                                                        
+                                                           }
+                                                    }
+                                                }
+                                        
+                                        
+                                             parentCampaignWrapperList2.add(wrapper);
+                                        }
+                            
+                                 }else{     if(wrapper.childCampaignName == 'Unsure')
+                                                {
+                                                        isunsure =true;
+                                                }else{   isunsure =false;                    }
+                                        parentCampaignWrapperList2.add(wrapper);
+                                 }                           
+                }  
+            }
+        }
+        system.debug('unsure===>'+isunsure);
+        system.debug('parentCampaignWrapperList2 ==>run'+parentCampaignWrapperList2);
+    return null;
+    }
+
 
     public Pagereference addCampaignMember() {
 
@@ -354,9 +463,9 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                 map<String, CampaignMember> contactIdCampaignId_CampaignMemberMap = new map<String, CampaignMember>();
 
                 String campaignMemberIds = '';
-                if(parentCampaignWrapperList !=  null && parentCampaignWrapperList.size() > 0) {
-                    for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
-                        if(wrapper.isCampaignChecked) {
+                if(parentCampaignWrapperList2 !=  null && parentCampaignWrapperList2.size() > 0) {
+                    for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
+                     
                             campaignIdSet.add(wrapper.childCampaignId);
 
                             if(wrapper.parentCampaignName != null && wrapper.parentCampaignName != '') {
@@ -372,7 +481,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                             else {
                                  return addErrorMessageAndRollback(savepoint,'Please contact the council for help. Selected Troop doesn\'t have a Parent.');
                             }
-                        }
+                        
                     }
                 }
 
@@ -387,6 +496,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                        and CampaignId IN :campaignIdSet
                 ];
 
+                system.debug('********* existingCampaignMemberList'+existingCampaignMemberList);
                 if(existingCampaignMemberList != null && existingCampaignMemberList.size() > 0) {
                     for(CampaignMember campaignMember : existingCampaignMemberList) {
                         if(campaignMember != null && campaignMember.contactId != null && campaignMember.CampaignId != null) {
@@ -395,7 +505,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                         }
                     }
                 }
-
+                system.debug('********* campaignMemberList'+campaignMemberList);
                 if(campaignMemberList != null && campaignMemberList.size() > 0) {
                     for(CampaignMember campaignMember : campaignMemberList) {
                         if(campaignMember != null && campaignMember.contactId != null && campaignMember.CampaignId != null) {
@@ -509,9 +619,9 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                 List<CampaignMember> campaignMemberList = new List<CampaignMember>();
                 List<Task> taskList = new List<Task>();
                 List<Database.Saveresult> campaignMemberSaveresultList;
-                if(parentCampaignWrapperList != null && parentCampaignWrapperList.size() > 0) {
-                    for(ParentCampaignWrapper wrapper : parentCampaignWrapperList) {
-                        if(wrapper != null && wrapper.isCampaignChecked) {
+                if(parentCampaignWrapperList2 != null && parentCampaignWrapperList2.size() > 0) {
+                    for(ParentCampaignWrapper wrapper : parentCampaignWrapperList2) {
+                        if(wrapper != null ) {
                             CampaignMember campaignMember = new CampaignMember(ContactId = contactId, CampaignId= wrapper.childCampaignId); //RecordTypeId = RT_SHEDULED_VOLUNTEER_ID
 
                             if(campaignMember != null && whyAreYouUnsure != null && whyAreYouUnsure != '') {
@@ -572,7 +682,6 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                 }else {
                     //VolunteerRegistrationUtilty.updateSiteURLAndContact('Volunteer_JoinMembershipInformation' + '?ContactId='+contactId + '&CouncilId='+councilId+'&CampaignMemberIds'+campaignMemberIds, contact);
                     VolunteerRegistrationUtilty.updateSiteURLAndContact('Volunteer_JoinMembershipInformation' + '?ContactId='+contactId + '&CouncilId='+councilId+'&CampaignMemberIds='+campaignMemberIds, contact);
-                    
                             Pagereference JoinMembershipInformationPage = Page.Volunteer_JoinMembershipInformation;//new Pagereference('/apex/Volunteer_JoinMembershipInformation');
                             if(contactId != null && contactId != '')
                                 JoinMembershipInformationPage.getParameters().put('ContactId', contactId);
@@ -647,7 +756,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                 searchByCampaignName = false;
                 for(Campaign campaign : allCampaignList)
                     if(campaign != null && campaign.Id != null)
-                        innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id));
+                        innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
 
                 if(unsureCampaignRecordList != null && unsureCampaignRecordList.size() > 0) {
                     for(ParentCampaignWrapper wrapper : unsureCampaignRecordList) {
@@ -708,7 +817,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
             for(Campaign campaign : allChildCampaignWithZipCodeList) {
                 if(campaign != null && campaign.Id != null) {
                     if(parentCampaignIdVSDistanceMap.ContainsKey(campaign.Parent.Id)) {
-                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, parentCampaignIdVSDistanceMap.get(campaign.Parent.Id), campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id));
+                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, parentCampaignIdVSDistanceMap.get(campaign.Parent.Id), campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
                     }
                 }
             }
@@ -833,7 +942,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                  , Meeting_Start_Date_time__c
                  , Meeting_Day_s__c
                  , GS_Volunteers_Required__c 
-                 , rC_Volunteers__Required_Volunteer_Count__c
+                 , rC_Volunteers__Required_Volunteer_Count__c,Parent.Participation__c
                  , Volunteer_Openings_Remaining__c
               From Campaign
              where Display_on_Website__c = true
@@ -862,6 +971,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                  , Parent.Zip_Code__c
                  , Parent.Account__c
                  , Id
+                 ,Parent.Participation__c
                  , Name
                  , Zip_Code__c
                  , Council_Code__c
@@ -878,7 +988,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
         if(parentCampaignRecordList != null && parentCampaignRecordList.size() > 0) {
             for(Campaign childCampaign :parentCampaignRecordList)
             if(childCampaign != null)
-                unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', childCampaign.Name, childCampaign.Parent.Grade__c, childCampaign.Parent.Meeting_Location__c,  childCampaign.Parent.Meeting_Day_s__c, childCampaign.Parent.Meeting_Start_Date_time__c, String.valueOf(childCampaign.Volunteer_Openings_Remaining__c), childCampaign.Parent.Name, childCampaign.Parent.Account__c, childCampaign.Id));
+                unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', childCampaign.Name, childCampaign.Parent.Grade__c, childCampaign.Parent.Meeting_Location__c,  childCampaign.Parent.Meeting_Day_s__c, childCampaign.Parent.Meeting_Start_Date_time__c, String.valueOf(childCampaign.Volunteer_Openings_Remaining__c), childCampaign.Parent.Name, childCampaign.Parent.Account__c, childCampaign.Id,childCampaign.Parent.Participation__c));
         }
     }
 
@@ -895,10 +1005,10 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
         public String campaignVolunteersRequired { get; set; }
         public String parentCampaignName { get; set; }
         public String campaignMeetingStartDatetimeStd { get; set; }
-
+         public Id campaignId { get; set; }
         public String parentCampaignAccountId;
-
-        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strCampaignVolunteersRequired, String strParentCampaignName, String strAccountId, String strChildCampaignId) {
+        public String campaignParticipationType { get; set; }
+        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strCampaignVolunteersRequired, String strParentCampaignName, String strAccountId, String strChildCampaignId,String strCampaignParticipation) {
             isCampaignChecked = campaignChecked;
             campaignDistance = strCampaignDistance;
             childCampaignName = strChildCampaignName;
@@ -910,7 +1020,8 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
             parentCampaignName = strParentCampaignName;
             parentCampaignAccountId = strAccountId;
             childCampaignId = strChildCampaignId;
-            
+               campaignId = strChildCampaignId;
+              campaignParticipationType = strCampaignParticipation;
             if(strCampaignMeetingStartDatetime!=null)
               campaignMeetingStartDatetimeStd = String.valueOf(strCampaignMeetingStartDatetime.getTime());
         }

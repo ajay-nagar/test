@@ -46,6 +46,9 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
     
     public Boolean confirmTransactions { set; get; }
     
+    public String primaryContactFullName;
+    public String primaryContactEmail;
+    
     public List<Opportunity> opportunityTransactionList { get; set;}
     private Zip_Code__c matchingZipCode = new Zip_Code__c();
     private User systemAdminUser;
@@ -57,17 +60,19 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
     private string oldCampaign = '';
     private CampaignMember oldCampaignMember;
     public Community_GirlPaymentProcessing() {
-        OldDonationopportunity  =  new Opportunity();
+
+        OldDonationopportunity =  new Opportunity();
         acceptGSPromiseAndLaw = false;
         NotAtThisTime = 0;
         total = 0;
         donationPriseAmount = 0;
         confirmTransactions = false;
         noDelete = false;
-        oldCampaignMember = new CampaignMember();
+        systemAdminUser = GirlRegistrationUtilty.getSystemAdminUser();
         donationMap = new Map<String, decimal>();
         opportunityTransactionList = new List<Opportunity>();
         CampaignMemberList = new List<CampaignMember>();
+        oldCampaignMember = new CampaignMember();
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
             contactId = Apexpages.currentPage().getParameters().get('GirlContactId');
 
@@ -133,24 +138,20 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
             }
         } 
         List<Contact> contactList = [
-                Select MailingPostalCode, Account.OwnerId
-                 From Contact 
-                where Id= :contactId
-            ];
-            Contact contact = (contactList != null && contactList.size() > 0 ) ? contactList[0] : new Contact();
-            
-            if(contact != null && contact.Id != null) {                
-                zipCode = (contact.MailingPostalCode != null) ? contact.MailingPostalCode : '';
-                systemAdminUser = [Select Id
-                     , LastName
-                     , IsActive
-                     , Profile.Name
-                     , Profile.Id
-                     , ProfileId  from User where Id = :contact.Account.OwnerId
-                   and IsActive = true 
-                   and UserRoleId != null
-                limit 1];
-            }
+            Select Id
+                 , Name
+                 , Email
+                 , MailingPostalCode
+             From Contact 
+            where Id= :contactId
+        ];
+        Contact contact = (contactList != null && contactList.size() > 0 ) ? contactList[0] : new Contact();
+
+        if(contact != null && contact.Id != null) {                
+            zipCode = (contact.MailingPostalCode != null) ? contact.MailingPostalCode : '';
+            primaryContactFullName = contact.Name;
+            primaryContactEmail = contact.Email;
+        }
     }
      public boolean pastDate() {
         boolean pastBoolean = true;
@@ -313,8 +314,9 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
 
                 if(campaignMembersId != null && campaignMembersId != '') {
                     List<String> campaignMemberIdList = campaignMembersId.trim().split(',');
-                    oldCampaign = campaignMemberIdList[campaignMemberIdList.size()-1];
+
                     if(campaignMemberIdList != null && campaignMemberIdList.size() > 0){
+                        oldCampaign = campaignMemberIdList[campaignMemberIdList.size()-1];
                         for(String campaignMember : campaignMemberIdList)
                             campaignMemberIdSet.add(campaignMember.trim());
 
@@ -332,12 +334,7 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
                             tempurl = tempurl.substring(0,tempurl.length()-30) + '&donationid='+OldDonationopportunity.Id; 
                             oldCampaignMember.Pending_Payment_URL__c = tempurl;
                             update oldCampaignMember;
-                        } else if(oldCampaignMember.Pending_Payment_URL__c!='' && oldCampaignMember.Pending_Payment_URL__c.contains('donationid') && OldDonationopportunity.Id ==null)  {
-                            string tempurl = oldCampaignMember.Pending_Payment_URL__c;
-                            tempurl = tempurl.substring(0,tempurl.length()-30); 
-                            oldCampaignMember.Pending_Payment_URL__c = tempurl;
-                            update oldCampaignMember;
-                        }   
+                        }  
                         //List<Contact> contactList = [
                         //    Select Id
                         //         , Name
@@ -430,12 +427,15 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_NUMBER => cardNumber,
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_CVV2 => securityCode,
                     PaymentServicer_PaypalTransaction.FULLNAME => cardHolderName,
+                    PaymentServicer_PaypalTransaction.CUSTOM_VAR => primaryContactFullName,
                     PaymentServicer_PaypalTransaction.ADDRESS => address,
                     PaymentServicer_PaypalTransaction.ADDR_CITY => city,
                     PaymentServicer_PaypalTransaction.ADDR_STATE => state,
                     PaymentServicer_PaypalTransaction.ADDR_COUNTRY_CODE => 'US',
                     PaymentServicer_PaypalTransaction.ZIPCODE => zipCode,
-                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount
+                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount,
+                    PaymentServicer_PaypalTransaction.INVOICE_ID => '' + opportunityTransaction.id,
+                    PaymentServicer_PaypalTransaction.CONTACT_EMAIL => primaryContactEmail
                 }, opportunityTransaction.rC_Giving__Parent__r.CampaignId);
 
                 // Success/failure?
@@ -500,7 +500,7 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
 
         try {
             if(lstCampaignMemberShare.size()>0)
-            insert lstCampaignMemberShare;
+            //insert lstCampaignMemberShare;
             updateOpportunityTransactionChargeableList(opportunityTransactionChargeableList, 0);
             if(sendReciept) {
             oldCampaignMember.Pending_Payment_URL__c = '';

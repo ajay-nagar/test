@@ -57,12 +57,15 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
     public String   campaignMembersId;
     public String   councilId;
     public decimal  donationPriseAmount;
+    public String primaryContactFullName;
+    public String primaryContactEmail;
 
     private Opportunity membershipOpportunity;
     private Opportunity CouncilMembershipOpp;
     private Opportunity OldDonationopportunity;
     private PricebookEntry donationPricebookEntry;
     private Account councilAccount;
+    private Contact parentContact;
     
     private map<Id, PricebookEntry> priceBookEntryMap;
     private map<String, GSA_payment__c> paymentOptionsMap;
@@ -135,7 +138,22 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
 
         if(Apexpages.currentPage().getParameters().containsKey('CampaignMemberIds'))
             campaignMembersId = Apexpages.currentPage().getParameters().get('CampaignMemberIds');
+        
+        List<Contact> parentContactList = [
+            SELECT Id
+                 , Name
+                 , Email
+              FROM Contact
+             WHERE Id = :parentContactId
+        ];
 
+        parentContact = (parentContactList != null && parentContactList.size() > 0) ? parentContactList[0]: new Contact();
+        primaryContactFullName = parentContact.Name;
+        primaryContactEmail = parentContact.Email;
+
+        system.debug(' parentContact ==: ' + parentContact
+                      + '\n primaryContactFullName ==: ' + primaryContactFullName);
+                      
         if(membershipOppStrIdSet != null && membershipOppStrIdSet.size() > 0) {
             membershipOpportunityList = [
                 select Id
@@ -434,12 +452,15 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_NUMBER => cardNumber,
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_CVV2 => securityCode,
                     PaymentServicer_PaypalTransaction.FULLNAME => cardHolderName,
+                    PaymentServicer_PaypalTransaction.CUSTOM_VAR => primaryContactFullName,
                     PaymentServicer_PaypalTransaction.ADDRESS => address,
                     PaymentServicer_PaypalTransaction.ADDR_CITY => city,
                     PaymentServicer_PaypalTransaction.ADDR_STATE => state,
                     PaymentServicer_PaypalTransaction.ADDR_COUNTRY_CODE => 'US',
                     PaymentServicer_PaypalTransaction.ZIPCODE => zipCode,
-                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount
+                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount,
+                    PaymentServicer_PaypalTransaction.INVOICE_ID => '' + opportunityTransaction.id,
+                    PaymentServicer_PaypalTransaction.CONTACT_EMAIL => primaryContactEmail
                 }, opportunityTransaction.rC_Giving__Parent__r.CampaignId);
 
                 // Success/failure?
@@ -482,20 +503,21 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
             return null;
         }
 
-        // Done
+        /*/ Done
         List<Contact> parentContactList = [
             SELECT Name, Id
               FROM Contact
              WHERE Id = :parentContactId
-        ];
+        ];*/
 
-        if (parentContactList.isEmpty() == false) {
+        //if (parentContactList.isEmpty() == false) {
+        if(parentContact != null && parentContact.Id != null){
             GirlRegistrationUtilty.updateSiteURLAndContactForGirl(''
                 + '/Girl_DemographicsInformation'
                 + '?GirlContactId='+ contactId
                 + '&CouncilId=' + councilId
                 + '&CampaignMemberIds=' + campaignMembersId
-            , parentContactList[0]);
+            , parentContact);
         }
 
         PageReference demographicsInfoPage = Page.Girl_DemographicsInformation;

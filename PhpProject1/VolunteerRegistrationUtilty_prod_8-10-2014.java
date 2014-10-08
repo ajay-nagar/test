@@ -42,13 +42,14 @@ public without sharing class VolunteerRegistrationUtilty {
     public static Zip_Code__c getZipCode(String zipCode) {
         List<Zip_Code__c> zipCodeList;
         if(zipCode.length() > 5){
+            String zipCodeToSearch = zipCode.substring(0, 5) + '%';
             zipCodeList =[
               Select geo_location__Longitude__s
                  , geo_location__Latitude__s
                  , Zip_Code_Unique__c
                  , Name
                 From Zip_Code__c 
-                where Zip_Code_Unique__c = :zipCode.substring(0, 5)
+                where Zip_Code_Unique__c like :zipCodeToSearch //zipCode.substring(0, 5)
              ];
         }else{
             zipCodeList =[
@@ -598,13 +599,14 @@ public without sharing class VolunteerRegistrationUtilty {
         String unsureName = ' and Parent.Name != ' +'\'' + unsure + '\'';
         String zipCodeUniqueSet = ' and Parent.Zip_Code__c IN :zipCodeSet ';
         String orderBy = ' order By Name,Parent.Name  ASC';
- 
+        String isvolunteercampaign ='and Recordtypeid ='+' \''+ VolunteerRegistrationUtilty.getCampaignRecordTypeId(VolunteerRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE) +'\'';
+
         if(isTroopOrZip.equalsIgnoreCase('TroopNameAndZipCode'))
-            baseQuery = selectQuery + whereClause + parentZipCode +' and '+ troopName + displayWebSite + unsureName + zipCodeUniqueSet + orderBy;
+            baseQuery = selectQuery + whereClause + parentZipCode +' and '+ troopName + displayWebSite + isvolunteercampaign + unsureName + zipCodeUniqueSet + orderBy;
         else if(isTroopOrZip.equalsIgnoreCase('TroopName'))
-            baseQuery = selectQuery + whereClause + troopName + displayWebSite + unsureName;
+            baseQuery = selectQuery + whereClause + troopName + displayWebSite + isvolunteercampaign + unsureName;
         else if(isTroopOrZip.equalsIgnoreCase('ZipCode'))
-            baseQuery = selectQuery + whereClause + parentZipCode + displayWebSite + unsureName + zipCodeUniqueSet + orderBy; 
+            baseQuery = selectQuery + whereClause + parentZipCode + displayWebSite + isvolunteercampaign + unsureName + zipCodeUniqueSet + orderBy; 
 
         system.debug('==========>'+baseQuery);
         List<Campaign> campaignMemberList = database.query(baseQuery);

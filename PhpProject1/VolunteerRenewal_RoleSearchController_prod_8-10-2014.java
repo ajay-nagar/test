@@ -143,7 +143,42 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
              if(searchByCampaignName == true) {
                 if(newTempWrapperList.size() == 0)
                     parentCampaignWrapperList.clear();
+                    List<Campaign> unsureCampaignList = [
+                    Select Parent.Name
+                 , ParentId
+                 , Parent.Grade__c
+                 , Parent.Meeting_Day_s__c
+                 , Parent.Meeting_Location__c
+                 , Parent.rC_Volunteers__Required_Volunteer_Count__c
+                 , Parent.Display_on_Website__c
+                 , Parent.Meeting_Start_Date_time__c
+                 , Parent.Zip_Code__c
+                 , Parent.Account__c
+                 , Id
+                 ,Parent.Participation__c
+                 , Name
+                 , Zip_Code__c
+                 , Council_Code__c
+                 , GS_Volunteers_Required__c 
+                 , Volunteer_Openings_Remaining__c 
+              From Campaign 
+             where Parent.Name = 'Unsure'
+               and ParentId != null
+               and Display_on_Website__c = true
+               and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
+             limit 1
+                ];
+                for(Campaign campaign : unsureCampaignList){
+                 parentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
+                }  
+                                        
+                 if(troopOrGroupName!='unsure' ){
                 return addErrorMessageAndRollback(savepoint,'No Troop/Groups with this Name Exists.');
+                 }else{
+                 return null; }
+                    
+                    
+               
              }
             if(newTempWrapperList.size() == 0) {
                 parentCampaignWrapperList.clear();
@@ -760,6 +795,8 @@ public PageReference deleteselectedrecord(){
                   From Campaign 
                  where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
                    and Display_on_Website__c = true
+                   and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
+                   and Parent.Name !='unsure'
             ];
             
         system.debug('allCampaignList=====>'+allCampaignList);

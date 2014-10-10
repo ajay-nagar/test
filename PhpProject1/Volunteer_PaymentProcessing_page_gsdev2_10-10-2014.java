@@ -85,7 +85,7 @@ window.onunload = function() { void (0) }
               window.location.href = baseUrl + 'InMaintenance';
         }
         $("body").show();
-     </script>
+    </script>
 
     <apex:form styleClass="form-horizontal">
     <c:VolunteerRegistrationHeader />
@@ -229,7 +229,7 @@ window.onunload = function() { void (0) }
           </div>
           <div class="col-sm-3" style="margin-bottom: 30px!important;">
             <apex:commandButton value="Process Charges" id="test" action="{!processPaypalTransactions}" styleClass="btn button_reg submitButton2" style="width:100%!important;"/>
-          <apex:commandButton value="Processing..." disabled="true" styleClass="btn button_reg submitButtonprocessing2" style="width:100%!important;display:none;"/>
+          <apex:commandButton value="Processing..." disabled="true" styleClass="btn button_reg submitButtonprocessing2" style="width:100%!important;display: none;"/>
           </div>
          
         </apex:outputPanel>
@@ -379,7 +379,7 @@ window.onunload = function() { void (0) }
                 <div class="col-sm-4"></div>
                 <div class="col-sm-3">
                     <apex:commandButton value="Confirm" id="nextBtn" action="{!processMyOrder}" styleClass="button_reg submitButton" style="width: 280px!important;Margin-left: 95px!important;" status="buttons_group_status"/>
-                    <apex:commandButton value="Processing..." disabled="true" styleClass="button_reg submitButtonprocessing" style="width: 280px!important;Margin-left: 95px!important;display:none;" />
+                    <apex:commandButton value="Processing..." disabled="true" styleClass="button_reg submitButtonprocessing" style="width: 280px!important;Margin-left: 95px!important;display: none;" />
                 </div>
             </div>
             </apex:outputPanel>

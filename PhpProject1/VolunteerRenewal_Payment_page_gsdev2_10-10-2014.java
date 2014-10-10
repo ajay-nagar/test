@@ -192,7 +192,7 @@
         </div>
         <div class="col-sm-3" style="margin-bottom: 30px!important;">
         <apex:commandButton value="Process Charges" id="test" action="{!processPaypalTransactions}" styleClass="btn button_reg btncharge" />
-        <apex:commandButton value="Processing..." id="testdisabled" disabled="true" styleClass="btn button_reg btnprocessing" style="display:none;" />
+        <apex:commandButton value="Processing..." id="testdisabled" disabled="true" styleClass="btn button_reg btnprocessing" style="display: none;"/>
         </div>
         
         </apex:outputPanel>
@@ -331,7 +331,7 @@
                <div class="col-sm-5">&nbsp;</div> 
                 <div class="col-sm-3 butright">
                     <apex:commandButton value="Confirm" id="nextBtn" action="{!processMyOrder}" styleClass="button_reg submitButton" status="buttons_group_status"></apex:commandButton>
-                    <apex:commandButton value="Processing..." id="nextBtnprocess" disabled="true" action="{!processMyOrder}" styleClass="btn button_reg submitButtonProcessing" style="margin-left: 8px;display:none;" ></apex:commandButton>
+                    <apex:commandButton value="Processing..." id="nextBtnprocess" disabled="true" action="{!processMyOrder}" styleClass="btn button_reg submitButtonProcessing" style="margin-left: 8px;display: none;" ></apex:commandButton>
                 </div>
             </div>
             </apex:outputPanel>

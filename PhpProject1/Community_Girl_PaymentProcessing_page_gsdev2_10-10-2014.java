@@ -252,7 +252,7 @@ window.onunload = function() { void (0) }
 <!-- c------------------------------------------------------------------------------------------------------------------------c -->
     <apex:outputPanel layout="block" rendered="{!AND(confirmTransactions)}" style="margin-bottom: 2em;">
         <div class="col-sm-3" style="margin-bottom: 30px!important;">
-        <apex:commandButton value="Back" id="test2" action="{!processPaypalTransactionsUndo}" styleClass="btn btnback button_reg"/>
+        <apex:commandButton value="Back" id="test2" action="{!processPaypalTransactionsUndo}" styleClass="btn button_reg"/>
         </div>
         <div class="col-sm-3" style="margin-bottom: 30px!important;">
         <apex:commandButton value="Process Charges" id="test" action="{!processPaypalTransactions}" styleClass="btn button_reg processChange"/>
@@ -462,25 +462,10 @@ window.onunload = function() { void (0) }
             </div>
             </div>
             </div> 
-<script type="text/javascript">
- $(".submitButton").show();
-        $(".submitButtonprocessing2").hide();
-        $(".processChange").show();
-        $(".btnback").show();
-        $(".processNone").hide();
-
-        $('.processChange').click(function(){
-            console.log('Submit button clicked...');
-            $(".processChange").hide();
-            $(".processNone").show();
-            $(".btnback").hide();
-              $('#mybtnPopup').modal('toggle');
-        });
-   
-   
-   
+<script>
+    $(document).ready(function(){
         var selectedAmount = $("#donationAmount").val();
-            selectedAmount =  Math.round(selectedAmount);
+               selectedAmount =  Math.round(selectedAmount);
        
         if(selectedAmount == 15){
          $('#DonationRadios1').prop('checked', true);
@@ -511,8 +496,18 @@ window.onunload = function() { void (0) }
           $('#optionsRadios5').prop('checked', false);
           $('#otherPaymentInputText').val(selectedAmount);
         }
- 
-        
+ /* ===================================================================================================================== */       
+        $(".submitButton").show();
+        $(".submitButtonprocessing2").hide();
+        $(".processChange").show();
+        $(".processNone").hide();
+
+        $('.processChange').click(function(){
+            console.log('Submit button clicked...');
+            $(".processChange").hide();
+            $(".processNone").show();
+              $('#mybtnPopup').modal('toggle');
+        });
             
             
             
@@ -945,7 +940,7 @@ window.onunload = function() { void (0) }
             }
             return false;
         });              
-   
+   });
 
 </script>
     

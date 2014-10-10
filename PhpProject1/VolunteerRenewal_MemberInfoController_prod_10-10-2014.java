@@ -438,6 +438,7 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
                     Select Id
                          , Name
                          , Council__c
+                         , Council__r.Council_Header_Url__c
                          , Zip_Code_Unique__c
                          , City__c
                          , Recruiter__c
@@ -546,6 +547,123 @@ public class VolunteerRenewal_MemberInfoController extends SobjectExtension{
             }
 
             if (booleanOppMembershipOnPaper || booleanGrantRequested) {
+            
+            /*******************************************************************************************************/
+            if(newOpportunity!=null) {
+            //Create G Email template Content
+            
+            string sCouncil_Header_Urlc;
+            string sService_Feec;
+            string sAdult_Contact_First_Namec='';
+            //string sGirl_First_Namec='';
+            string sCouncil_Namec='';
+            string sCouncil_Addressc='';
+            string sContactrName='';
+            string sAuto_Givingc='';
+            string srC_GivingGiving_Amountc='';
+            string sOwnerName='';
+            string sOwner_Titlec='';
+            string sOwner_Phonec='';
+            string sOwner_Emailc='';
+    
+            
+            sCouncil_Header_Urlc =zipCodeList[0].Council__r.Council_Header_Url__c!=null?zipCodeList[0].Council__r.Council_Header_Url__c:'';
+
+             Opportunity newopp=[select ID
+            ,Adult_Contact_First_Name__c
+            ,Girl_First_Name__c
+            ,Council_Name__c
+            ,Council_Address__c
+            ,Contact__r.Name
+            ,Auto_Giving__c
+            ,rC_Giving__Giving_Amount__c
+            ,Owner.Name
+            ,Owner_Title__c
+            ,Owner_Phone__c
+            ,Owner_Email__c 
+            from Opportunity where Id=:newOpportunity.Id
+            limit 1
+            ];
+                            
+            sAdult_Contact_First_Namec=newopp.Adult_Contact_First_Name__c!=null?newopp.Adult_Contact_First_Name__c:'';
+            //sGirl_First_Namec=newopp.Girl_First_Name__c!=null?newopp.Girl_First_Name__c:'';
+            sCouncil_Namec=newopp.Council_Name__c!=null?newopp.Council_Name__c:'';
+            sCouncil_Addressc=newopp.Council_Address__c!=null?newopp.Council_Address__c:'';
+            sContactrName=newopp.Contact__r.Name!=null?newopp.Contact__r.Name:'';
+            sAuto_Givingc=newopp.Auto_Giving__c!=null?newopp.Auto_Giving__c:'';
+            srC_GivingGiving_Amountc=newopp.rC_Giving__Giving_Amount__c!=null?string.valueof(newopp.rC_Giving__Giving_Amount__c):''; //string.valueof(sService_Feec==null?newopp.rC_Giving__Giving_Amount__c:(newopp.rC_Giving__Giving_Amount__c+Decimal.ValueOf(sService_Feec)));
+            sOwnerName=newopp.Owner.Name!=null?newopp.Owner.Name:'';
+            sOwner_Titlec=newopp.Owner_Title__c!=null?newopp.Owner_Title__c:'';
+            sOwner_Phonec=newopp.Owner_Phone__c!=null?newopp.Owner_Phone__c:'';
+            sOwner_Emailc=newopp.Owner_Email__c!=null?newopp.Owner_Email__c:'';
+            
+            
+    string logo = '<div style="padding-left:10px;height:103px;background-color:#00AE58;">';
+    if(sCouncil_Header_Urlc != null && sCouncil_Header_Urlc != '') {
+        logo = logo + '<img src="' + sCouncil_Header_Urlc + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
+    } else {
+        logo = logo + '<img src="' + Label.DefaultCouncilLogo + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
+    }
+     logo = logo + '</div>';
+            string Email7='';
+            Email7 +=logo;
+            
+            
+            Email7 +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
+            Email7 +='<p>Our volunteers are the heart of the Girl Scout organization - they make it possible for girls to shine in bold new ways. Before we can get you started in your volunteer role, we need to welcome you as an official member.</p>';            
+            Email7 +='<p>You’ve indicated that you need to pay with cash or check. If you’re writing a check, please include your confirmation number on it; for both cash and checks, please print this email and mail or bring it, along with payment, to:<br/><br/>'+sCouncil_Namec+'<br/>'+sCouncil_Addressc+'</p>';
+            Email7 +='<p>From:</p>';
+            Email7 +=' <p>'+sContactrName+'<br/> Confirmation number: '+sAuto_Givingc+'<br/> Amount due: $ '+srC_GivingGiving_Amountc+'</p>';
+            Email7 +='<p>Once we process your payment, we’ll send you a confirmation email. Keep in mind that it may take a few business days.</p>';
+            Email7 +='<p>If you have questions, feel free to reach out. I’m here to help.</p>';
+            Email7 +='<p>Have a great day!</p>';
+            Email7 +='<p>'+sOwnerName+'<br/>'+sOwner_Titlec+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';
+            system.debug('7Email==>'+Email7 );
+           
+           
+            string Email8='';
+            Email8 +=logo;
+            
+            
+            Email8 +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
+            Email8 +='<p>We can’t wait to have you on board as a Girl Scout volunteer! A rich and rewarding - and fun! - adventure awaits you. But first we need you to complete the registration process.</p>';  
+
+            //Email8 +='<p>Payment does take a few days to process once we receive it, so if you’ve already sent yours please disregard this email. Once we’ve processed your payment, we’ll be sure to send you an email to confirm and let you know how to complete the next step in the process.</p>';
+            Email8 +='<p>You indicated that you’ll pay with cash or check. If you’re writing a check, please include your confirmation number on it; for both cash and checks, please print this email and mail or bring it, along with payment, to:</p>';
+            Email8 +='<p>'+sCouncil_Namec+'<br/>'+sCouncil_Addressc+'</p>';
+            Email8 +='<p>From:</p>';
+            Email8 +=' <p>'+sContactrName+'<br/> Confirmation number: '+sAuto_Givingc+'<br/> Amount due: $ '+srC_GivingGiving_Amountc+'</p>';
+            Email8 +='<p>Payment does take a few days to process once we receive it, so if you’ve already sent yours please disregard this email. Once we’ve processed your payment, we’ll be sure to send you an email to confirm and let you know how to complete the next step in the process.</p>';
+            Email8 +='<p>If you have questions or need me to talk you through the process, I’m here to help.</p>';
+            Email8 +='<p>Have a great day!</p>';
+            Email8 +='<p>'+sOwnerName+'<br/>'+sOwner_Titlec+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';                        
+            system.debug('8Email==>'+Email8);
+            
+            string Email9='';
+            Email9 +=logo;
+            Email9 +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
+            Email9 +='<p>Thank you for your interest in volunteering with Girl Scouts!</p>'; 
+            Email9 +='<p>You indicated that you’d be paying the membership fee with cash or check, but we haven’t received anything yet. I just wanted to check in and see if you have questions or would like some help completing the registration process.</p>';           
+            Email9 +='<p>Payment does take a few days to process once we receive it, so if you’ve already sent yours please disregard this email. Once we’ve processed your payment, we’ll be sure to let you know.</p>';
+            Email9 +='<p>When you’re ready, if writing a check, please include your confirmation number on it. For both cash and checks, please print this email and mail or bring it, along with payment, to:</p>';
+            Email9 +='<p>'+sCouncil_Namec+'<br/>'+sCouncil_Addressc+'</p>';
+            Email9 +='<p>From:</p>';
+            Email9 +=' <p>'+sContactrName+'<br/> Confirmation number: '+sAuto_Givingc+'<br/> Amount due: $ '+srC_GivingGiving_Amountc+'</p>';
+            Email9 +='<p>If you have questions, reach out to me anytime.</p>';
+            Email9 +='<p>Have a great day!</p>';
+            Email9 +='<p>'+sOwnerName+'<br/>'+sOwner_Titlec+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';
+    
+            system.debug('9Email==>'+Email9 );
+                
+                
+                newOpportunity.Email_7__c = Email7 ; //'<b>Hi Testing,</b><br/>Email G for customer community!';
+                newOpportunity.Email_8__c = Email8 ; //'<b>Hi Testing,</b><br/>Email H for customer community!';
+                newOpportunity.Email_9__c = Email9 ; //'<b>Hi Testing,</b><br/>Email I for customer community!';
+                update newOpportunity;
+            }
+/**************************************************************************************************************/   
+
+
                 PageReference landingPage = Page.VolunteerRenewal_MemberInfoThankYou;
                 if(contact != null && contact.Id != null)
                     landingPage.getParameters().put('ContactId', contact.Id);

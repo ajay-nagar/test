@@ -122,6 +122,81 @@ public without sharing class VolunteerWelcomePageController {
                    os.CampaignAccessLevel = 'Read';
                    os.UserOrGroupId = UserInfo.getUserId();
                    lstCampaignMemberShare.add(os);
+                   
+                   /***********************************************************************************************************/
+
+        string sCouncil_Header_Urlc;
+        string sCampaign_Namec='';
+        
+        string sConFirst_Namec='';
+        string sCOwnerName='';
+        string sCOwner_Titlec='';
+        string sCOwner_Phonec='';
+        string sCOwner_Emailc='';
+        
+        Contact newcon=[Select Id
+            ,Name
+            ,FirstName
+            ,MailingPostalCode
+            ,Owner_Email__c
+            ,Owner_Phone__c
+            ,Owner_Title__c
+            ,Owner.Name
+            from contact where id=:campaignMember.ContactId limit 1 ];
+            if(newcon!=null) {
+            string zipcode= (newcon.MailingPostalCode != null && newcon.MailingPostalCode.length() > 5) ? newcon.MailingPostalCode.substring(0, 5) + '%' : newcon.MailingPostalCode + '%';
+            Zip_Code__c[] zipCodeList = new Zip_Code__c[] {};
+            if(zipCode != null && zipCode != '') {
+                zipCodeList = [
+                    Select Id
+                         , Name
+                         , Council__c
+                         , Zip_Code_Unique__c
+                         , Council__r.Council_Header_Url__c
+                      From Zip_Code__c
+                     where Zip_Code_Unique__c like :zipCode limit 1
+                ];
+            }
+            
+            if(zipCodeList.size()>0)
+            sCouncil_Header_Urlc =zipCodeList[0].Council__r.Council_Header_Url__c!=null?zipCodeList[0].Council__r.Council_Header_Url__c:'';
+            
+            sCampaign_Namec=campaignMember.Campaign.Name!=null?campaignMember.Campaign.Name:'';
+            
+            sCOwnerName=newcon.Owner.Name!=null?newcon.Owner.Name:'';
+            sCOwner_Titlec=newcon.Owner_Title__c!=null?newcon.Owner_Title__c:'';
+            sCOwner_Phonec=newcon.Owner_Phone__c!=null?newcon.Owner_Phone__c:'';
+            sCOwner_Emailc=newcon.Owner_Email__c!=null?newcon.Owner_Email__c:'';
+            sConFirst_Namec=newcon.FirstName!=null?newcon.FirstName:'';
+            
+            string logo = '<div style="padding-left:10px;height:103px;background-color:#00AE58;">';
+            if(sCouncil_Header_Urlc != null && sCouncil_Header_Urlc != '') {
+                logo = logo + '<img src="' + sCouncil_Header_Urlc + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
+            } else {
+                logo = logo + '<img src="' + Label.DefaultCouncilLogo + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
+            }
+            logo = logo + '</div>';
+            
+            string Email16='';
+            Email16 +=logo;
+            
+            
+            Email16 +='<p>Hi ' + sConFirst_Namec+',</p>';
+            Email16 +='<p>Congratulations! You are now a fully certified Girl Scout volunteer! Welcome aboard - we’re so glad to have you.</p>';            
+            Email16 +='<p> You have been appointed to the following volunteer position(s):</p>';
+            Email16 +='<p>'+sCampaign_Namec+'</p>';
+            Email16 +='<p> Excited to start the fun? You’ll be hearing from someone about your new role soon.</p>';
+            Email16 +='<p>In the meantime, if you have any questions, don’t hesitate to reach out.</p>';
+            Email16 +='<p>Thank you, and again, welcome to Girl Scouts! It’s the support of volunteers like you who make it possible for girls to shine and unlock their potential.</p>';
+            Email16 +='<p>Sincerely,</p>';
+            Email16 +='<p>'+sCOwnerName+'<br/>'+sCOwner_Titlec+'<br/>'+sCOwner_Phonec+'<br/>'+sCOwner_Emailc+'</p>';
+            system.debug('Email16 ==>'+Email16 );
+            campaignMember.Email_16__c=Email16 ;
+            }
+
+/***********************************************************************************************************/
+
+
                 }
                 if(isPrimary == false) {
                     campaignMemberListFromContact[0].Primary__c = true;
@@ -134,8 +209,8 @@ public without sharing class VolunteerWelcomePageController {
                     }
                 }
             }
-            if(lstCampaignMemberShare.size()>0)
-            insert lstCampaignMemberShare;
+            //if(lstCampaignMemberShare.size()>0)
+            //insert lstCampaignMemberShare;
         Contact objContact = new Contact();
         objContact.id = userList[0].contactId;
         objContact.Welcome_Q1__c = selectVideoValue;

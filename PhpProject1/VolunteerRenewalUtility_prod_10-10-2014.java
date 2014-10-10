@@ -604,10 +604,12 @@ public without sharing class VolunteerRenewalUtility {
                     , Secondary_Role__c
                     ,(Select Id
                            , CampaignId
+                           , Campaign.Name
                            , Membership__c
                            , Active__c
                            , Date_Active__c 
                            , Primary__c 
+                           , ContactId  
                         From CampaignMembers
                         Where Welcome__c = true 
                     order By CreatedDate asc)  

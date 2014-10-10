@@ -273,7 +273,7 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
 
                 for(Opportunity opportunity : opportunityTransactionList){
                     if(opportunity != null && opportunity.Name != null)
-                      donationMap.put(opportunity.Name, decimal.ValueOf(amountValue).setScale(2));
+                        donationMap.put(opportunity.Name, amountValue);
                 }
             }
         } catch(System.exception pException) {
@@ -536,9 +536,218 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
         Savepoint savepoint = Database.setSavepoint();
 
         try {
-            if(lstCampaignMemberShare.size()>0)
-            insert lstCampaignMemberShare;
+            //if(lstCampaignMemberShare.size()>0)
+            //insert lstCampaignMemberShare;
+            if(sendReciept) {
+                
+/*************************************************************************************************************/
+        //Create  Email template Content for 10,11,12,13,14,15
+        
+        string sCouncil_Header_Urlc;
+        string sService_Feec;
+        string sAdult_Contact_First_Namec='';
+        
+        string sCouncil_Namec='';
+        string sCouncil_Addressc='';
+        string sContactrName='';
+        string sAuto_Givingc='';
+        string srC_GivingGiving_Amountc='';
+        string sOwnerName='';
+        string sOwner_Titlec='';
+        string sOwner_Phonec='';
+        string sOwner_Emailc='';
+        
+        string sConFirst_Namec='';
+        string sCOwnerName='';
+        string sCOwner_Titlec='';
+        string sCOwner_Phonec='';
+        string sCOwner_Emailc='';
+
+            
+            
+                
+             Opportunity newopp=[select ID
+            ,Adult_Contact_First_Name__c
+            ,Girl_First_Name__c
+            ,Council_Name__c
+            ,Council_Address__c
+            ,Contact__r.Name
+            ,Contact__c
+            ,Auto_Giving__c
+            ,rC_Giving__Giving_Amount__c
+            ,Owner.Name
+            ,Owner_Title__c
+            ,Owner_Phone__c
+            ,Owner_Email__c 
+            //,Email_10__c
+            //,Email_11__c
+            //,Email_12__c
+            from Opportunity where Id=:OpportunityId
+            limit 1
+            ];
+            system.debug('Set Email newopp =:'+newopp);    
+            Contact newcon=[Select Id
+            ,Name
+            ,FirstName
+            ,MailingPostalCode
+            ,Owner_Email__c
+            ,Owner_Phone__c
+            ,Owner_Title__c
+            ,Owner.Name
+            from contact where id=:newopp.Contact__c limit 1 ];
+            system.debug('Set Email newcon =:'+newcon); 
+            string zipcode= (newcon.MailingPostalCode != null && newcon.MailingPostalCode.length() > 5) ? newcon.MailingPostalCode.substring(0, 5) + '%' : newcon.MailingPostalCode + '%';
+            Zip_Code__c[] zipCodeList = new Zip_Code__c[] {};
+            if(zipCode != null && zipCode != '') {
+                zipCodeList = [
+                    Select Id
+                         , Name
+                         , Council__c
+                         , Zip_Code_Unique__c
+                         , Council__r.Council_Header_Url__c
+                         , City__c
+                         , Recruiter__c
+                         , Recruiter__r.IsActive
+                         , Recruiter__r.UserRoleId
+                      From Zip_Code__c
+                     where Zip_Code_Unique__c like :zipCode limit 1
+                ];
+            }
+            
+            if(zipCodeList.size()>0)
+            sCouncil_Header_Urlc =zipCodeList[0].Council__r.Council_Header_Url__c!=null?zipCodeList[0].Council__r.Council_Header_Url__c:'';
+                            
+            sAdult_Contact_First_Namec=newopp.Adult_Contact_First_Name__c!=null?newopp.Adult_Contact_First_Name__c:'';
+            
+            sCouncil_Namec=newopp.Council_Name__c!=null?newopp.Council_Name__c:'';
+            sCouncil_Addressc=newopp.Council_Address__c!=null?newopp.Council_Address__c:'';
+            sContactrName=newopp.Contact__r.Name!=null?newopp.Contact__r.Name:'';
+            sAuto_Givingc=newopp.Auto_Giving__c!=null?newopp.Auto_Giving__c:'';
+            srC_GivingGiving_Amountc=newopp.rC_Giving__Giving_Amount__c!=null?string.valueof(newopp.rC_Giving__Giving_Amount__c):''; //string.valueof(sService_Feec==null?newopp.rC_Giving__Giving_Amount__c:(newopp.rC_Giving__Giving_Amount__c+Decimal.ValueOf(sService_Feec)));
+            sOwnerName=newopp.Owner.Name!=null?newopp.Owner.Name:'';
+            sOwner_Titlec=newopp.Owner_Title__c!=null?newopp.Owner_Title__c:'';
+            sOwner_Phonec=newopp.Owner_Phone__c!=null?newopp.Owner_Phone__c:'';
+            sOwner_Emailc=newopp.Owner_Email__c!=null?newopp.Owner_Email__c:'';
+            
+            
+            
+            
+    string logo = '<div style="padding-left:10px;height:103px;background-color:#00AE58;">';
+    if(sCouncil_Header_Urlc != null && sCouncil_Header_Urlc != '') {
+        logo = logo + '<img src="' + sCouncil_Header_Urlc + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
+    } else {
+        logo = logo + '<img src="' + Label.DefaultCouncilLogo + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
+    }
+     logo = logo + '</div>';
+            string Email10='';
+            Email10 +=logo;
+            
+            
+            Email10 +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
+            Email10 +='<p>Welcome to Girl Scouts as an official member! We know you can’t wait to start the fun in your volunteer role.</p>';            
+            Email10 +='<p>The good news is you’re almost ready. We just need you to complete two more simple items - a background check and a short online introduction to the organization.</p>';
+            Email10 +='<p>Here’s how the background check will work: You’ll receive an email from our trusted vendor, which conducts background checks on all of our volunteers. Simply follow the instructions and you’ll be on your way.</p>';
+            Email10 +='<p>Once your background check has been processed, we will contact you about your online introduction to Girl Scouts.</p>';
+            Email10 +='<p>If you have any questions, please reach out. I’m here to help.</p>';
+            Email10 +='<p>Have a great day!</P>';
+            Email10 +='<p>'+sOwnerName+'<br/>'+sOwner_Titlec+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';
+            system.debug('Email10 ==>'+Email10);
+                      
+            string Email11='';
+            Email11 +=logo;
+            
+            
+            Email11 +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
+            Email11 +='<p>We know that, as a new member, you can’t wait to get the ball rolling on all the amazing Girl Scout experiences that await you. There’s another step you need to complete before you can become an official Girl Scout volunteer: the background check.</p>';  
+            Email11 +='<p>Here’s how the background check will work: you’ll receive an email from our trusted vendor, which conducts background checks on all of our volunteers. Simply follow the instructions and you’ll be on your way.</p>';
+            Email11 +='<p>If you have already completed your background check, please disregard this email - it is likely still being processed.We’ll contact you shortly and let you know when that’s done so you can move on to the online introduction to the organization.</P>';
+            Email11 +='<p>Got questions? Please don’t hesitate to reach out to me - I’m here to help!</P>';
+            Email11 +='<p>Thank you,</p>';
+            Email11 +='<p>'+sOwnerName+'<br/>'+sOwner_Titlec+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';                        
+            system.debug('Email11 ==>'+Email11);
+            
+            string Email12='';
+            Email12 +=logo;
+            Email12 +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
+            Email12 +='<p>I just wanted to follow up and see if you have any questions about the background check, which you’ll need to complete before becoming a Girl Scout volunteer.</p>'; 
+            Email12 +='<p>Here’s how the background check works: you should have received an email from our trusted vendor, which conducts background checks on all of our volunteers. Once you’ve found that email, simply follow the instructions and you’ll be on your way.</P>';           
+            Email12 +='<p>Need help? Please don’t hesitate to get in touch by phone or email. I’m here if you have questions!</p>';
+            Email12 +='<p>Once your background check has been processed, we’ll send you more information about your online introduction to Girl Scouts.</P>';
+            Email12 +='<p>We look forward to welcoming you soon.</p>';
+            Email12 +='<p>Sincerely,</P>';
+            Email12 +='<p>'+sOwnerName+'<br/>'+sOwner_Titlec+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';
+    
+            system.debug('Email12 ==>'+Email12);
+                
+                
+                newopp.Email_10__c =Email10; 
+                newopp.Email_11__c= Email11; 
+                newopp.Email_12__c= Email12; 
+                
+         /*######################Template 13,14,15###############################*/ 
+         
+            sCOwnerName=newcon.Owner.Name!=null?newcon.Owner.Name:'';
+            sCOwner_Titlec=newcon.Owner_Title__c!=null?newcon.Owner_Title__c:'';
+            sCOwner_Phonec=newcon.Owner_Phone__c!=null?newcon.Owner_Phone__c:'';
+            sCOwner_Emailc=newcon.Owner_Email__c!=null?newcon.Owner_Email__c:'';
+            sConFirst_Namec=newcon.FirstName!=null?newcon.FirstName:'';
+         
+         string Email13='';
+            Email13 +=logo;
+            
+            
+            Email13 +='<p>Hi ' + sConFirst_Namec +',</p>';
+            Email13 +='<p>Great news! We have processed and approved your background check, and now it’s time for us to tell you a little bit more about the organization!</p>';            
+            Email13 +='<p>Now that we’ve gotten the paper work out of the way, <a href="'+Label.community_login_URL+'">complete this short online introduction</a>, where you’ll hear more about Girl Scouts and tools that will help you in your volunteer role.</p>';
+            Email13 +='<p>Once you’ve done that, someone will be in touch with the details about your volunteer assignment.</p>';
+            
+           
+            Email13 +='<p>Thank you!</p>';
+            Email13 +='<p>'+sCOwnerName+'<br/>'+sCOwner_Titlec+'<br/>'+sCOwner_Phonec+'<br/>'+sCOwner_Emailc+'</p>';
+            system.debug('Email13 ==>'+Email13);
+                      
+            string Email14='';
+            Email14 +=logo;
+            
+            
+            Email14 +='<p>Hi ' + sConFirst_Namec+',</p>';
+            Email14 +='<p>You’re almost there! Once you <a href="'+Label.community_login_URL+'">complete your online introduction</a> to Girl Scouts, you’ll be ready to get started.</p>';  
+            Email14 +='<p>We’ll tell you more about the organization and the tools that we use to help support you in your volunteer role.</p>';
+            Email14 +='<p>Have questions? Don’t hesitate to let me know by phone or email. I’m here to help!</p>';
+            Email14 +='<p>Once you’ve answered a few quick questions after the introduction, we’ll be in touch with the details about your volunteer placement.</p>';
+            Email14 +='<p>Thank you. It’s volunteers like you that make Girl Scouting possible.</p>';
+            Email14 +='<p>All the best,</p>';
+            Email14 +='<p>'+sCOwnerName+'<br/>'+sCOwner_Titlec+'<br/>'+sCOwner_Phonec+'<br/>'+sCOwner_Emailc+'</p>';
+            system.debug('Email14 ==>'+Email14);
+            
+            string Email15='';
+            Email15 +=logo;
+            Email15 +='<p>Hi ' + sConFirst_Namec+',</p>';
+            Email15 +='<p>Your background check is complete and you’re almost done!</p>'; 
+            Email15 +='<p>Last step before all the fun: <a href="'+Label.community_login_URL+'">complete a short online introduction</a> to the organization and answer a couple quick questions. Once you’re done, someone will be in touch with the details about your volunteer placement.</p>';           
+            Email15 +='<p>During the introduction, we’ll tell you a little bit more about Girl Scouts and let you know about some tools that will support you as a volunteer.</p>';
+            Email15 +='<p>Have questions? Don’t hesitate to let me know by phone or email. I’m here to help.</p>';
+            Email15 +='<p>Have a great day!</p>';
+            Email15 +='<p>'+sCOwnerName+'<br/>'+sCOwner_Titlec+'<br/>'+sCOwner_Phonec+'<br/>'+sCOwner_Emailc+'</p>';
+    
+            system.debug('Email15 ==>'+Email15);
+                
+                
+                newopp.Email_13__c =Email13; 
+                newopp.Email_14__c= Email14; 
+                newopp.Email_15__c= Email15;       
+                
+         /*#####################################################*/  
+              
+         update newopp; 
+         system.debug('update newopp=:');
+/*************************************************************************************************************/   
+                
+            }
+            
+            system.debug('opportunityTransactionChargeableList size before update=:'+opportunityTransactionChargeableList.size());
             updateOpportunityTransactionChargeableList(opportunityTransactionChargeableList, 0);
+            system.debug('opportunityTransactionChargeableList update Successfully=:');
             if(sendReciept) {
                 oldCampaignMember.Pending_Payment_URL__c = '';
                 update oldCampaignMember;

@@ -481,6 +481,10 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
                      , Display_Renewal__c
                      , Campaign.Background_Check_Needed__c
                      , CampaignId
+                     , membership__C
+                     , Parent_First_Name__c
+                     , Girl_First_Name__c
+                     , Contact.mailingpostalcode 
                   From CampaignMember
                  where Id IN :campaignMemberIdSet
             ];
@@ -494,17 +498,86 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
            os.CampaignAccessLevel = 'Read';
            os.UserOrGroupId = UserInfo.getUserId();
            lstCampaignMemberShare.add(os);
+           
+           /************************************************************************************/
+string sCouncil_Header_Urlc;
+            string sParent_First_Namec='';
+            string sGirl_First_Namec='';
+            string sOwnerName='';
+            string sOwner_Titlec='';
+            string sOwner_Phonec='';
+            string sOwner_Emailc='';
+
+            Opportunity newopp=[select ID
+            ,Owner.Name
+            ,Owner_Title__c
+            ,Owner_Phone__c
+            ,Owner_Email__c
+            //,rC_Giving__Primary_Contact__r.mailingpostalcode 
+            from Opportunity where Id=:campaignMember.membership__C
+            limit 1
+            ];
+            
+            Zip_Code__c[] zipCodeList = new Zip_Code__c[] {};
+            //system.debug('zipCode... '+newopp.rC_Giving__Primary_Contact__r.mailingpostalcode );
+            //String zipCodeToMatch = (newopp.rC_Giving__Primary_Contact__r.mailingpostalcode != null && newopp.rC_Giving__Primary_Contact__r.mailingpostalcode.length() > 5) ? newopp.rC_Giving__Primary_Contact__r.mailingpostalcode.substring(0, 5) + '%' : newopp.rC_Giving__Primary_Contact__r.mailingpostalcode + '%';
+            String zipCodeToMatch = (campaignMember.Contact.mailingpostalcode  != null && campaignMember.Contact.mailingpostalcode.length() > 5) ? campaignMember.Contact.mailingpostalcode.substring(0, 5) + '%' : campaignMember.Contact.mailingpostalcode + '%';
+            
+            system.debug('zipCode... '+zipCodeToMatch);
+            if(zipCodeToMatch != null && zipCodeToMatch != '')
+                zipCodeList = [
+                    Select Id
+                         , Name
+                         , Council__r.Council_Header_Url__c
+                         , Recruiter__c 
+                      From Zip_Code__c 
+                     where Zip_Code_Unique__c like :zipCodeToMatch and Recruiter__r.isActive = true limit 1
+                ];
+                
+            if(zipCodeList.size()>0)
+            sCouncil_Header_Urlc =zipCodeList[0].Council__r.Council_Header_Url__c!=null?zipCodeList[0].Council__r.Council_Header_Url__c:'';
+                      
+            sParent_First_Namec=campaignMember.Parent_First_Name__c!=null?campaignMember.Parent_First_Name__c:'';
+            sGirl_First_Namec=campaignMember.Girl_First_Name__c!=null?campaignMember.Girl_First_Name__c:'';
+            
+            sOwnerName=newopp.Owner.Name!=null?newopp.Owner.Name:'';
+            sOwner_Titlec=newopp.Owner_Title__c!=null?newopp.Owner_Title__c:'';
+            sOwner_Phonec=newopp.Owner_Phone__c!=null?newopp.Owner_Phone__c:'';
+            sOwner_Emailc=newopp.Owner_Email__c!=null?newopp.Owner_Email__c:'';
+            
+            
+            string logo = '<div style="padding-left:10px;height:103px;background-color:#00AE58;">';
+            if(sCouncil_Header_Urlc != null && sCouncil_Header_Urlc != '') {
+                logo = logo + '<img src="' + sCouncil_Header_Urlc + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
+            } else {
+                logo = logo + '<img src="' + Label.DefaultCouncilLogo + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
+            }
+             logo = logo + '</div>';
+
+            string EmailG_Renewal='';
+            EmailG_Renewal +=logo;
+            EmailG_Renewal +='<p>Hi ' + sParent_First_Namec+',</p>';
+            EmailG_Renewal +='<p>Thank you for renewing '+sGirl_First_Namec+'’s Girl Scout membership. She’s all set for another year of fun and adventure!</p>';            
+            EmailG_Renewal +='<p>We can’t wait to see how she’ll shine next year.</p>';
+            EmailG_Renewal +='<p>If you ever have any questions about your Girl Scout experience, please feel free to reach out to us. We’re always here to help!</p>';
+            EmailG_Renewal +='<p>Sincerely,</p>';
+            EmailG_Renewal +='<p>'+sOwnerName+'<br/>'+sOwner_Titlec+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';
+            system.debug('EmailG_Renewal ==>'+EmailG_Renewal);
+           campaignMember.Girl_Renewal_Email__c= EmailG_Renewal ;
+/************************************************************************************/
+
         }
         // Update the transactions
         Savepoint savepoint = Database.setSavepoint();
 
         try {
-            if(lstCampaignMemberShare.size()>0)
-            insert lstCampaignMemberShare;
+            //if(lstCampaignMemberShare.size()>0)
+            //insert lstCampaignMemberShare;
             updateOpportunityTransactionChargeableList(opportunityTransactionChargeableList, 0);
             if(sendReciept) {
             oldCampaignMember.Pending_Payment_URL__c = '';
             update oldCampaignMember;
+            update CampaignMemberList ;// add for set Receipt code on 09-10-2014
             }
         } catch(Exception pException) {
             return addErrorMessageAndRollback(savepoint, pException);

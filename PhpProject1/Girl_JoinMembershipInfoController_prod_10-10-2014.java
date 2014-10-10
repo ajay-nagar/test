@@ -231,7 +231,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
        if(!PricebookEntryList.isEmpty() && PricebookEntryList.size() > 0) {
            for(PricebookEntry pricebookEntry : PricebookEntryList) {
                if(pricebookEntry.Name.toUpperCase().contains('GIRL') || pricebookEntry.Name.toUpperCase().contains('GIRL'))
-                   membershipProducts.add(new SelectOption(pricebookEntry.Id, '$'+pricebookEntry.UnitPrice +' ' +pricebookEntry.Name));
+                   membershipProducts.add(new SelectOption(pricebookEntry.Id, pricebookEntry.Name));
            }
        }
        return membershipProducts;
@@ -762,6 +762,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
                          '\n===========================================================');
 
             newOpportunity = createMembershipOpportunity(GirlRegistrationUtilty.getOpportunityRecordTypeId(GirlRegistrationUtilty.MEMBERSHIP_RECORDTYPE), girlContact, priceBookEntry);
+              system.debug('=======|newOpportunity:'+newOpportunity);
             if(newOpportunity != null)
                 opportunitiesToInsert.add(newOpportunity);
             campaignMemberList = getCampaignMember(girlContact.Id, campaignMemberIdSet);
@@ -1088,9 +1089,9 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
             membershipYear = string.valueOf(priceBookEntry.Product2.rC_Giving__End_Date__c.year());
             campaignName = membershipYear + ' Membership';
         }
-
+        system.debug('=======|campaignName:'+campaignName);
         Campaign campaign  = GirlRegistrationUtilty.searchCampaignFromName(campaignName);
-
+         system.debug('=======|campaign:'+campaign);
         if(parentAccount != null && parentAccount.Id != null && campaign != null && campaign.Id != null) {
             opportunity = new Opportunity(
                 RecordTypeId = recordTypeId,
@@ -1099,7 +1100,6 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
                 rC_Giving__Giving_Amount__c = (priceBookEntry.UnitPrice != null) ? priceBookEntry.UnitPrice : 0,
                 StageName = 'Open',
                 CloseDate = System.today(),
-                Membership_Year__c = membershipYear,
                 rC_Giving__Is_Giving__c = true
             );
 

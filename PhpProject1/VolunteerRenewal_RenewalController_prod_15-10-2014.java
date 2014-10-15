@@ -7,6 +7,7 @@ public  class VolunteerRenewal_RenewalController {
     public Boolean displayInterestedSearchingOtherRole { get; set; }
     public Boolean isUserRenewable { get; set;}
     public Boolean hasPaymentUrl { get; set;}
+
     public List<VolunteerPositionRenewalWrapper> volunteerPositionRenewalList { get; set; }
 
     public Set<String> campaignIdSet;
@@ -37,7 +38,7 @@ public  class VolunteerRenewal_RenewalController {
         displayInterestedSearchingOtherRole = true;
         isUserRenewable = false;
         Integer counti = 1;
-        hasPaymentUrl = false;
+
         campaignIdSet = new Set<String>();
         campaignMemberIdSet = new Set<String>();
         oldOpportunityIdSet = new Set<String>();
@@ -53,6 +54,7 @@ public  class VolunteerRenewal_RenewalController {
         displayWantToBeAnAdultMember = false;
         displayInterestedSearchingOtherRole = true;
         isUserRenewable = false;
+        hasPaymentUrl = false;
         Integer counti = 1;
 
         campaignIdSet = new Set<String>();
@@ -195,7 +197,7 @@ public  class VolunteerRenewal_RenewalController {
                                 && !campaignMemberIdVsParentCampaignName.isEmpty() && campaignMemberIdVsParentCampaignName.ContainsKey(campaignMember.CampaignId))
                             volunteerPositionRenewalList.add(new VolunteerPositionRenewalWrapper(contact.Name , campaignMemberIdVsCampaignName.get(campaignMember.CampaignId), campaignMemberIdVsParentCampaignName.get(campaignMember.CampaignId), 'Yes', campaignMemberIdVsParticipationType.get(campaignMember.CampaignId), showAllContinuePositionOptions,campaignMember.Pending_Payment_URL__c));
                         if(campaignMember.Pending_Payment_URL__c !='' && campaignMember.Pending_Payment_URL__c !=null)
-                        hasPaymentUrl = true; 
+                        hasPaymentUrl = true;    
                     }
             }
             system.debug('volunteerPositionRenewalList==>'+volunteerPositionRenewalList);
@@ -203,7 +205,8 @@ public  class VolunteerRenewal_RenewalController {
         return null;
     }
 
-    public PageReference renewPosition() {
+    public PageReference renewPosition() {      
+        
         boolean originalValue;
         rC_Event__CampaignMember_Setting__c objCampaignMemberSetting = rC_Event__CampaignMember_Setting__c.getInstance();
         objCampaignMemberSetting = (objCampaignMemberSetting != null) ? objCampaignMemberSetting : new rC_Event__CampaignMember_Setting__c();
@@ -231,6 +234,7 @@ public  class VolunteerRenewal_RenewalController {
             system.debug('rin for ==>'+wrapper.continuePosition);
             if(wrapper.continuePosition.trim().toUppercase().contains('YES')) {
                 system.debug('renewedCampaignMemberListYES==>');
+                system.debug('wrapper.paymentUrl==>'+wrapper.paymentUrl);
                 if(wrapper.paymentUrl != '' && wrapper.paymentUrl !=null) {
                 string urlPayment = wrapper.paymentUrl.substring(4); 
                 PageReference page = new PageReference(urlPayment);                
@@ -245,10 +249,42 @@ public  class VolunteerRenewal_RenewalController {
                 rolesToBeNotRenewCampaignIdSet.add(campaignMemberCampaignNameVsId.get(wrapper.positon));
                 nonRenewCampaignMemberIdVrcontinuePositionMap.put(campaignMemberCampaignNameVsId.get(wrapper.positon), wrapper.continuePosition);
             }
-        }
+        } 
+        system.debug('======[scenario  0 ]==');
+        if(rolesToBeRenewCampaignIdSet != null) {
+            //"continue this position" = Yes [scenario 1 ]
+             system.debug('======[scenario 1 ]==');
+                 loggedInContact.rC_Bios__Role__c = 'Adult';
+                 loggedInContact.Secondary_Role__c = 'Volunteer';
+                 loggedInContact.Girl_Registration__c = False;
+         
+         }
+            //"continue this position" = no
+                      if(rolesToBeNotRenewCampaignIdSet !=null && isInterestedInSearchingForOtherRole.equalsIgnoreCase('Yes'))
+                      { //[scenario 2 ]
+                       system.debug('======[scenario 2 ]==');
+                             loggedInContact.rC_Bios__Role__c = 'Adult';
+                             loggedInContact.Secondary_Role__c = 'Volunteer';
+                             loggedInContact.Girl_Registration__c = False;
 
-        system.debug('renew map==>'+renewCampaignMemberIdVrcontinuePositionMap);
-        system.debug('non renew map==>'+nonRenewCampaignMemberIdVrcontinuePositionMap);
+                      }
+                      if(rolesToBeNotRenewCampaignIdSet !=null && isInterestedInSearchingForOtherRole.equalsIgnoreCase('No') && isWantToBeAnAdultMember != null && isWantToBeAnAdultMember !='' && isWantToBeAnAdultMember.equalsIgnoreCase('Yes')) 
+                      { //[scenario 3 ]
+                         system.debug('======[scenario 3 ]==');
+                             loggedInContact.rC_Bios__Role__c = 'Adult';
+                             loggedInContact.Secondary_Role__c = 'Adult Member';
+                             loggedInContact.Adult_Member__c  = True ;
+                             loggedInContact.Girl_Registration__c = False;
+
+                      }
+
+         
+        
+         system.debug('======[scenario ]==secondry role:'+loggedInContact.Secondary_Role__c);
+         system.debug('%%%% ');
+         update loggedInContact;
+         system.debug('renew map==>'+renewCampaignMemberIdVrcontinuePositionMap);
+         system.debug('non renew map==>'+nonRenewCampaignMemberIdVrcontinuePositionMap);
 
         if(rolesToBeRenewCampaignIdSet != null) {
 
@@ -403,6 +439,9 @@ public  class VolunteerRenewal_RenewalController {
             }
             objCampaignMemberSetting.rC_Event__Disable_All__c = originalValue;
         update objCampaignMemberSetting;
+             
+        
+        
         //} 
         return null;
     }
@@ -522,6 +561,7 @@ public  class VolunteerRenewal_RenewalController {
         public String participationType { get; set; }
         public Boolean showAllContinuePositionOptions { get; set; }
         public String paymentUrl { get; set; }
+        
         public VolunteerPositionRenewalWrapper(String strContactName, String strPositon, String strTroopName, String strContinueThisPosition, String strParticipationType, Boolean booleanShowAllContinuePositionOptions, String paymentUrl) {
             this.contactName = strContactName;
             this.positon = strPositon;

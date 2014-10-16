@@ -196,7 +196,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
            girlLastName = (girlContact.LastName != null) ? girlContact.LastName : '';
        }
        secondaryPreferredEmail = 'Email';
-       secondaryPreferredPhone = 'Home Phone'; 
+       secondaryPreferredPhone = 'Home Phone';
     }
 
     public pageReference calculateGirlAge() {
@@ -499,8 +499,8 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
         List<SelectOption> custodialCareInfo = new List<SelectOption>();
         List<Contact> adultContactList;
         if(girlContact != null && girlContact.AccountId != null)
-            adultContactList = new List<Contact>([select Id from Contact 
-                                                            where rC_Bios__Role__c = 'Adult' 
+            adultContactList = new List<Contact>([select Id from Contact
+                                                            where rC_Bios__Role__c = 'Adult'
                                                             AND AccountId =: girlContact.AccountId]);
         if(adultContactList!=null && adultContactList.size()>1){
             custodialCareInfo.add(new Selectoption('--None--', '--None--'));
@@ -515,7 +515,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
             custodialCareInfo.add(new SelectOption('Guardian', 'Guardian'));
             custodialCareInfo.add(new SelectOption('Guardian and Secondary Contact', 'Guardian and Secondary Contact'));
         }
-        
+
         return custodialCareInfo;
     }
 
@@ -753,8 +753,68 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
             parentAccount = (accountList != null && accountList.size() > 0) ? accountList[0] : null;
             parentContact = updatePrimaryContact(parentContact);
             girlContact = updateGirlContact(girlContact);
-            secondaryContact = createSecondaryContact(parentContact.Id);
-
+            // secondaryContact = createSecondaryContact(parentContact.Id);
+//======================= checking secondary contact exists or not in same account===============================================================
+            if(secondaryFirstName!=null && secondaryFirstName!='' && secondaryLastName!=null && secondaryLastName !='' ){
+                 secondaryFirstName =secondaryFirstName.Trim();
+                 secondaryLastName=secondaryLastName.Trim();
+                   String sencondryconemail;
+                  String prefered=(secondaryPreferredEmail.toUpperCase().contains('NONE'))? '' : (secondaryPreferredEmail.equalsIgnoreCase('Email') ? 'Home' : 'Work');
+                        if(prefered=='Home'){
+                        sencondryconemail= secondaryEmail.Trim();
+                        }
+                        if(prefered=='Work'){
+                        sencondryconemail=secondaryEmail2.Trim();
+                        }
+                         system.debug('=====>girlContact.AccountId:'+girlContact.AccountId);
+                  List<Contact> duplicatecontactList = [
+                    Select Id
+                         , FirstName
+                         , LastName
+                         , Email
+                         , Phone
+                         , AccountId
+                         , Account.RecordType.Name
+                         , rC_Bios__Secondary_Contact__c
+                          ,rC_Bios__Preferred_Mailing_Address__c
+                         , Secondary_Role__c
+                      From Contact
+                     where FirstName = :secondaryFirstName
+                       And LastName = :secondaryLastName
+                       And Email = :sencondryconemail
+                       And rC_Bios__Role__c = :'Adult'
+                       And Account.RecordType.Name = :'Household'
+                       And AccountId= :girlContact.AccountId
+                  order by CreatedDate asc
+                  ];
+              
+                if(duplicatecontactList != null && duplicatecontactList.size() > 0){
+                      //update secondary contact address
+                    /*   
+                      rC_Bios__Address__c secondaryAddress;
+                        system.debug('=====>duplicatecontactList[0]:'+duplicatecontactList[0]);
+                        system.debug('=====>secondarypreferedAddress :'+duplicatecontactList[0].rC_Bios__Preferred_Mailing_Address__c);
+                      if(duplicatecontactList[0].rC_Bios__Preferred_Mailing_Address__c != null){ 
+                           secondaryAddress = [Select Id,rC_Bios__City__c,rC_Bios__Country__c,rC_Bios__County__c,rC_Bios__Postal_Code__c,rC_Bios__State__c,rC_Bios__Street_Line_1__c,rC_Bios__Street_Line_2__c from rC_Bios__Address__c where ID = :duplicatecontactList[0].rC_Bios__Preferred_Mailing_Address__c];
+                       }
+                       system.debug('=====>secondaryAddress :'+secondaryAddress);
+                       if(secondaryAddress!=null){
+                         secondaryAddress.rC_Bios__Street_Line_1__c = secondaryStreetLine1;
+                        secondaryAddress.rC_Bios__Street_Line_2__c = secondaryStreetLine2;
+                        secondaryAddress.rC_Bios__City__c = secondaryCity;
+                        secondaryAddress.rC_Bios__State__c = secondaryState;
+                        secondaryAddress.rC_Bios__Country__c = secondaryCountry;
+                        secondaryAddress.rC_Bios__Postal_Code__c = secondaryZipCode;
+                        secondaryAddress.rC_Bios__County__c = secondaryCounty;
+                        system.debug('=====>secondaryAddress2 :'+secondaryAddress);
+                        update secondaryAddress; 
+                        }*/
+                }else{
+                  //create new secondary contact
+                  secondaryContact = createSecondaryContact(parentContact.Id);
+                }           
+            }         
+//======================code ends here for duplicate secondary contact=========================================
             system.debug('\n===========================================================\n' +
                          'parentAccount : ' + accountList +
                          'parentContact : ' + parentContact +
@@ -825,7 +885,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
                         OpportunityLineItemInsertList.add(oppLineItem);
                     }
                 }
-                
+
                 if(OpportunityLineItemInsertList != null && OpportunityLineItemInsertList.size() > 0) {
                     insert OpportunityLineItemInsertList;
                 }
@@ -925,7 +985,8 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
 
             if(parentContact != null && parentContact.Id != null && girlContact != null && girlContact.Id != null && councilAccount != null && councilAccount.Id != null && newOpportunity != null && newOpportunity.Id != null)
             {
-                 if(councilMembershipOpp == null){
+            
+              if(councilMembershipOpp == null){
                 GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id + '&ParentContactId='+parentContact.Id, parentContact);
                 }else{
                 GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id + '&ParentContactId='+parentContact.Id+'&CouncilMembershipOppId='+councilMembershipOpp.Id, parentContact);
@@ -933,7 +994,9 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
             
             
             
+            
             }
+
             Pagereference paymentProcessingPage = Page.Girl_PaymentProcessing;
             paymentProcessingPage.getParameters().put('GirlContactId', girlContact.Id);
             paymentProcessingPage.getParameters().put('CampaignMemberIds',campaignMembers);
@@ -1028,9 +1091,9 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
               From Zip_Code__c
              where Zip_Code_Unique__c IN :zipCodeSet
         ];
-        
+
         system.debug('zipCodeList#######'+zipCodeList);
-        
+
         if(zipCodeList.size() > 0) {
             for(Zip_Code__c zipCode : zipCodeList)
                 mailingPostalCodeToZipCodeMap.put(zipCode.Zip_Code_Unique__c, zipCode);

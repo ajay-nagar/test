@@ -105,6 +105,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
     public static final string LIFETIME_MEMBERSHIP  = 'Lifetime Membership';
     
     private Opportunity opportunityServicefee;
+    private String membershipYear = '';
     private string oldCampaign = '';
     public Community_Girl_JoinMembershipInfo() {
         booleanOppMembershipOnPaper = false;
@@ -125,7 +126,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         PricebookEntryList = new PricebookEntry[]{};
         fillPricebookEntryList();
         councilAccount = new Account();
-        
+        systemAdminUser = GirlRegistrationUtilty.getSystemAdminUser();
         if(Apexpages.currentPage().getParameters().containsKey('ParentContactId'))
             parentContactId = Apexpages.currentPage().getParameters().get('ParentContactId');
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
@@ -171,15 +172,6 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         girlAddress = [Select Id,rC_Bios__City__c,rC_Bios__Country__c,rC_Bios__County__c,rC_Bios__Postal_Code__c,rC_Bios__State__c,rC_Bios__Street_Line_1__c,rC_Bios__Street_Line_2__c from rC_Bios__Address__c where ID = :girlContact.rC_Bios__Preferred_Mailing_Address__c];
         
         if(parentContact != null) {
-            systemAdminUser = [Select Id
-                 , LastName
-                 , IsActive
-                 , Profile.Name
-                 , Profile.Id
-                 , ProfileId  from User where Id = :parentContact.Account.OwnerId
-               and IsActive = true 
-               and UserRoleId != null
-            limit 1];
             primaryFirstName = parentContact.FirstName;
             primaryLastName = parentContact.LastName;
             primaryEmail = parentContact.rC_Bios__Home_Email__c;            
@@ -386,7 +378,6 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
                  , LastName
                  , Birthdate
                  , AccountId
-                 , Account.OwnerId
                  , Account.rC_Bios__Preferred_Contact__c
                  , rC_Bios__Home_Email__c
                  , rC_Bios__Gender__c
@@ -837,11 +828,11 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             if(priceBookEntry != null && priceBookEntry.Product2.rC_Giving__End_Date__c != null)
             membershipYear = string.valueOf(priceBookEntry.Product2.rC_Giving__End_Date__c.year());
             if(membershipYear !=null && membershipYear != '') {
-            List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:girlContact.ID and Active__c=true];
+            List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:girlContact.ID];// and Active__c=true];
             if(lstCM.size()>0) {
             for(campaignmember cm:lstCM) {
             if(cm.Membership__r.Membership_year__c == membershipYear)
-            return addErrorMessage('This membership is already active, Please select another membership.');
+             return addErrorMessageAndRollback(savepoint,'This membership is already active, Please select another membership.');
             }
             }
             }
@@ -865,10 +856,72 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             set<String> contactAddressIds = new set<String>();
             if(custodialFlag == true){
                 if(secondaryContact.id == null) {
-                    secondaryContact = createSecondaryContact(parentContact.Id);
-                    
-                    rC_Bios__Contact_Address__c secondaryContactAddress = createContactAddress(secondaryContact, 'Home', secondaryStreetLine1, secondaryStreetLine2, secondaryCity, secondaryState, secondaryZipCode, secondaryCountry, secondaryCounty);
-                    insertContactAddressList.add(secondaryContactAddress);
+                    //======================= checking new secondary contact exists or not in same account========================================
+                        if(secondaryFirstName!=null && secondaryFirstName!='' && secondaryLastName!=null && secondaryLastName !='' ){
+                                    secondaryFirstName =secondaryFirstName.Trim();
+                                    secondaryLastName=secondaryLastName.Trim();
+                                    String sencondryconemail;
+                                    String prefered=(secondaryPreferredEmail.toUpperCase().contains('NONE'))? '' : (secondaryPreferredEmail.equalsIgnoreCase('Email') ? 'Home' : 'Work');
+                                        if(prefered=='Home'){
+                                        sencondryconemail= secondaryEmail.Trim();
+                                        }
+                                        if(prefered=='Work'){
+                                        sencondryconemail=secondaryEmail2.Trim();
+                                        }
+                                         system.debug('=====>girlContact.AccountId:'+girlContact.AccountId);
+                                     List<Contact> duplicatecontactList = [
+                                        Select Id
+                                         , FirstName
+                                         , LastName
+                                         , Email
+                                         , Phone
+                                         , AccountId
+                                         , Account.RecordType.Name
+                                         , rC_Bios__Secondary_Contact__c
+                                          ,rC_Bios__Preferred_Mailing_Address__c
+                                         , Secondary_Role__c
+                                      From Contact
+                                     where FirstName = :secondaryFirstName
+                                       And LastName = :secondaryLastName
+                                       And Email = :sencondryconemail
+                                       And rC_Bios__Role__c = :'Adult'
+                                       And Account.RecordType.Name = :'Household'
+                                       And AccountId= :girlContact.AccountId
+                                  order by CreatedDate asc
+                                  ];
+                                 
+
+                                 if(duplicatecontactList != null && duplicatecontactList.size() > 0){
+                                    //if duplicate secondary contact exists========================================================================
+                                       /*     rC_Bios__Address__c secondaryAddress3;
+                                            system.debug('=====>duplicatecontactList[0]:'+duplicatecontactList[0]);
+                                            system.debug('=====>secondarypreferedAddress :'+duplicatecontactList[0].rC_Bios__Preferred_Mailing_Address__c);
+                                          if(duplicatecontactList[0].rC_Bios__Preferred_Mailing_Address__c != null){ 
+                                               secondaryAddress3 = [Select Id,rC_Bios__City__c,rC_Bios__Country__c,rC_Bios__County__c,rC_Bios__Postal_Code__c,rC_Bios__State__c,rC_Bios__Street_Line_1__c,rC_Bios__Street_Line_2__c from rC_Bios__Address__c where ID = :duplicatecontactList[0].rC_Bios__Preferred_Mailing_Address__c];
+                                           }
+                                           system.debug('=====>secondaryAddress3 :'+secondaryAddress3);
+                                           if(secondaryAddress3!=null){
+                                             secondaryAddress3.rC_Bios__Street_Line_1__c = secondaryStreetLine1;
+                                            secondaryAddress3.rC_Bios__Street_Line_2__c = secondaryStreetLine2;
+                                            secondaryAddress3.rC_Bios__City__c = secondaryCity;
+                                            secondaryAddress3.rC_Bios__State__c = secondaryState;
+                                            secondaryAddress3.rC_Bios__Country__c = secondaryCountry;
+                                            secondaryAddress3.rC_Bios__Postal_Code__c = secondaryZipCode;
+                                            secondaryAddress3.rC_Bios__County__c = secondaryCounty;
+                                            system.debug('secondaryStreetLine1:'+secondaryStreetLine1+'secondaryStreetLine2:'+secondaryStreetLine2);
+                                            system.debug('=====>secondaryAddress3 :'+secondaryAddress3);
+                                            upsert secondaryAddress3; 
+                                            } */
+                                 }else{
+                                    //====== if duplicate secondary contact not exists=============================================================
+                                        //====create new secondary contact
+                                        secondaryContact = createSecondaryContact(parentContact.Id);
+                                        rC_Bios__Contact_Address__c secondaryContactAddress = createContactAddress(secondaryContact, 'Home', secondaryStreetLine1, secondaryStreetLine2, secondaryCity, secondaryState, secondaryZipCode, secondaryCountry, secondaryCounty);
+                                        insertContactAddressList.add(secondaryContactAddress);
+                                 }
+                         }
+                    //======================code ends here for duplicate secondary contact ===========================
+                
                 } else {
                     system.debug('secondaryContact... '+secondaryContact );
                     secondaryContact = updateSecondaryContact(); 
@@ -962,10 +1015,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             councilAccount = GirlRegistrationUtilty.getCouncilAccount(zip[0].Council__c);            
             }
             if (booleanOppMembershipOnPaper || booleanOpportunityGrantRequested) {
-                if (!Test.isRunningTest()) {
-                if(parentContact != null && parentContact.Id != null && councilAccount.Id != null)
-                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_ThankYou' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id+'&FinancialAidRequired='+String.valueOf(booleanOpportunityGrantRequested)+'&CashOrCheck='+String.valueOf(booleanOppMembershipOnPaper), parentContact);
-                }
+                
                 Pagereference landingPage = System.Page.Community_Girl_ThankYou;//new Pagereference('/apex/');
                 if(booleanOpportunityGrantRequested != null)
                     landingPage.getParameters().put('FinancialAidRequired',String.valueOf(booleanOpportunityGrantRequested));
@@ -996,7 +1046,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
                 oldCampaignMember.Pending_Payment_URL__c = paymenturlFinal;
                 update oldCampaignMember;
             }
-            Pagereference paymentProcessingPage = System.Page.Community_Girl_PaymentProcessing;//new Pagereference('/apex/');
+            Pagereference paymentProcessingPage = System.Page.Community_Girl_PaymentProcessing;
             paymentProcessingPage.getParameters().put('GirlContactId', girlContact.Id);
             paymentProcessingPage.getParameters().put('CampaignMemberIds',campaignMembers);
 
@@ -1133,7 +1183,7 @@ system.debug('mailingPostalCodeToZipCodeMap#######'+mailingPostalCodeToZipCodeMa
     
     public Opportunity createMembershipOpportunity(String recordTypeId, Contact contact,PricebookEntry priceBookEntry) {
         String campaignName = '';
-        String membershipYear = string.valueOf(system.today().year());
+        membershipYear = string.valueOf(system.today().year());
 
         if(priceBookEntry != null && priceBookEntry.Product2.Name.toUpperCase().contains('LIFETIME')) {
             campaignName = LIFETIME_MEMBERSHIP;
@@ -1213,7 +1263,7 @@ system.debug('mailingPostalCodeToZipCodeMap#######'+mailingPostalCodeToZipCodeMa
            os.OpportunityId = opportunity.id; // *** ERROR - not writable ***
            os.OpportunityAccessLevel = 'Read';
            os.UserOrGroupId = UserInfo.getUserId();
-           insert os;
+           //insert os;
         
         updateOpportunityType(opportunity, priceBookEntry, contact);   
         

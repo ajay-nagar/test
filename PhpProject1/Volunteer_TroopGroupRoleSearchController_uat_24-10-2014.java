@@ -134,6 +134,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                  , ParentId
                  , Parent.Grade__c
                  , Parent.Meeting_Day_s__c
+                 , Parent.Meeting_Frequency__c
                  , Parent.Meeting_Location__c
                  , Parent.rC_Volunteers__Required_Volunteer_Count__c
                  , Parent.Display_on_Website__c
@@ -155,13 +156,13 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
              limit 1
         ];
 for(Campaign campaign : unsureCampaignList){
- parentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
-}  
-                 if(troopOrGroupName!='unsure' ){
+ parentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c,  campaign.Parent.Meeting_Frequency__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
+}              if(troopOrGroupName!='unsure' ){
                 return addErrorMessageAndRollback(savepoint,'No Troop/Groups with this Name Exists.');
             }else{
             return  null;   }
-            }
+            
+           } 
             if(newTempWrapperList.size() == 0) {
                 system.debug('######222###');
                 parentCampaignWrapperList.clear();
@@ -286,7 +287,7 @@ for(Campaign campaign : unsureCampaignList){
 
         double radian = 57.295; 
         double theDistance = (Math.sin(latA/radian) * Math.sin(latB/radian) + Math.cos(latA/radian) * Math.cos(latB/radian) * Math.cos((longA - longB)/radian));
-           if(theDistance >1.0){
+         if(theDistance >1.0){
              theDistance=1.0;
           }  
           if(theDistance <-1.0){
@@ -542,6 +543,7 @@ for(Campaign campaign : unsureCampaignList){
                        and CampaignId IN :campaignIdSet
                 ];
 
+                system.debug('********* existingCampaignMemberList'+existingCampaignMemberList);
                 if(existingCampaignMemberList != null && existingCampaignMemberList.size() > 0) {
                     for(CampaignMember campaignMember : existingCampaignMemberList) {
                         if(campaignMember != null && campaignMember.contactId != null && campaignMember.CampaignId != null) {
@@ -550,7 +552,7 @@ for(Campaign campaign : unsureCampaignList){
                         }
                     }
                 }
-
+                system.debug('********* campaignMemberList'+campaignMemberList);
                 if(campaignMemberList != null && campaignMemberList.size() > 0) {
                     for(CampaignMember campaignMember : campaignMemberList) {
                         if(campaignMember != null && campaignMember.contactId != null && campaignMember.CampaignId != null) {
@@ -794,8 +796,9 @@ for(Campaign campaign : unsureCampaignList){
             }
         }
         else if(troopOrGroupName != null && troopOrGroupName != '') {
-                   List<Campaign> allCampaignList;
-                  if(councilId !=null && councilId !='')
+            
+                 List<Campaign> allCampaignList;
+              if(councilId !=null && councilId !='')
                     {
                          allCampaignList =[
                         Select Parent.Name
@@ -803,6 +806,7 @@ for(Campaign campaign : unsureCampaignList){
                              , ParentId
                              , Parent.Grade__c
                              , Parent.Meeting_Day_s__c
+                              , Parent.Meeting_Frequency__c
                              , Parent.Meeting_Location__c
                              , Parent.rC_Volunteers__Required_Volunteer_Count__c
                              , Parent.Display_on_Website__c
@@ -824,13 +828,11 @@ for(Campaign campaign : unsureCampaignList){
                     }else{
                          allCampaignList = VolunteerRegistrationUtilty.getListOfAllCampaign(troopOrGroupName,'TroopName', new Set<String>());
                         }
-           // List<Campaign> allCampaignList = VolunteerRegistrationUtilty.getListOfAllCampaign(troopOrGroupName,'TroopName', new Set<String>());
-
             if(allCampaignList != null && allCampaignList.size() > 0) {
                 searchByCampaignName = false;
                 for(Campaign campaign : allCampaignList)
                     if(campaign != null && campaign.Id != null)
-                        innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
+                        innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c , campaign.Parent.Meeting_Frequency__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
 
                 if(unsureCampaignRecordList != null && unsureCampaignRecordList.size() > 0) {
                     for(ParentCampaignWrapper wrapper : unsureCampaignRecordList) {
@@ -891,7 +893,7 @@ for(Campaign campaign : unsureCampaignList){
             for(Campaign campaign : allChildCampaignWithZipCodeList) {
                 if(campaign != null && campaign.Id != null) {
                     if(parentCampaignIdVSDistanceMap.ContainsKey(campaign.Parent.Id)) {
-                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, parentCampaignIdVSDistanceMap.get(campaign.Parent.Id), campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
+                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, parentCampaignIdVSDistanceMap.get(campaign.Parent.Id), campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c , campaign.Parent.Meeting_Frequency__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
                     }
                 }
             }
@@ -1015,6 +1017,7 @@ for(Campaign campaign : unsureCampaignList){
                  , Meeting_Location__c
                  , Meeting_Start_Date_time__c
                  , Meeting_Day_s__c
+                  ,Meeting_Frequency__c
                  , GS_Volunteers_Required__c 
                  , rC_Volunteers__Required_Volunteer_Count__c,Parent.Participation__c
                  , Volunteer_Openings_Remaining__c
@@ -1038,6 +1041,7 @@ for(Campaign campaign : unsureCampaignList){
                  , ParentId
                  , Parent.Grade__c
                  , Parent.Meeting_Day_s__c
+                  , Parent.Meeting_Frequency__c
                  , Parent.Meeting_Location__c
                  , Parent.rC_Volunteers__Required_Volunteer_Count__c
                  , Parent.Display_on_Website__c
@@ -1062,7 +1066,7 @@ for(Campaign campaign : unsureCampaignList){
         if(parentCampaignRecordList != null && parentCampaignRecordList.size() > 0) {
             for(Campaign childCampaign :parentCampaignRecordList)
             if(childCampaign != null)
-                unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', childCampaign.Name, childCampaign.Parent.Grade__c, childCampaign.Parent.Meeting_Location__c,  childCampaign.Parent.Meeting_Day_s__c, childCampaign.Parent.Meeting_Start_Date_time__c, String.valueOf(childCampaign.Volunteer_Openings_Remaining__c), childCampaign.Parent.Name, childCampaign.Parent.Account__c, childCampaign.Id,childCampaign.Parent.Participation__c));
+                unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', childCampaign.Name, childCampaign.Parent.Grade__c, childCampaign.Parent.Meeting_Location__c,  childCampaign.Parent.Meeting_Day_s__c , childCampaign.Parent.Meeting_Frequency__c, childCampaign.Parent.Meeting_Start_Date_time__c, String.valueOf(childCampaign.Volunteer_Openings_Remaining__c), childCampaign.Parent.Name, childCampaign.Parent.Account__c, childCampaign.Id,childCampaign.Parent.Participation__c));
         }
     }
 
@@ -1075,6 +1079,7 @@ for(Campaign campaign : unsureCampaignList){
         public String campaignGrade { get; set; }
         public String campaignMeetingLocation { get; set; }
         public String campaignMeetingDay { get; set; }
+         public String campaignMeetingDayfrequency { get; set; }
         public DateTime campaignMeetingStartDatetime { get; set; }
         public String campaignVolunteersRequired { get; set; }
         public String parentCampaignName { get; set; }
@@ -1082,13 +1087,16 @@ for(Campaign campaign : unsureCampaignList){
          public Id campaignId { get; set; }
         public String parentCampaignAccountId;
         public String campaignParticipationType { get; set; }
-        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strCampaignVolunteersRequired, String strParentCampaignName, String strAccountId, String strChildCampaignId,String strCampaignParticipation) {
+        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, String strcampaignMeetingDayfrequency, DateTime strCampaignMeetingStartDatetime, String strCampaignVolunteersRequired, String strParentCampaignName, String strAccountId, String strChildCampaignId,String strCampaignParticipation) {
             isCampaignChecked = campaignChecked;
             campaignDistance = strCampaignDistance;
             childCampaignName = strChildCampaignName;
             campaignGrade = strCampaignGrade;
             campaignMeetingLocation = strCampaignMeetingLocation;
-            campaignMeetingDay = strcampaignMeetingDay;
+            if(strcampaignMeetingDayfrequency ==null)
+            strcampaignMeetingDayfrequency ='';
+            campaignMeetingDay =strcampaignMeetingDayfrequency +' '+ strcampaignMeetingDay;
+            campaignMeetingDayfrequency =  strcampaignMeetingDayfrequency ;
             campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
             campaignVolunteersRequired = strCampaignVolunteersRequired;
             parentCampaignName = strParentCampaignName;

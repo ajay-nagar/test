@@ -590,7 +590,7 @@ public without sharing class VolunteerRegistrationUtilty {
     public static List<Campaign> getListOfAllCampaign(String troopOrGroupName, String isTroopOrZip, Set<String> zipCodeSet){
         String baseQuery = '';
         String unsure = 'Unsure';
-        String selectQuery = 'Select Parent.Participation__c,Parent.Name, ParentId, Parent.Grade__c, Parent.Meeting_Day_s__c , Parent.Meeting_Location__c, Parent.rC_Volunteers__Required_Volunteer_Count__c, Parent.Display_on_Website__c, Parent.Meeting_Start_Date_time__c, Parent.Zip_Code__c, Parent.Account__c, Id, Name, Zip_Code__c, Council_Code__c, GS_Volunteers_Required__c, Volunteer_Openings_Remaining__c From Campaign';
+        String selectQuery = 'Select Parent.Participation__c, Parent.Meeting_Frequency__c,Parent.Name, ParentId, Parent.Grade__c, Parent.Meeting_Day_s__c , Parent.Meeting_Location__c, Parent.rC_Volunteers__Required_Volunteer_Count__c, Parent.Display_on_Website__c, Parent.Meeting_Start_Date_time__c, Parent.Zip_Code__c, Parent.Account__c, Id, Name, Zip_Code__c, Council_Code__c, GS_Volunteers_Required__c, Volunteer_Openings_Remaining__c From Campaign';
         String whereClause = ' where ';
         String troopName = '(Name = ' +'\'' + troopOrGroupName + '\' OR Parent.Name= '+'\'' + troopOrGroupName + '\')';
         String zipCode = ' Zip_Code__c != null';
@@ -599,22 +599,15 @@ public without sharing class VolunteerRegistrationUtilty {
         String unsureName = ' and Parent.Name != ' +'\'' + unsure + '\'';
         String zipCodeUniqueSet = ' and Parent.Zip_Code__c IN :zipCodeSet ';
         String orderBy = ' order By Name,Parent.Name  ASC';
-        String isvolunteercampaign = ' and Parent.Participation__c != null';
- 
+      // String isvolunteercampaign = ' and Parent.Participation__c != null';
+      String isvolunteercampaign ='and Recordtypeid ='+' \''+ VolunteerRegistrationUtilty.getCampaignRecordTypeId(VolunteerRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE) +'\'';
+       //String isvolunteercampaign ='';
         if(isTroopOrZip.equalsIgnoreCase('TroopNameAndZipCode'))
             baseQuery = selectQuery + whereClause + parentZipCode +' and '+ troopName + displayWebSite + isvolunteercampaign + unsureName + zipCodeUniqueSet + orderBy;
         else if(isTroopOrZip.equalsIgnoreCase('TroopName'))
             baseQuery = selectQuery + whereClause + troopName + displayWebSite + isvolunteercampaign +  unsureName;
         else if(isTroopOrZip.equalsIgnoreCase('ZipCode'))
             baseQuery = selectQuery + whereClause + parentZipCode + displayWebSite + isvolunteercampaign + unsureName + zipCodeUniqueSet + orderBy; 
-       
-       /* if(isTroopOrZip.equalsIgnoreCase('TroopNameAndZipCode'))
-            baseQuery = selectQuery + whereClause + parentZipCode +' and '+ troopName + displayWebSite + unsureName + zipCodeUniqueSet + orderBy;
-        else if(isTroopOrZip.equalsIgnoreCase('TroopName'))
-            baseQuery = selectQuery + whereClause + troopName + displayWebSite + unsureName;
-        else if(isTroopOrZip.equalsIgnoreCase('ZipCode'))
-            baseQuery = selectQuery + whereClause + parentZipCode + displayWebSite + unsureName + zipCodeUniqueSet + orderBy; 
-      */
         system.debug('==========>'+baseQuery);
         List<Campaign> campaignMemberList = database.query(baseQuery);
         system.debug('====campaignMemberList======>'+campaignMemberList);

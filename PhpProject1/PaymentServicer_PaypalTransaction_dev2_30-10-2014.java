@@ -37,8 +37,7 @@ public class PaymentServicer_PaypalTransaction {
     public static final String CONTACT_EMAIL = 'email';
     public class MissingMerchantException extends Exception {}
     public class AuthorizationFailedException extends Exception {}
-    
-    public String Invouceid = '';
+
 
     public class Transactions {
         public Amount amount;
@@ -197,10 +196,7 @@ public class PaymentServicer_PaypalTransaction {
         String merchantUserId = paymentData.get(MERCHANT_USER_ID);
         String merchantPass = paymentData.get(MERCHANT_PASS);
         String endPointName = paymentData.get(ENDPOINT);
-        
-        Invouceid = paymentData.get(INVOICE_ID);
-        system.debug('INVOICE_ID_str =>>>>'+Invouceid );
-        
+
         if (merchantUserId == null || merchantUserId == '' ||
             merchantPass == null || merchantPass == '') {
             throw new MissingMerchantException();
@@ -348,20 +344,6 @@ public class PaymentServicer_PaypalTransaction {
         Map<String,String> responseMap = new Map<String,String>();
         if (responseJson == null || responseJson == '') {
             responseMap.put(RESPONSEMESSAGE, 'Unable to process payment, please try again.');
-            
-            /****************** Track Paypal Reponse Messages Log*******************/
-            System.debug(' Insert data into PaypalResponseLog__c ##');
-                PaypalResponseLog__c paypallog=new PaypalResponseLog__c();
-                paypallog.Response_Code__c=responseMap.get(PaymentServicer_PaypalTransaction.TRANSACTIONID);
-                paypallog.Response_Date_Time__c=DateTime.now();
-                paypallog.Response_Message__c= responseMap.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
-                paypallog.Transaction_Opportunity__c=Invouceid ;
-                paypallog.Name='Paypal Responce Message in class';
-                System.debug('Try to Insert data into PaypalResponseLog__c ======' );
-                insert paypallog;
-                System.debug('After inser data into PaypalResponseLog__c ==>'+paypallog.Transaction_Opportunity__c);
-                /****************** Track Paypal Reponse Messages Log*******************/
-                
             return responseMap;
         }
         system.debug('responseJson-->'+responseJson);
@@ -396,31 +378,9 @@ public class PaymentServicer_PaypalTransaction {
             responseMap.put(ISSUCCESS,''+is_Success);
 
         } catch (Exception pException) {
-        System.debug(' Exception in paypal class==>'+pException );
             throw new Integration.InvalidPayloadFormatException(pException);
         }
 
-                /****************** Track Paypal Reponse Messages Log*******************/
-                System.debug(' INVOICE_ID ==>'+Invouceid );
-                ID invoiceid;
-                invoiceid=ID.valueof(Invouceid );
-                System.debug(' invoiceid ==>'+invoiceid);
-                System.debug(' Insert data into PaypalResponseLog__c ##--**');
-                /*PaypalResponseLog__c paypallog=new PaypalResponseLog__c();
-                paypallog.Response_Code__c=responseMap.get(TRANSACTIONID);
-                paypallog.Response_Date_Time__c=DateTime.now();
-                paypallog.Response_Message__c= responseMap.get(RESPONSEMESSAGE);
-                paypallog.Transaction_Opportunity__c=invoiceid;
-                paypallog.Name='Paypal Responce Message in class';
-                System.debug('Try to Insert data into PaypalResponseLog__c ======' );
-                //insert paypallog;
-                Database.insert(paypallog);
-                System.debug('After inser data into PaypalResponseLog__c ==>'+paypallog.Transaction_Opportunity__c);*/
-                
-                insertpaypalLog obj=new insertpaypalLog();
-                obj.insertlog(responseMap.get(TRANSACTIONID),responseMap.get(RESPONSEMESSAGE),Invouceid );
-                System.debug(' Insert data into PaypalResponseLog__c ##-Success-**');
-                /****************** Track Paypal Reponse Messages Log*******************/
         return responseMap;
 
     }

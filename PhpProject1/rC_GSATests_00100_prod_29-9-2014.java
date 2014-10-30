@@ -1,7 +1,7 @@
 @isTest 
 private class rC_GSATests_00100 {
     
-    static testMethod void test_100_SearchForTroopRoleByName() {
+    /* static testMethod void test_100_SearchForTroopRoleByName() {
         ID ProfileID = [ Select Id from Profile where Name = 'Partner Community Login Custom'][0].id;
         List<Account> accountList = new List<Account>();
         
@@ -487,7 +487,7 @@ private class rC_GSATests_00100 {
       // }
     }
     
-    static testMethod void test_100_UnsureOfVolunteerRole() {
+   static testMethod void test_100_UnsureOfVolunteerRole() {
         ID ProfileID = [ Select Id from Profile where Name = 'Partner Community Login Custom'][0].id;
         List<Account> accountList = new List<Account>();
         List<Campaign> volunteerJobsCampaignList = new List<Campaign>();
@@ -614,7 +614,7 @@ private class rC_GSATests_00100 {
         Test.stopTest();
        // }
     }
-  
+ 
     static testMethod void test_100_ClearSearch() {
         ID ProfileID = [ Select Id from Profile where Name = 'Partner Community Login Custom'][0].id;
         List<Account> accountList = new List<Account>();
@@ -991,7 +991,7 @@ private class rC_GSATests_00100 {
         //}
     }
 
-    
+     */
   
     @isTest(seeAllData = true)
     static void test_101_Scenario1() {

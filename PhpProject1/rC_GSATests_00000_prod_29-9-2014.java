@@ -423,7 +423,7 @@ private class rC_GSATests_00000 {
     }
     
     
-        static testMethod void test_23_SearchForTroopRoleByZipCode() {
+       /* static testMethod void test_23_SearchForTroopRoleByZipCode() {
         List<Account> accountList = new List<Account>();
         List<Campaign> volunteerJobsCampaignList = new List<Campaign>();
         List<Campaign> volunteerProjectCampaignList = new List<Campaign>();
@@ -1271,7 +1271,7 @@ private class rC_GSATests_00000 {
 
         Test.stopTest();
     }
-
+*/
 
     static void test_24_redirectToPaymentPage() {
         rC_Giving__Opportunity_Setting__c opportunitySetting = rC_Giving__Opportunity_Setting__c.getInstance();
@@ -3220,7 +3220,7 @@ static testMethod void rc_30_contactAndMemberUpdateWithLinkInCouncilAccount() {
         system.assert(contactList.size() > 0);
     }
 
-    static testMethod void test_38_SearchForTroopRoleByName() {
+  /*  static testMethod void test_38_SearchForTroopRoleByName() {
         List<Account> accountList = new List<Account>();
 
         Account councilAccount = rC_GSATests.initializeAccount(false);
@@ -3921,7 +3921,7 @@ static testMethod void rc_30_contactAndMemberUpdateWithLinkInCouncilAccount() {
 
         Test.stopTest();
     }
-
+*/
    @isTest(SeeAllData=true)
     static void test_39_ProvideMembershipInformation(){
         ID ProfileID = [ Select Id from Profile where Name = 'System Administrator'][0].id;

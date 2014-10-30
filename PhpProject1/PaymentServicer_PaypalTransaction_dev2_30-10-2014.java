@@ -15,7 +15,6 @@ public class PaymentServicer_PaypalTransaction {
     public static final String ADDR_STATE = 'state';
     public static final String ADDR_COUNTRY_CODE = 'country_code';
     public static final String ZIPCODE = 'zipCode';
-    public static final String CUSTOM_VAR = 'custom';
 
     public static final String RESPONSEMESSAGE = 'responseMessage';
     public static final String ISSUCCESS = 'isSuccess';
@@ -33,8 +32,7 @@ public class PaymentServicer_PaypalTransaction {
     public static final String MERCHANT_PASS = 'merchant_pass';
     public static final String ENDPOINT = 'endpoint';
     public static final String ENDPOINT_SANDBOX = 'Sandbox';
-    public static final String INVOICE_ID = 'invoice id';
-    public static final String CONTACT_EMAIL = 'email';
+
     public class MissingMerchantException extends Exception {}
     public class AuthorizationFailedException extends Exception {}
 
@@ -42,8 +40,6 @@ public class PaymentServicer_PaypalTransaction {
     public class Transactions {
         public Amount amount;
         public String description;
-        public String invoice_number;
-        public String custom;
     }
 
     public class ResponseTransactions {
@@ -125,17 +121,12 @@ public class PaymentServicer_PaypalTransaction {
     public class Payer_Without_Token {
         public String payment_method;
         public Funding_Instrument_Without_Token[] funding_instruments;
-        public payer_info payer_info;
     }
 
     public class ProcessCCWithoutTokenRequest {
         public String intent;
         public Payer_Without_Token payer;
         public Transactions[] transactions;
-    }
-
-    public class payer_info {
-        public String email;
     }
 
     public class ProcessCCWithoutTokenResponse {
@@ -168,8 +159,7 @@ public class PaymentServicer_PaypalTransaction {
             'Content-Length' => '' + requestBody.length(),
             'Accept'         => 'application/json',
             'authorization'  =>  authorizationHeader,
-            'Accept-Language'=> 'en_US',
-            'PayPal-Partner-Attribution-Id' => 'roundCorner_SP'
+            'Accept-Language'=> 'en_US'
         }, requestBody, null);
 
         system.debug('authorization Response body-->'+httpResponse.getBody());
@@ -232,11 +222,10 @@ public class PaymentServicer_PaypalTransaction {
 
         String full_Name = paymentData.get(FULLNAME);
 
-        String[] nameParts = full_Name != null? full_Name.split(' ',2) : new String[]{};
+        String[] nameParts = full_Name != null? full_Name.split(' ') : new String[]{};
 
         pageReference.getParameters().put(FIRSTNAME, encodeValue(nameParts.size() != 0? nameParts[0] : ''));
         pageReference.getParameters().put(LASTNAME, encodeValue(nameParts.size() > 1? nameParts[1] : ' '));
-        pageReference.getParameters().put(CUSTOM_VAR, encodeValue(paymentData.get(CUSTOM_VAR)));
         pageReference.getParameters().put(ADDRESS, encodeValue(paymentData.get(ADDRESS)));
         pageReference.getParameters().put(ADDR_CITY, encodeValue(paymentData.get(ADDR_CITY)));
         pageReference.getParameters().put(ADDR_STATE, encodeValue(paymentData.get(ADDR_STATE)));
@@ -245,8 +234,6 @@ public class PaymentServicer_PaypalTransaction {
 
         pageReference.getParameters().put(TOTAL_AMOUNT, encodeValue(paymentData.get(TOTAL_AMOUNT)));
         pageReference.getParameters().put(CURRENCY_CODE, encodeValue(CURRENCY_CODE_USD));
-        pageReference.getParameters().put(INVOICE_ID, encodeValue(paymentData.get(INVOICE_ID)));
-        pageReference.getParameters().put(CONTACT_EMAIL, paymentData.get(CONTACT_EMAIL));
 
         return pageReference;
     }
@@ -282,8 +269,7 @@ public class PaymentServicer_PaypalTransaction {
             'Content-Length' => '' + requestBody.length(),
             'Accept'         => 'application/json',
             'User-Agent'     => 'PayPalSDK/NIW/HATEOAS',
-            'authorization'  => authorizationToken,
-            'PayPal-Partner-Attribution-Id' => 'roundCorner_SP'
+            'authorization'  => authorizationToken
         }, requestBody, pageReference.getParameters().get('Id'));
 
         if (test.isRunningTest() == true) {
@@ -298,8 +284,6 @@ public class PaymentServicer_PaypalTransaction {
         processCCWithoutTokenRequest.intent = 'sale';
 
         Payer_Without_Token payer = new Payer_Without_Token();
-        payer.payer_info = new payer_info();
-        payer.payer_info.email = blank(pageReference.getParameters().get(CONTACT_EMAIL));
         payer.payment_method = 'credit_card';
         payer.funding_instruments = new Funding_Instrument_Without_Token[] {};
         Funding_Instrument_Without_Token funding_instrument = new Funding_Instrument_Without_Token();
@@ -319,9 +303,6 @@ public class PaymentServicer_PaypalTransaction {
         funding_instrument.credit_card.billing_address.country_code = blank(pageReference.getParameters().get(ADDR_COUNTRY_CODE));
         payer.funding_instruments.add(funding_instrument);
         processCCWithoutTokenRequest.payer = payer;
-        
-        
-        
 
         processCCWithoutTokenRequest.transactions = new Transactions[] {};
         Transactions transactions = new Transactions();
@@ -329,8 +310,6 @@ public class PaymentServicer_PaypalTransaction {
         transactions.amount.entered_currency = blank(pageReference.getParameters().get(CURRENCY_CODE));
         transactions.amount.total = blank(pageReference.getParameters().get(TOTAL_AMOUNT));
         transactions.description = blank(pageReference.getParameters().get(OPPORTUNITY_DESCRIPTION));
-        transactions.invoice_number = blank(pageReference.getParameters().get(INVOICE_ID));
-        transactions.custom = blank(pageReference.getParameters().get(CUSTOM_VAR));
         processCCWithoutTokenRequest.transactions.add(transactions);
 
         String requestBody = Json.serialize(processCCWithoutTokenRequest);

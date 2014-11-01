@@ -19,7 +19,7 @@ public with sharing class GirlCatalog_TroopSearchController extends SobjectExten
     private String contactId;
     private String girlContactId;
     private String parentContactId;
-    private String councilId;
+    private String councilId { get; set; }
 
     public GirlCatalog_TroopSearchController() {
         selectedPageSize = '10';

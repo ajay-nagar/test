@@ -25,7 +25,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
     public static final Map<String, Schema.FieldSet> FIELDSETS_CAMPAIGN = SObjectType.Campaign.FieldSets.getMap();
 
     private String contactId;
-    public String councilId;
+    public String councilId { get; set; }
     private static Integer counterUnableToLockRow = 0;
 
     private List<ParentCampaignWrapper> unsureCampaignRecordList;
@@ -782,8 +782,38 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
         }
         else if(troopOrGroupName != null && troopOrGroupName != '') {
             
-            List<Campaign> allCampaignList = VolunteerRegistrationUtilty.getListOfAllCampaign(troopOrGroupName,'TroopName', new Set<String>());
-
+             List<Campaign> allCampaignList;
+              if(councilId !=null && councilId !='')
+                    {
+                         allCampaignList =[
+                        Select Parent.Name
+                             ,Volunteer_Openings_Remaining__c
+                             , ParentId
+                             , Parent.Grade__c
+                             , Parent.Meeting_Day_s__c
+                              , Parent.Meeting_Frequency__c
+                             , Parent.Meeting_Location__c
+                             , Parent.rC_Volunteers__Required_Volunteer_Count__c
+                             , Parent.Display_on_Website__c
+                             , Parent.Meeting_Start_Time__c
+                             , Parent.Troop_Start_Date__c
+                             , Parent.Account__c
+                             , Id 
+                             ,Parent.Participation__c
+                             , Name
+                             , Council_Code__c 
+                             , GS_Volunteers_Required__c 
+                          From Campaign 
+                         where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
+                           and Display_on_Website__c = true
+                           and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
+                           and Parent.Name !='unsure'
+                           and Parent.Account__c =:councilId 
+                            ];
+                    
+                    }else{
+                         allCampaignList = VolunteerRegistrationUtilty.getListOfAllCampaign(troopOrGroupName,'TroopName', new Set<String>());
+                        }
             if(allCampaignList != null && allCampaignList.size() > 0) {
                 searchByCampaignName = false;
                 for(Campaign campaign : allCampaignList)
@@ -934,18 +964,24 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
     }
 
     @RemoteAction
-    public static List<String> searchCampaingNames(String searchtext1) {
+    public static List<String> searchCampaingNames(String searchtext1,String councilId2 ) {
         String JSONString1;
         List<Campaign> campaignList = new List<Campaign>();
         List<String> nameList = new List<String>();
+        String searchQueri='';
 
-        String searchQueri = 'Select ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\' and Recordtypeid = \''+RT_VOLUNTEER_JOBS_ID+'\' and Display_on_Website__c = true order by Name limit 100' ;
-        campaignList = database.query(searchQueri);
+       // searchQueri = 'Select ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\' and (Parent.Account__c ='+'\'' +councilId+ '\' or Account__c ='+ councilId+')  and Display_on_Website__c = true order by Name limit 100' ;
+             searchQueri = 'Select Parent.Account__c,Account__c, ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true order by Name limit 100' ;
+               campaignList = database.query(searchQueri);
+           
+            
 
         if(campaignList != null && campaignList.size() > 0) {
             for(Campaign campaign : campaignList)
+            {
+            if(campaign.Parent.Account__c==councilId2 ||campaign.Account__c==councilId2 )
             nameList.add(campaign.Name);
-
+             }
             JSONString1 = JSON.serialize(nameList);
         }
         return nameList;

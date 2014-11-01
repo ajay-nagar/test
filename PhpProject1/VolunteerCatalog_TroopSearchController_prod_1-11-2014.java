@@ -18,7 +18,7 @@ public with sharing class VolunteerCatalog_TroopSearchController extends Sobject
     public static final Map<String, Schema.FieldSet> FIELDSETS_CAMPAIGN = SObjectType.Campaign.FieldSets.getMap();
 
     private String contactId;
-    private String councilId;
+    private String councilId { get; set; }
     private List<ParentCampaignWrapper> unsureCampaignRecordList;
 
     private static final map<String, Schema.RecordTypeInfo> CAMPAIGN_RECORDTYPE_INFO_MAP =  Campaign.SObjectType.getDescribe().getRecordTypeInfosByName();

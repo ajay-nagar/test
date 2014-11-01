@@ -24,7 +24,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
     private String contactId;
     private String girlContactId;
     private String parentContactId;
-    private String councilId;
+    private String councilId { get; set; }
     private static Integer counterUnableToLockRow = 0;
 
     public Girl_TroopGroupRoleSearchController() {
@@ -729,8 +729,36 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
             }
         }
         else if(troopOrGroupName != null && troopOrGroupName != '') {
-
-            List<Campaign> allCampaignList = GirlRegistrationUtilty.getListOfCampaign(troopOrGroupName, 'TroopName', new Set<String>(), Grade);
+					      List<Campaign> allCampaignList;
+                if(councilId !=null && councilId !='')
+                {
+                 allCampaignList = [
+                                Select Grade__c
+                                     , Meeting_Day_s__c
+                                     , Meeting_Frequency__c
+                                     , Meeting_Location__c
+                                     , Volunteers_Needed_to_Start__c 
+                                     , Display_on_Website__c
+                                     , Meeting_Start_Date_time__c
+                                    ,Troop_Start_Date__c
+                                    ,Meeting_Start_Time__c
+                                     , Account__c
+                                     , Girl_Openings_Remaining__c
+                                     , Participation__c
+                                     , Id
+                                     , Name
+                                     , RecordTypeId
+                                     , Council_Code__c 
+                                  From Campaign 
+                                 where Name = :troopOrGroupName
+                                   and Display_on_Website__c = true
+                                   and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
+                                   and Account__c = :councilId
+                            ];
+                 }else{
+                  allCampaignList = GirlRegistrationUtilty.getListOfCampaign(troopOrGroupName, 'TroopName', new Set<String>(), Grade);
+                 }
+       //     List<Campaign> allCampaignList = GirlRegistrationUtilty.getListOfCampaign(troopOrGroupName, 'TroopName', new Set<String>(), Grade);
             system.debug('allCampaignList===>'+allCampaignList);
             if(allCampaignList != null && allCampaignList.size() > 0) {
                 for(Campaign campaign : allCampaignList)                     
@@ -880,8 +908,8 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         return null;
     }
 
-    @RemoteAction
-    public static List<String> searchCampaingNames(String searchtext1) {
+   @RemoteAction
+    public static List<String> searchCampaingNames(String searchtext1,String councilId2) {
         String JSONString;
         List<Campaign> campaignList = new List<Campaign>();
         List<String> nameList = new List<String>();
@@ -890,13 +918,15 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         Savepoint savepoint = Database.setSavepoint();
 
         try{
-            String searchQueri = 'Select ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true and RecordTypeId = \'' + recTypeId + '\' order by Name limit 100' ;
+            String searchQueri = 'Select ParentId,Account__c, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true and RecordTypeId = \'' + recTypeId + '\' order by Name limit 100' ;
             campaignList = database.query(searchQueri);
 
             if(!campaignList.isEmpty())
                 for(Campaign campaign : campaignList)
+                { 
+                    if(campaign.Account__c==councilId2)
                     nameList.add(campaign.Name);
-
+                }
             JSONString = JSON.serialize(nameList);
         } catch(System.exception pException) {
             system.debug('pException.getMessage==>'+pException.getMessage());
@@ -904,6 +934,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         }
         return nameList;
     }
+
 
     public Contact getContactRecord() {
         Contact contact;

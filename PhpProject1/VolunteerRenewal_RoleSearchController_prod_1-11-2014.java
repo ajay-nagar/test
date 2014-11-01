@@ -24,6 +24,7 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
      public Boolean isunsure { get; set; }
     private String contactId;
     private String councilId;
+	public String councilId2 { get; set; }
     private List<ParentCampaignWrapper> unsureCampaignRecordList;
     private List<Contact> contactList;
     private String campaignMemberIds = '';
@@ -103,6 +104,10 @@ public class VolunteerRenewal_RoleSearchController extends SobjectExtension{
 
         //if (Apexpages.currentPage().getParameters().containsKey('CouncilId'))
             //councilId = Apexpages.currentPage().getParameters().get('CouncilId');
+
+		 if (Apexpages.currentPage().getParameters().containsKey('CouncilId'))
+            councilId2 = Apexpages.currentPage().getParameters().get('CouncilId');
+
 
         if (Apexpages.currentPage().getParameters().containsKey('CampaignMemberIds'))
             campaignMemberIds = Apexpages.currentPage().getParameters().get('CampaignMemberIds');
@@ -774,30 +779,61 @@ public PageReference deleteselectedrecord(){
             addUnsureCampaign();
   
             //List<Campaign> allCampaignList = VolunteerRenewalUtility.lstCampaign(troopOrGroupName, 'troopName');
-            
+            List<Campaign> allCampaignList;
             system.debug('troopOrGroupName#############'+troopOrGroupName);
             
-            List<Campaign> allCampaignList =[
-                Select Parent.Name
-                     , ParentId
-                     , Parent.Grade__c
-                     , Parent.Meeting_Day_s__c
-                     , Parent.Meeting_Location__c
-                     , Parent.rC_Volunteers__Required_Volunteer_Count__c
-                     , Parent.Display_on_Website__c
-                     , Parent.Meeting_Start_Date_time__c
-                     , Parent.Account__c
-                     , Id 
-                     ,Parent.Participation__c
-                     , Name
-                     , Council_Code__c 
-                     , GS_Volunteers_Required__c 
-                  From Campaign 
-                 where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
-                   and Display_on_Website__c = true
-                   and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
-                   and Parent.Name !='unsure'
-            ];
+              if(councilId2 !=null && councilId2 !='')
+                    {
+                         allCampaignList =[
+                        Select Parent.Name
+                             , ParentId
+                             , Parent.Grade__c
+                             , Parent.Meeting_Day_s__c
+                             , Parent.Meeting_Frequency__c
+                             , Parent.Meeting_Location__c
+                             , Parent.rC_Volunteers__Required_Volunteer_Count__c
+                             , Parent.Display_on_Website__c
+                             ,Parent.Troop_Start_Date__c
+                             ,Parent.Meeting_Start_Time__c
+                             , Parent.Account__c
+                             , Id 
+                             ,Parent.Participation__c
+                             , Name
+                             , Council_Code__c 
+                             , GS_Volunteers_Required__c 
+                          From Campaign 
+                         where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
+                           and Display_on_Website__c = true
+                           and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
+                           and Parent.Name !='unsure'
+                           and Parent.Account__c =:councilId2 
+                            ];
+                    system.debug('councilId2:'+councilId2);
+                    }else{
+                           allCampaignList =[
+                        Select Parent.Name
+                             , ParentId
+                             , Parent.Grade__c
+                             , Parent.Meeting_Day_s__c
+                               , Parent.Meeting_Frequency__c
+                             , Parent.Meeting_Location__c
+                             , Parent.rC_Volunteers__Required_Volunteer_Count__c
+                             , Parent.Display_on_Website__c
+                               ,Parent.Troop_Start_Date__c
+                                ,Parent.Meeting_Start_Time__c
+                             , Parent.Account__c
+                             , Id 
+                             ,Parent.Participation__c
+                             , Name
+                             , Council_Code__c 
+                             , GS_Volunteers_Required__c 
+                          From Campaign 
+                         where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
+                           and Display_on_Website__c = true
+                           and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
+                           and Parent.Name !='unsure'
+                            ];
+                    }
             
         system.debug('allCampaignList=====>'+allCampaignList);
             if(allCampaignList != null && allCampaignList.size() > 0) {
@@ -937,24 +973,28 @@ public PageReference deleteselectedrecord(){
         return null;
     }
 
-    @RemoteAction
-    public static List<String> searchCampaingNames(String searchtext1) {
+  @RemoteAction
+    public static List<String> searchCampaingNames(String searchtext1,String councilId22) {
 
         String JSONString1;
         List<Campaign> campaignList = new List<Campaign>();
         List<String> nameList = new List<String>();
 
-        String searchQueri = 'Select ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\' and Recordtypeid = \''+RT_VOLUNTEER_JOBS_ID+'\'  and Display_on_Website__c = true order by Name limit 100' ;
+        String searchQueri = 'Select Parent.Account__c,Account__c ,ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true order by Name limit 100' ;
         campaignList = VolunteerRenewalUtility.remoteCampaignList(searchQueri);//database.query(searchQueri);
         system.debug('***campaignList***'+campaignList);
         if(campaignList != null && campaignList.size() > 0) {
             for(Campaign campaign : campaignList)
+            {
+            if(campaign.Parent.Account__c==councilId22 ||campaign.Account__c==councilId22 )
             nameList.add(campaign.Name);
+             }
 
             JSONString1 = JSON.serialize(nameList);
         }
         return nameList;
     }
+
 
     public Contact getContactRecord() {
         Contact contact;

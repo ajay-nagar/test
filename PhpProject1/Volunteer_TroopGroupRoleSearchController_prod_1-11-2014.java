@@ -12,11 +12,6 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
     public List<Campaign> parentCampaignList { get; set;}
     public boolean searchByCampaignName ;
     public static Boolean isCouncilHeaderAvailable { get; set; }
-    
-    //change
-    //public PageReference currentURL ;
-    public String CurrentURl ;
-
      public Boolean showselectedcampaign { get; set; }
      public Boolean isunsure { get; set; }
      public ID deleteselectedrecordid { get; set; }
@@ -30,7 +25,7 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
     public static final Map<String, Schema.FieldSet> FIELDSETS_CAMPAIGN = SObjectType.Campaign.FieldSets.getMap();
 
     private String contactId;
-    public String councilId { get; set; }
+    public String councilId;
     private static Integer counterUnableToLockRow = 0;
 
     private List<ParentCampaignWrapper> unsureCampaignRecordList;
@@ -73,12 +68,6 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
         searchByCampaignName = false;
         isCouncilHeaderAvailable = false;
             showselectedcampaign =false;
-        //change start
-        
-        CurrentURL= ApexPages.currentPage().getURL();
-        system.debug('---Current Url -->'+CurrentURL);
-        
-        //change End
         parentCampaignWrapperList2 = new List<ParentCampaignWrapper>();
         pageNumberSet = new List<Integer>();
         parentCampaignWrapperList = new List<ParentCampaignWrapper>();
@@ -104,10 +93,6 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
         addUnsureCampaign();
     }
     
-  /*  public PageReference currentURL() {
-      
-    }*/
-
     public PageReference searchTroopORGroupRoleByNameORZip() {
         Savepoint savepoint = Database.setSavepoint();
 
@@ -130,16 +115,14 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                 if(newTempWrapperList.size() == 0)
                     parentCampaignWrapperList.clear();
                        List<Campaign> unsureCampaignList = [
-            Select Parent.Name
+                    Select Parent.Name
                  , ParentId
                  , Parent.Grade__c
                  , Parent.Meeting_Day_s__c
-                 , Parent.Meeting_Frequency__c
                  , Parent.Meeting_Location__c
                  , Parent.rC_Volunteers__Required_Volunteer_Count__c
                  , Parent.Display_on_Website__c
-                 , Parent.Troop_Start_Date__c
-                 , Parent.Meeting_Start_Time__c
+                 , Parent.Meeting_Start_Date_time__c
                  , Parent.Zip_Code__c
                  , Parent.Account__c
                  , Id
@@ -155,16 +138,16 @@ public with sharing class Volunteer_TroopGroupRoleSearchController extends Sobje
                and Display_on_Website__c = true
                and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
              limit 1
-        ];
-for(Campaign campaign : unsureCampaignList){
- parentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c,  campaign.Parent.Meeting_Frequency__c ,  campaign.Parent.Troop_Start_Date__c
-                 , campaign.Parent.Meeting_Start_Time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
-}              if(troopOrGroupName!='unsure' ){
+                ];
+                for(Campaign campaign : unsureCampaignList){
+                 parentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
+                }  
+                                        
+                 if(troopOrGroupName!='unsure' ){
                 return addErrorMessageAndRollback(savepoint,'No Troop/Groups with this Name Exists.');
-            }else{
-            return  null;   }
-            
-           } 
+                 }else{
+                 return null; }
+            }
             if(newTempWrapperList.size() == 0) {
                 system.debug('######222###');
                 parentCampaignWrapperList.clear();
@@ -289,7 +272,7 @@ for(Campaign campaign : unsureCampaignList){
 
         double radian = 57.295; 
         double theDistance = (Math.sin(latA/radian) * Math.sin(latB/radian) + Math.cos(latA/radian) * Math.cos(latB/radian) * Math.cos((longA - longB)/radian));
-         if(theDistance >1.0){
+          if(theDistance >1.0){
              theDistance=1.0;
           }  
           if(theDistance <-1.0){
@@ -799,44 +782,13 @@ for(Campaign campaign : unsureCampaignList){
         }
         else if(troopOrGroupName != null && troopOrGroupName != '') {
             
-                 List<Campaign> allCampaignList;
-              if(councilId !=null && councilId !='')
-                    {
-                         allCampaignList =[
-                        Select Parent.Name
-                             ,Volunteer_Openings_Remaining__c
-                             , ParentId
-                             , Parent.Grade__c
-                             , Parent.Meeting_Day_s__c
-                              , Parent.Meeting_Frequency__c
-                             , Parent.Meeting_Location__c
-                             , Parent.rC_Volunteers__Required_Volunteer_Count__c
-                             , Parent.Display_on_Website__c
-                             , Parent.Meeting_Start_Time__c
-                             , Parent.Troop_Start_Date__c
-                             , Parent.Account__c
-                             , Id 
-                             ,Parent.Participation__c
-                             , Name
-                             , Council_Code__c 
-                             , GS_Volunteers_Required__c 
-                          From Campaign 
-                         where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
-                           and Display_on_Website__c = true
-                           and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
-                           and Parent.Name !='unsure'
-                           and Parent.Account__c =:councilId 
-                            ];
-                    
-                    }else{
-                         allCampaignList = VolunteerRegistrationUtilty.getListOfAllCampaign(troopOrGroupName,'TroopName', new Set<String>());
-                        }
+            List<Campaign> allCampaignList = VolunteerRegistrationUtilty.getListOfAllCampaign(troopOrGroupName,'TroopName', new Set<String>());
+
             if(allCampaignList != null && allCampaignList.size() > 0) {
                 searchByCampaignName = false;
                 for(Campaign campaign : allCampaignList)
                     if(campaign != null && campaign.Id != null)
-                        innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c , campaign.Parent.Meeting_Frequency__c, campaign.Parent.Troop_Start_Date__c
-                 , campaign.Parent.Meeting_Start_Time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
+                        innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
 
                 if(unsureCampaignRecordList != null && unsureCampaignRecordList.size() > 0) {
                     for(ParentCampaignWrapper wrapper : unsureCampaignRecordList) {
@@ -897,8 +849,7 @@ for(Campaign campaign : unsureCampaignList){
             for(Campaign campaign : allChildCampaignWithZipCodeList) {
                 if(campaign != null && campaign.Id != null) {
                     if(parentCampaignIdVSDistanceMap.ContainsKey(campaign.Parent.Id)) {
-                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, parentCampaignIdVSDistanceMap.get(campaign.Parent.Id), campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c , campaign.Parent.Meeting_Frequency__c,  campaign.Parent.Troop_Start_Date__c
-                 , campaign.Parent.Meeting_Start_Time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
+                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, parentCampaignIdVSDistanceMap.get(campaign.Parent.Id), campaign.Name, campaign.Parent.Grade__c, campaign.Parent.Meeting_Location__c,  campaign.Parent.Meeting_Day_s__c, campaign.Parent.Meeting_Start_Date_time__c, String.valueOf(campaign.Volunteer_Openings_Remaining__c), campaign.Parent.Name, campaign.Parent.Account__c, campaign.Id,campaign.Parent.Participation__c));
                     }
                 }
             }
@@ -983,24 +934,18 @@ for(Campaign campaign : unsureCampaignList){
     }
 
     @RemoteAction
-    public static List<String> searchCampaingNames(String searchtext1,String councilId2 ) {
+    public static List<String> searchCampaingNames(String searchtext1) {
         String JSONString1;
         List<Campaign> campaignList = new List<Campaign>();
         List<String> nameList = new List<String>();
-        String searchQueri='';
 
-       // searchQueri = 'Select ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\' and (Parent.Account__c ='+'\'' +councilId+ '\' or Account__c ='+ councilId+')  and Display_on_Website__c = true order by Name limit 100' ;
-             searchQueri = 'Select Parent.Account__c,Account__c, ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true order by Name limit 100' ;
-               campaignList = database.query(searchQueri);
-           
-            
+        String searchQueri = 'Select ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\' and Recordtypeid = \''+RT_VOLUNTEER_JOBS_ID+'\' and Display_on_Website__c = true order by Name limit 100' ;
+        campaignList = database.query(searchQueri);
 
         if(campaignList != null && campaignList.size() > 0) {
             for(Campaign campaign : campaignList)
-            {
-            if(campaign.Parent.Account__c==councilId2 ||campaign.Account__c==councilId2 )
             nameList.add(campaign.Name);
-             }
+
             JSONString1 = JSON.serialize(nameList);
         }
         return nameList;
@@ -1026,10 +971,8 @@ for(Campaign campaign : unsureCampaignList){
                  , Display_on_Website__c
                  , Zip_Code__c
                  , Meeting_Location__c
-                 ,Troop_Start_Date__c
-                 ,Meeting_Start_Time__c
+                 , Meeting_Start_Date_time__c
                  , Meeting_Day_s__c
-                  ,Meeting_Frequency__c
                  , GS_Volunteers_Required__c 
                  , rC_Volunteers__Required_Volunteer_Count__c,Parent.Participation__c
                  , Volunteer_Openings_Remaining__c
@@ -1053,12 +996,10 @@ for(Campaign campaign : unsureCampaignList){
                  , ParentId
                  , Parent.Grade__c
                  , Parent.Meeting_Day_s__c
-                  , Parent.Meeting_Frequency__c
                  , Parent.Meeting_Location__c
                  , Parent.rC_Volunteers__Required_Volunteer_Count__c
                  , Parent.Display_on_Website__c
-                 , Parent.Troop_Start_Date__c
-                 , Parent.Meeting_Start_Time__c
+                 , Parent.Meeting_Start_Date_time__c
                  , Parent.Zip_Code__c
                  , Parent.Account__c
                  , Id
@@ -1079,8 +1020,7 @@ for(Campaign campaign : unsureCampaignList){
         if(parentCampaignRecordList != null && parentCampaignRecordList.size() > 0) {
             for(Campaign childCampaign :parentCampaignRecordList)
             if(childCampaign != null)
-                unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', childCampaign.Name, childCampaign.Parent.Grade__c, childCampaign.Parent.Meeting_Location__c,  childCampaign.Parent.Meeting_Day_s__c , childCampaign.Parent.Meeting_Frequency__c
-, childCampaign.Parent.Troop_Start_Date__c, childCampaign.Parent.Meeting_Start_Time__c, String.valueOf(childCampaign.Volunteer_Openings_Remaining__c), childCampaign.Parent.Name, childCampaign.Parent.Account__c, childCampaign.Id,childCampaign.Parent.Participation__c));
+                unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', childCampaign.Name, childCampaign.Parent.Grade__c, childCampaign.Parent.Meeting_Location__c,  childCampaign.Parent.Meeting_Day_s__c, childCampaign.Parent.Meeting_Start_Date_time__c, String.valueOf(childCampaign.Volunteer_Openings_Remaining__c), childCampaign.Parent.Name, childCampaign.Parent.Account__c, childCampaign.Id,childCampaign.Parent.Participation__c));
         }
     }
 
@@ -1093,7 +1033,6 @@ for(Campaign campaign : unsureCampaignList){
         public String campaignGrade { get; set; }
         public String campaignMeetingLocation { get; set; }
         public String campaignMeetingDay { get; set; }
-         public String campaignMeetingDayfrequency { get; set; }
         public DateTime campaignMeetingStartDatetime { get; set; }
         public String campaignVolunteersRequired { get; set; }
         public String parentCampaignName { get; set; }
@@ -1101,54 +1040,23 @@ for(Campaign campaign : unsureCampaignList){
          public Id campaignId { get; set; }
         public String parentCampaignAccountId;
         public String campaignParticipationType { get; set; }
-        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, String strcampaignMeetingDayfrequency, Date TroopStartDate,String MeetingStartTime, String strCampaignVolunteersRequired, String strParentCampaignName, String strAccountId, String strChildCampaignId,String strCampaignParticipation) {
+        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strCampaignVolunteersRequired, String strParentCampaignName, String strAccountId, String strChildCampaignId,String strCampaignParticipation) {
             isCampaignChecked = campaignChecked;
             campaignDistance = strCampaignDistance;
             childCampaignName = strChildCampaignName;
             campaignGrade = strCampaignGrade;
             campaignMeetingLocation = strCampaignMeetingLocation;
-            if(strcampaignMeetingDayfrequency ==null)
-            strcampaignMeetingDayfrequency ='';
-            campaignMeetingDay =strcampaignMeetingDayfrequency +' '+ strcampaignMeetingDay;
-            campaignMeetingDayfrequency =  strcampaignMeetingDayfrequency ;
-            if(TroopStartDate!= null && MeetingStartTime!=null ){
-                  //String Str0 = String.valueOf(TroopStartDate);// +' '+ MeetingStartTime;
-                 // system.debug('Str0======>'+Str0 +'TroopStartDate:'+TroopStartDate+'strCampaignMeetingStartDatetime:'+strCampaignMeetingStartDatetime);
-                 // DateTime st =Datetime.parse(Str0);
-                 //campaignMeetingStartDatetimeStd = String.valueOf(st.getTime());
-                 Datetime   strCampaignMeetingStartDatetime= TroopStartDate;
-                    String Str0 = MeetingStartTime;//convert in 24 hours format
-                    String[] strarr = Str0.split(' ');
-                    Integer hour = Integer.valueof(strarr.get(0).split(':').get(0));
-                    Integer min = Integer.valueof(strarr.get(0).split(':').get(1));
-                    string AMPM     = strarr.get(1);
-                    if(hour!=12 && AMPM!='AM' )
-                        hour=hour+12;
-                         hour=hour+7;
-                    Integer year=strCampaignMeetingStartDatetime.year();
-                    Integer mon=strCampaignMeetingStartDatetime.month();
-                    Integer day=strCampaignMeetingStartDatetime.day();
-                    Datetime myDate = datetime.newInstance(year, mon, day , hour, min, 0);
-                        
-                     campaignMeetingStartDatetimeStd = String.valueOf(myDate.getTime());
-             
-            }else{
-                 //campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
-                 
-                          campaignMeetingStartDatetimeStd = '';
-                   
-            
-            }
-            
-           // campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
-          
+            campaignMeetingDay = strcampaignMeetingDay;
+            campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
             campaignVolunteersRequired = strCampaignVolunteersRequired;
             parentCampaignName = strParentCampaignName;
             parentCampaignAccountId = strAccountId;
             childCampaignId = strChildCampaignId;
                campaignId = strChildCampaignId;
               campaignParticipationType = strCampaignParticipation;
-         }  
+            if(strCampaignMeetingStartDatetime!=null)
+              campaignMeetingStartDatetimeStd = String.valueOf(strCampaignMeetingStartDatetime.getTime());
+        }
 
         public Integer compareTo(Object compareTo) {
             ParentCampaignWrapper compareToParentCamp = (ParentCampaignWrapper)compareTo;

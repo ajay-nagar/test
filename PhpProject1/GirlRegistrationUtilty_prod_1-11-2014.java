@@ -75,7 +75,6 @@ public without sharing class GirlRegistrationUtilty {
                  , Meeting_Location__c
                  , Meeting_Start_Date_time__c
                  , Meeting_Day_s__c
-                 , Meeting_Frequency__c
                  , rC_Volunteers__Required_Volunteer_Count__c
               From Campaign
              where Display_on_Website__c = true
@@ -333,7 +332,7 @@ public without sharing class GirlRegistrationUtilty {
     public static List<Campaign> getListOfCampaign(String troopOrGroupName, String isTroopOrZip, Set<String> zipCodeSet, String strGrade){
         String baseQuery = '';
         String unsure = 'Unsure';
-        String selectQuery = 'Select Grade__c, Meeting_Day_s__c, Meeting_Frequency__c, Meeting_Location__c, Volunteers_Needed_to_Start__c , Display_on_Website__c, Meeting_Start_Date_time__c,Troop_Start_Date__c,Meeting_Start_Time__c, Account__c, Girl_Openings_Remaining__c, Participation__c, Id, Name, Zip_Code__c, Council_Code__c From Campaign';
+        String selectQuery = 'Select Grade__c, Meeting_Day_s__c, Meeting_Location__c, Volunteers_Needed_to_Start__c , Display_on_Website__c, Meeting_Start_Date_time__c, Account__c, Girl_Openings_Remaining__c, Participation__c, Id, Name, Zip_Code__c, Council_Code__c From Campaign';
         String whereClause = ' where ';
         String troopName = ' Name = ' +'\'' + troopOrGroupName + '\'';
         String zipCode = ' Zip_Code__c != null';

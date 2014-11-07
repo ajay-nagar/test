@@ -169,7 +169,6 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
           if(theDistance <-1.0){
              theDistance=-1.0;
           } 
-        
         double dis = (Math.acos(theDistance)) * 69.09 * radian;
         return dis; 
     }
@@ -375,7 +374,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                 Boolean isPrimaryCampaignMember = false;
                 Boolean isPrimaryCampaignMemberForSelection = false;
                 Boolean isTroopContainsIRM = false;
-                map<ID,ID> AlreadyExistCampaignMemberMap = new map<ID,ID>();
+
                 List<Contact> conactList = [Select Name, Id from Contact where Id = :girlContactId]; 
                 Contact contact = (conactList != null && conactList.size() > 0) ? conactList[0] : new Contact();
 
@@ -398,16 +397,9 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                     ];
 
                     if(campaignMemberForCurrentGirlList != null && campaignMemberForCurrentGirlList.size() > 0) {
-                        /*for(CampaignMember campaignMember :campaignMemberForCurrentGirlList)
-                            if(campaignMember.Primary__c && campaignMember.Active__c)
-                                isPrimaryCampaignMember = true;*/
-                      for(CampaignMember campaignMember :campaignMemberForCurrentGirlList) {
+                        for(CampaignMember campaignMember :campaignMemberForCurrentGirlList)
                             if(campaignMember.Primary__c && campaignMember.Active__c)
                                 isPrimaryCampaignMember = true;
-                            AlreadyExistCampaignMemberMap.put(campaignMember.CampaignId,campaignMember.ContactId);
-                            system.debug('Campaign Id==>' + campaignMember.CampaignId +'Contact Id==>'+campaignMember.ContactId);
-                      }
-                     
                     }
                 }
 
@@ -427,37 +419,16 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                             if(isTroopContainsIRM && wrapper.campaignParticipationType != null && wrapper.campaignParticipationType != '' && wrapper.campaignParticipationType.equalsIgnoreCase('IRM')) {
                                 CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = true, Active__c = false);
                                 campaignMemberList.add(campaignMember);
-                                System.debug('wrapper.campaignAccountId=>'+wrapper.campaignAccountId);
-                                System.debug('****CampaignMember Mark Primary****'+campaignMember.Primary__c );
                             }
                             else {
-                            
-                                System.debug('!isPrimaryCampaignMember=>'+!isPrimaryCampaignMember);
-                                System.debug('!isPrimaryCampaignMemberForSelection =>'+!isPrimaryCampaignMemberForSelection );
-                                System.debug('!isTroopContainsIRM=>'+!isTroopContainsIRM);
-                                
                                 if(!isPrimaryCampaignMember && !isPrimaryCampaignMemberForSelection && !isTroopContainsIRM) {
-                                    /*CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = true, Active__c = false);
+                                    CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = true, Active__c = false);
                                     campaignMemberList.add(campaignMember);
                                     isPrimaryCampaignMemberForSelection = true;
-                                    System.debug('****CampaignMember Mark Primary****'+campaignMember.Primary__c );*/
-                                    
-                                    if(!AlreadyExistCampaignMemberMap.containsKey(wrapper.campaignId)){
-                                        CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = true, Active__c = false);
-                                        campaignMemberList.add(campaignMember);
-                                        isPrimaryCampaignMemberForSelection = true;
-                                    }
-                                    else {
-                                        CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = false, Active__c = false);
-                                        campaignMemberList.add(campaignMember);
-                                    }
-                                    
                                 }
                                 else {
                                     CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = false, Active__c = false);
                                     campaignMemberList.add(campaignMember);
-                                    System.debug('primary False');
-                                    System.debug('****CampaignMember Mark Primary****'+campaignMember.Primary__c );
                                 }
                             }
                          }
@@ -490,23 +461,20 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                         campaignMemberIdSet.add(contactIdCampaignId_CampaignMemberMap.get(contactIdCampaignIdString).Id);
                     } else {
                         newCampaignMemberList.add(campaignMember);
-                        System.debug('**** Add CampaignMember to newCampaignMemberList then check CM primary ==>'+campaignMember.Primary__c );
                     }
                 }
 
                 List<Database.Saveresult> campaignMemberSaveresultList;
                 campaignMemberSaveresultList = Database.insert(newCampaignMemberList);
-                System.debug('campaignMemberSaveresultList  size ==>'+campaignMemberSaveresultList.size());
+
                 if(campaignMemberIdSet.size() > 0) {
                     for(Id campaignMemberId : campaignMemberIdSet)
                         campaignMemberIds = campaignMemberIds == '' ?  string.valueOf(campaignMemberId) : campaignMemberIds + ',' + string.valueOf(campaignMemberId);
                 }
 
                 if(newCampaignMemberList != null && newCampaignMemberList.size() > 0) {
-                    for(CampaignMember campaignMember : newCampaignMemberList) { 
+                    for(CampaignMember campaignMember : newCampaignMemberList) 
                         campaignMemberIds = campaignMemberIds == '' ?  string.valueOf(campaignMember.Id) : campaignMemberIds + ',' + string.valueOf(campaignMember.Id);
-                        System.debug('**** after insert CampaignMember of newCampaignMemberList check CM primary ==>'+campaignMember.Primary__c );
-                        }
                 }
                 
                 if(parentContactId != null) {
@@ -518,25 +486,6 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                         GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_JoinMembershipInformation' + '?GirlContactId='+girlContactId + '&ParentContactId='+parentContactId+'&CampaignMemberIds='+CampaignMemberIds+'&CouncilId='+CouncilId, parentContact);
                 }
                 if(campaignMemberSaveresultList != null) {
-                
-                
-                /********************** delete below this after test******************************/
-                List<CampaignMember> existingCampaignMemberList_test = [
-                    Select Id
-                         , ContactId
-                         , Primary__c 
-                         , CampaignId
-                      from CampaignMember 
-                     where ContactId = :girlContactId 
-                       and CampaignId IN :campaignIdSet
-                ];
-                System.debug('Size existingCampaignMemberList_test  ==>'+existingCampaignMemberList_test.size());
-                for(CampaignMember campaignMember : existingCampaignMemberList_test ) {
-                    System.debug('***Last before redirect check CM primary ==>'+campaignMember.Primary__c );
-                    
-                }
-                /*********************** delete above this after test ****************************/
-                
                     for(Database.Saveresult sr : campaignMemberSaveresultList) {
                         if (sr.isSuccess()) {
                             
@@ -780,19 +729,16 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
             }
         }
         else if(troopOrGroupName != null && troopOrGroupName != '') {
-            List<Campaign> allCampaignList;
+                          List<Campaign> allCampaignList;
                 if(councilId !=null && councilId !='')
                 {
                  allCampaignList = [
                                 Select Grade__c
                                      , Meeting_Day_s__c
-                                     , Meeting_Frequency__c
                                      , Meeting_Location__c
                                      , Volunteers_Needed_to_Start__c 
-                                     , Volunteers_Needed_to_Start_New__c
                                      , Display_on_Website__c
-                                    ,Troop_Start_Date__c
-                                    ,Meeting_Start_Time__c
+                                     , Meeting_Start_Date_time__c
                                      , Account__c
                                      , Girl_Openings_Remaining__c
                                      , Participation__c
@@ -809,12 +755,11 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                  }else{
                   allCampaignList = GirlRegistrationUtilty.getListOfCampaign(troopOrGroupName, 'TroopName', new Set<String>(), Grade);
                  }
-           // List<Campaign> allCampaignList = GirlRegistrationUtilty.getListOfCampaign(troopOrGroupName, 'TroopName', new Set<String>(), Grade);
+       //     List<Campaign> allCampaignList = GirlRegistrationUtilty.getListOfCampaign(troopOrGroupName, 'TroopName', new Set<String>(), Grade);
             system.debug('allCampaignList===>'+allCampaignList);
             if(allCampaignList != null && allCampaignList.size() > 0) {
                 for(Campaign campaign : allCampaignList)                     
-                    innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Frequency__c
-,campaign.Troop_Start_Date__c,campaign.Meeting_Start_Time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start_New__c), campaign.Id, campaign.Participation__c));
+                    innerParentCampaignWrapperList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Start_Date_time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start__c ), campaign.Id, campaign.Participation__c));
                   
                   innerParentCampaignWrapperList.sort();
             }
@@ -872,16 +817,14 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                         if(!gradeList.isEmpty() && gradeList.size() > 0){
                             for(String objGrade : gradeList) {
                                 if(objGrade.contains(Grade)) {
-                                    tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, campaignIdVSDistanceMap.get(campaign.Id), campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Frequency__c
-,campaign.Troop_Start_Date__c,campaign.Meeting_Start_Time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start_New__c), campaign.Id, campaign.Participation__c));
+                                    tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, campaignIdVSDistanceMap.get(campaign.Id), campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Start_Date_time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start__c ), campaign.Id, campaign.Participation__c));
                                     break;
                                 }
                             }
                         }
                     }
                     else {
-                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, campaignIdVSDistanceMap.get(campaign.Id), campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Frequency__c
-,campaign.Troop_Start_Date__c,campaign.Meeting_Start_Time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start_New__c), campaign.Id, campaign.Participation__c));
+                        tempParentCampaignWrapperList.add(new ParentCampaignWrapper(false, campaignIdVSDistanceMap.get(campaign.Id), campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Start_Date_time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start__c ), campaign.Id, campaign.Participation__c));
                     }
                 }
             }
@@ -962,7 +905,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         return null;
     }
 
-    @RemoteAction
+   @RemoteAction
     public static List<String> searchCampaingNames(String searchtext1,String councilId2) {
         String JSONString;
         List<Campaign> campaignList = new List<Campaign>();
@@ -989,6 +932,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         return nameList;
     }
 
+
     public Contact getContactRecord() {
         Contact contact;
         if(girlContactId != null) {
@@ -1013,13 +957,10 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         parentCampaignRecordList = [
             Select Grade__c
                  , Meeting_Day_s__c
-                  , Meeting_Frequency__c
                  , Meeting_Location__c
                  , Volunteers_Needed_to_Start__c 
-                 , Volunteers_Needed_to_Start_New__c
                  , Display_on_Website__c
-                 ,Troop_Start_Date__c
-                 ,Meeting_Start_Time__c
+                 , Meeting_Start_Date_time__c
                  , Girl_Openings_Remaining__c
                  , Zip_Code__c
                  , Account__c
@@ -1037,8 +978,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         Campaign campaign = (parentCampaignRecordList != null && parentCampaignRecordList.size() > 0) ? parentCampaignRecordList[0] : new Campaign();
 
         if(campaign != null && campaign.Id != null)
-            unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Frequency__c
-,campaign.Troop_Start_Date__c,campaign.Meeting_Start_Time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start_New__c), campaign.Id, campaign.Participation__c));
+            unsureCampaignRecordList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Start_Date_time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start__c ), campaign.Id, campaign.Participation__c));
 
         return unsureCampaignRecordList;
     }
@@ -1050,13 +990,10 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         irmCampaignList = [
             Select Grade__c
                  , Meeting_Day_s__c
-                  , Meeting_Frequency__c
                  , Meeting_Location__c
                  , Volunteers_Needed_to_Start__c 
-                 , Volunteers_Needed_to_Start_New__c
                  , Display_on_Website__c
-                 ,Troop_Start_Date__c
-                 ,Meeting_Start_Time__c
+                 , Meeting_Start_Date_time__c
                  , Girl_Openings_Remaining__c
                  , Zip_Code__c
                  , Account__c
@@ -1073,7 +1010,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         Campaign campaign =  (irmCampaignList != null && irmCampaignList.size() > 0) ? irmCampaignList[0] : new Campaign();
 
         if(campaign != null && campaign.Id != null)
-            irmCampaignRecordList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Frequency__c, campaign.Troop_Start_Date__c,campaign.Meeting_Start_Time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start_New__c), campaign.Id, campaign.Participation__c));
+            irmCampaignRecordList.add(new ParentCampaignWrapper(false, '0', campaign.Name, campaign.Grade__c, campaign.Meeting_Location__c,  campaign.Meeting_Day_s__c, campaign.Meeting_Start_Date_time__c, String.valueOf(campaign.Girl_Openings_Remaining__c), campaign.Name, campaign.Account__c, String.valueOf(campaign.Volunteers_Needed_to_Start__c ), campaign.Id, campaign.Participation__c));
 
         return irmCampaignRecordList;
     }
@@ -1095,46 +1032,14 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         public String campaignParticipationType { get; set; }
         public String campaignMeetingStartDatetimeStd { get; set; }
 
-        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, String strcampaignMeetingDayfrequency, Date TroopStartDate,String MeetingStartTime, String strcampaignOpeningsRemaining, String strParentCampaignName, String strAccountId, String strVolunteers, String strCampaignId, String strCampaignParticipation) {//String strChildCampaignId,String strParticipation 
+        public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay, DateTime strCampaignMeetingStartDatetime, String strcampaignOpeningsRemaining, String strParentCampaignName, String strAccountId, String strVolunteers, String strCampaignId, String strCampaignParticipation) {//String strChildCampaignId,String strParticipation 
             isCampaignChecked = campaignChecked;
             campaignDistance = strCampaignDistance;
             childCampaignName = strChildCampaignName;
             campaignGrade = strCampaignGrade;
             campaignMeetingLocation = strCampaignMeetingLocation;
-            //campaignMeetingDay = strcampaignMeetingDay;
-
-              if(strcampaignMeetingDayfrequency ==null)
-            strcampaignMeetingDayfrequency ='';
-            campaignMeetingDay =strcampaignMeetingDayfrequency +' '+ strcampaignMeetingDay;
-
-             if(TroopStartDate!= null && MeetingStartTime!=null ){
-                //  String Str0 = String.valueOf(TroopStartDate);// +' '+ MeetingStartTime;
-                 // system.debug('Str0======>'+Str0 +'TroopStartDate:'+TroopStartDate+'strCampaignMeetingStartDatetime:'+strCampaignMeetingStartDatetime);
-                 // DateTime st =Datetime.parse(Str0);
-                 //campaignMeetingStartDatetimeStd = String.valueOf(st.getTime());
-                 Datetime   strCampaignMeetingStartDatetime= TroopStartDate;
-                    String Str0 = MeetingStartTime;//convert in 24 hours format
-                    String[] strarr = Str0.split(' ');
-                    Integer hour = Integer.valueof(strarr.get(0).split(':').get(0));
-                    Integer min = Integer.valueof(strarr.get(0).split(':').get(1));
-                    string AMPM     = strarr.get(1);
-                    if(hour!=12 && AMPM!='AM' )
-                          hour=hour+12;
-                         hour=hour+7;
-                    Integer year=strCampaignMeetingStartDatetime.year();
-                    Integer mon=strCampaignMeetingStartDatetime.month();
-                    Integer day=strCampaignMeetingStartDatetime.day();
-                    Datetime myDate = datetime.newInstance(year, mon, day , hour, min, 0);
-                        campaignMeetingStartDatetimeStd = String.valueOf(myDate.getTime()); 
-            }else{
-                // campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
-             
-                          campaignMeetingStartDatetimeStd = '';
-                   
-            
-            }
-
-           // campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
+            campaignMeetingDay = strcampaignMeetingDay;
+            campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
             campaignOpeningsRemaining = strcampaignOpeningsRemaining;
             campaignVolunteerReq = strVolunteers;
             parentCampaignName = strParentCampaignName;
@@ -1142,7 +1047,8 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
             campaignId = strCampaignId;
             campaignParticipationType = strCampaignParticipation;
             
-           
+            if(strCampaignMeetingStartDatetime!=null)
+                campaignMeetingStartDatetimeStd = String.valueOf(strCampaignMeetingStartDatetime.getTime());
         }
 
         public Integer compareTo(Object compareTo) {

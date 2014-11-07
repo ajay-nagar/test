@@ -108,8 +108,7 @@ public without sharing class VolunteerRenewalUtility {
                                                , rC_Volunteers__Required_Volunteer_Count__c
                                             From Campaign
                                            where Display_on_Website__c = true
-                                              //and Zip_Code__c != null
-                                             and Parent.Zip_Code__c != null
+                                             and Zip_Code__c != null
                                              and RecordTypeId = :RT_VOLUNTEER_JOBS_ID
         ];
         system.debug('allCampaignList=>'+allCampaignList);
@@ -605,12 +604,10 @@ public without sharing class VolunteerRenewalUtility {
                     , Secondary_Role__c
                     ,(Select Id
                            , CampaignId
-                           , Campaign.Name
                            , Membership__c
                            , Active__c
                            , Date_Active__c 
                            , Primary__c 
-                           , ContactId  
                         From CampaignMembers
                         Where Welcome__c = true 
                     order By CreatedDate asc)  

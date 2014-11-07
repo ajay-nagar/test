@@ -46,9 +46,6 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
     
     public Boolean confirmTransactions { set; get; }
     
-    public String primaryContactFullName;
-    public String primaryContactEmail;
-    
     public List<Opportunity> opportunityTransactionList { get; set;}
     private Zip_Code__c matchingZipCode = new Zip_Code__c();
     private User systemAdminUser;
@@ -60,19 +57,17 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
     private string oldCampaign = '';
     private CampaignMember oldCampaignMember;
     public Community_GirlPaymentProcessing() {
-
-        OldDonationopportunity =  new Opportunity();
+        OldDonationopportunity  =  new Opportunity();
         acceptGSPromiseAndLaw = false;
         NotAtThisTime = 0;
         total = 0;
         donationPriseAmount = 0;
         confirmTransactions = false;
         noDelete = false;
-        systemAdminUser = GirlRegistrationUtilty.getSystemAdminUser();
+        oldCampaignMember = new CampaignMember();
         donationMap = new Map<String, decimal>();
         opportunityTransactionList = new List<Opportunity>();
         CampaignMemberList = new List<CampaignMember>();
-        oldCampaignMember = new CampaignMember();
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
             contactId = Apexpages.currentPage().getParameters().get('GirlContactId');
 
@@ -138,20 +133,24 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
             }
         } 
         List<Contact> contactList = [
-            Select Id
-                 , Name
-                 , Email
-                 , MailingPostalCode
-             From Contact 
-            where Id= :contactId
-        ];
-        Contact contact = (contactList != null && contactList.size() > 0 ) ? contactList[0] : new Contact();
-
-        if(contact != null && contact.Id != null) {                
-            zipCode = (contact.MailingPostalCode != null) ? contact.MailingPostalCode : '';
-            primaryContactFullName = contact.Name;
-            primaryContactEmail = contact.Email;
-        }
+                Select MailingPostalCode, Account.OwnerId
+                 From Contact 
+                where Id= :contactId
+            ];
+            Contact contact = (contactList != null && contactList.size() > 0 ) ? contactList[0] : new Contact();
+            
+            if(contact != null && contact.Id != null) {                
+                zipCode = (contact.MailingPostalCode != null) ? contact.MailingPostalCode : '';
+                systemAdminUser = [Select Id
+                     , LastName
+                     , IsActive
+                     , Profile.Name
+                     , Profile.Id
+                     , ProfileId  from User where Id = :contact.Account.OwnerId
+                   and IsActive = true 
+                   and UserRoleId != null
+                limit 1];
+            }
     }
      public boolean pastDate() {
         boolean pastBoolean = true;
@@ -314,9 +313,8 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
 
                 if(campaignMembersId != null && campaignMembersId != '') {
                     List<String> campaignMemberIdList = campaignMembersId.trim().split(',');
-
+                    oldCampaign = campaignMemberIdList[campaignMemberIdList.size()-1];
                     if(campaignMemberIdList != null && campaignMemberIdList.size() > 0){
-                        oldCampaign = campaignMemberIdList[campaignMemberIdList.size()-1];
                         for(String campaignMember : campaignMemberIdList)
                             campaignMemberIdSet.add(campaignMember.trim());
 
@@ -407,7 +405,7 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
                    AND rC_Giving__Parent__c IN :opportunityParentIds
                    FOR UPDATE
             ];
-            List<PaypalResponseLog__c> lstpaypallog=new List<PaypalResponseLog__c>();
+            
             for(Opportunity opportunityTransaction : opportunityTransactionChargeableList) {
                 system.debug('opportunityTransaction-->'+opportunityTransaction);
                 Boolean isStageOpen = 'Open'.equalsIgnoreCase(opportunityTransaction.StageName);
@@ -425,7 +423,6 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
                 if (opportunityTransaction.Amount == null || opportunityTransaction.Amount == 0) {
                     continue;
                 }
-                System.debug('Call Paypal ==>');
                 // Run it
                 Map<String, String> transactionResult = new PaymentServicer_PaypalTransaction().processPayment(new Map<String, String> {
                     PaymentServicer_PaypalTransaction.CREDITCARD_EX_MONTH => expMonth,
@@ -433,17 +430,14 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_NUMBER => cardNumber,
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_CVV2 => securityCode,
                     PaymentServicer_PaypalTransaction.FULLNAME => cardHolderName,
-                    PaymentServicer_PaypalTransaction.CUSTOM_VAR => primaryContactFullName,
                     PaymentServicer_PaypalTransaction.ADDRESS => address,
                     PaymentServicer_PaypalTransaction.ADDR_CITY => city,
                     PaymentServicer_PaypalTransaction.ADDR_STATE => state,
                     PaymentServicer_PaypalTransaction.ADDR_COUNTRY_CODE => 'US',
                     PaymentServicer_PaypalTransaction.ZIPCODE => zipCode,
-                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount,
-                    PaymentServicer_PaypalTransaction.INVOICE_ID => '' + opportunityTransaction.id,
-                    PaymentServicer_PaypalTransaction.CONTACT_EMAIL => primaryContactEmail
+                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount
                 }, opportunityTransaction.rC_Giving__Parent__r.CampaignId);
-                System.debug('Check Paypal ==>');
+
                 // Success/failure?
                 if (transactionResult.get(PaymentServicer_PaypalTransaction.ISSUCCESS) == 'true') {
                     opportunityTransaction.StageName = 'Completed';
@@ -460,47 +454,8 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
                 opportunityTransaction.rC_Connect__Response_Code__c = transactionResult.get(PaymentServicer_PaypalTransaction.TRANSACTIONID);
                 opportunityTransaction.rC_Connect__Response_Date_Time__c = DateTime.now();
                 opportunityTransaction.rC_Connect__Response_Message__c = transactionResult.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
-                
-                System.debug('opportunityTransaction.Id==>'+opportunityTransaction.Id);
-                /****************** Track Paypal Reponse Messages Log*******************/
-                PaypalResponseLog__c paypallog=new PaypalResponseLog__c();
-                paypallog.Response_Code__c=transactionResult.get(PaymentServicer_PaypalTransaction.TRANSACTIONID);
-                paypallog.Response_Date_Time__c=DateTime.now();
-                paypallog.Response_Message__c= transactionResult.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
-                paypallog.Transaction_Opportunity__c=opportunityTransaction.Id;
-                paypallog.Name='Girl renewal Paypal Response';
-                System.debug('Try to Insert data into PaypalResponseLog__c ======' );
-                lstpaypallog.add(paypallog);
-                //insert paypallog;
-                System.debug('After inser data into PaypalResponseLog__c ==>'+paypallog);
-                /****************** Track Paypal Reponse Messages Log*******************/
-            }
-            System.debug('lstpaypallog.size() ==>'+lstpaypallog.size());
-            if(lstpaypallog!=null && lstpaypallog.size()>0)
-            {
-           // insert lstpaypallog;
-                Database.SaveResult[] srList = Database.insert(lstpaypallog, false);
-
-                    // Iterate through each returned result
-                    for (Database.SaveResult sr : srList) {
-                        if (sr.isSuccess()) {
-                            // Operation was successful, so get the ID of the record that was processed
-                            System.debug('Successfully inserted paypal log ID: ' + sr.getId());
-                        }
-                        else {
-                            // Operation failed, so get all errors                
-                            for(Database.Error err : sr.getErrors()) {
-                                System.debug('The following error has occurred.');                    
-                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
-                                System.debug('paypal log fields that affected this error: ' + err.getFields());
-                            }
-                        }
-                    }
-            
-            
             }
             // Done
-  /********************************* Track Paypal Reponse Messages Log*******************/         
         List<Contact> contactList = [
             Select Id
                  , Name
@@ -545,7 +500,7 @@ public without sharing class Community_GirlPaymentProcessing extends SobjectExte
 
         try {
             if(lstCampaignMemberShare.size()>0)
-            //insert lstCampaignMemberShare;
+            insert lstCampaignMemberShare;
             updateOpportunityTransactionChargeableList(opportunityTransactionChargeableList, 0);
             if(sendReciept) {
             oldCampaignMember.Pending_Payment_URL__c = '';

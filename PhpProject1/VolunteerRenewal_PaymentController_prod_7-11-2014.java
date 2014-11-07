@@ -54,15 +54,11 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
     public boolean acceptGSPromiseAndLaw {get;set;}
     public List<Opportunity> opportunityTransactionList {get; set;}
     public List<CampaignMember> CampaignMemberList;
-    public String primaryContactFullName;
-    public String primaryContactEmail;
-
     private Opportunity membershipOpportunity;
     private Opportunity OldDonationopportunity;
     private PricebookEntry donationPricebookEntry;
     private User systemAdminUser;
     private Account councilAccount;
-    private Contact contact;
     private map<Id, PricebookEntry> priceBookEntryMap;
     private static Integer counterUnableToLockRow = 0;
 
@@ -102,6 +98,8 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
         donationPricebookEntry = new PricebookEntry();
         priceBookEntryMap = new map<Id, PricebookEntry>();
 
+        
+
         fillPricebookEntryList();
 
         for(PricebookEntry varPricebookEntry : priceBookEntryMap.values()) {
@@ -127,10 +125,6 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
         }
 
         paymentOptionsMap = GSA_payment__c.getAll();
-
-        contact = VolunteerRenewalUtility.getContact(contactId);
-        primaryContactFullName = contact.Name;
-        primaryContactEmail = contact.Email;
 
         GSA_payment__c financialAssitanceDonation1_Setting = GSA_payment__c.getValues('FinancialAssitanceDonation1');
         option1Value = paymentOptionsMap.get('Donation1').amountDonate__c.setScale(2);
@@ -162,19 +156,17 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
                 donationPriseAmount = total;
             }
         }
-
+        Contact contact = VolunteerRenewalUtility.getContact(contactId);
         if(contact!=null) {
-            systemAdminUser = [
-                Select Id
-                     , LastName
-                     , IsActive
-                     , Profile.Name
-                     , Profile.Id
-                     , ProfileId  from User where Id = :contact.Account.OwnerId
-                   and IsActive = true 
-                   and UserRoleId != null 
-                 limit 1
-            ];
+        systemAdminUser = [Select Id
+                 , LastName
+                 , IsActive
+                 , Profile.Name
+                 , Profile.Id
+                 , ProfileId  from User where Id = :contact.Account.OwnerId
+               and IsActive = true 
+               and UserRoleId != null
+            limit 1];
         }     
     }
 
@@ -278,10 +270,10 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
                             donationOpp.ownerId = systemAdminUser.Id;
                     }
                 }
-                
+
                 for(Opportunity opportunity : opportunityTransactionList){
                     if(opportunity != null && opportunity.Name != null)
-                        donationMap.put(opportunity.Name, decimal.ValueOf(amountValue).setScale(2));
+                      donationMap.put(opportunity.Name, decimal.ValueOf(amountValue).setScale(2));
                 }
             }
         } catch(System.exception pException) {
@@ -393,7 +385,7 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
             tempurl = tempurl.substring(0,tempurl.length()-30); 
             oldCampaignMember.Pending_Payment_URL__c = tempurl;
             update oldCampaignMember;
-        }      
+        } 
         counterUnableToLockRow = 0;
         confirmTransactions = true;
         return null;
@@ -409,11 +401,11 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
     public PageReference processPaypalTransactions() {
         List<CampaignShare> lstCampaignMemberShare = new List<CampaignShare>();
         List<Opportunity> opportunityTransactionChargeableList = null;
-        backFlag = false;  
-        boolean sendReciept;      
+        backFlag = false;
+        boolean sendReciept = false;
         try {
             Set<String> campaignMemberIdSet = new Set<String>();
-            Set<Id> opportunityParentIds = new set<Id>();            
+            Set<Id> opportunityParentIds = new set<Id>();
             if (opportunityTransactionList != null && opportunityTransactionList.size() != 0) {
                 opportunityParentIds.addAll(new Map<Id, Opportunity>(opportunityTransactionList).keySet());
             }
@@ -469,8 +461,7 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
                    FOR UPDATE
             ];
             
-            sendReciept = false;
-              List<PaypalResponseLog__c> lstpaypallog=new List<PaypalResponseLog__c>();
+            
             for(Opportunity opportunityTransaction : opportunityTransactionChargeableList) {
                 //lstCampaignMemberToUpdate.add(opportunityTransaction.Campaign_Members__r);
                 system.debug('opportunityTransaction-->'+opportunityTransaction);
@@ -496,15 +487,12 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_NUMBER => cardNumber,
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_CVV2 => securityCode,
                     PaymentServicer_PaypalTransaction.FULLNAME => cardHolderName,
-                    PaymentServicer_PaypalTransaction.CUSTOM_VAR => primaryContactFullName,
                     PaymentServicer_PaypalTransaction.ADDRESS => address,
                     PaymentServicer_PaypalTransaction.ADDR_CITY => city,
                     PaymentServicer_PaypalTransaction.ADDR_STATE => state,
                     PaymentServicer_PaypalTransaction.ADDR_COUNTRY_CODE => 'US',
                     PaymentServicer_PaypalTransaction.ZIPCODE => zipCode,
-                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount,
-                    PaymentServicer_PaypalTransaction.INVOICE_ID => '' + opportunityTransaction.id,
-                    PaymentServicer_PaypalTransaction.CONTACT_EMAIL => primaryContactEmail
+                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount
                 }, opportunityTransaction.rC_Giving__Parent__r.CampaignId);
 
                 // Success/failure?
@@ -526,51 +514,7 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
                 opportunityTransaction.rC_Connect__Response_Code__c = transactionResult.get(PaymentServicer_PaypalTransaction.TRANSACTIONID);
                 opportunityTransaction.rC_Connect__Response_Date_Time__c = DateTime.now();
                 opportunityTransaction.rC_Connect__Response_Message__c = transactionResult.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
-            
-            
-                System.debug('opportunityTransaction.Id==>'+opportunityTransaction.Id);
-                /****************** Track Paypal Reponse Messages Log*******************/
-                PaypalResponseLog__c paypallog=new PaypalResponseLog__c();
-                paypallog.Response_Code__c=transactionResult.get(PaymentServicer_PaypalTransaction.TRANSACTIONID);
-                paypallog.Response_Date_Time__c=DateTime.now();
-                paypallog.Response_Message__c= transactionResult.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
-                paypallog.Transaction_Opportunity__c=opportunityTransaction.Id;
-                paypallog.Name='Volunteer renewal Paypal Responce';
-                System.debug('Try to Insert data into PaypalResponseLog__c ======' );
-                lstpaypallog.add(paypallog);
-                //insert paypallog;
-                System.debug('After inser data into PaypalResponseLog__c ==>'+paypallog);
-                /****************** Track Paypal Reponse Messages Log*******************/
-            
-            
             }
-
-                System.debug('lstpaypallog.size() ==>'+lstpaypallog.size());
-            if(lstpaypallog!=null && lstpaypallog.size()>0)
-            {
-           // insert lstpaypallog;
-                Database.SaveResult[] srList = Database.insert(lstpaypallog, false);
-
-                    // Iterate through each returned result
-                    for (Database.SaveResult sr : srList) {
-                        if (sr.isSuccess()) {
-                            // Operation was successful, so get the ID of the record that was processed
-                            System.debug('Successfully inserted paypal log ID: ' + sr.getId());
-                        }
-                        else {
-                            // Operation failed, so get all errors                
-                            for(Database.Error err : sr.getErrors()) {
-                                System.debug('The following error has occurred.');                    
-                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
-                                System.debug('paypal log fields that affected this error: ' + err.getFields());
-                            }
-                        }
-                    }
-            
-            
-            }
-            // Done
-  /********************************* Track Paypal Reponse Messages Log*******************/         
             List<Contact> contactList = [
             Select Id
                 , Name
@@ -593,7 +537,7 @@ public class VolunteerRenewal_PaymentController extends SobjectExtension{
 
         try {
             if(lstCampaignMemberShare.size()>0)
-            //insert lstCampaignMemberShare;
+            insert lstCampaignMemberShare;
             updateOpportunityTransactionChargeableList(opportunityTransactionChargeableList, 0);
             if(sendReciept) {
                 oldCampaignMember.Pending_Payment_URL__c = '';

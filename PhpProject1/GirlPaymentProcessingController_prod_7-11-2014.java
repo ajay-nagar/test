@@ -57,15 +57,12 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
     public String   campaignMembersId;
     public String   councilId;
     public decimal  donationPriseAmount;
-    public String primaryContactFullName;
-    public String primaryContactEmail;
 
     private Opportunity membershipOpportunity;
     private Opportunity CouncilMembershipOpp;
     private Opportunity OldDonationopportunity;
     private PricebookEntry donationPricebookEntry;
     private Account councilAccount;
-    private Contact parentContact;
     
     private map<Id, PricebookEntry> priceBookEntryMap;
     private map<String, GSA_payment__c> paymentOptionsMap;
@@ -138,21 +135,6 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
 
         if(Apexpages.currentPage().getParameters().containsKey('CampaignMemberIds'))
             campaignMembersId = Apexpages.currentPage().getParameters().get('CampaignMemberIds');
-
-        List<Contact> parentContactList = [
-            SELECT Id
-                 , Name
-                 , Email
-              FROM Contact
-             WHERE Id = :parentContactId
-        ];
-
-        parentContact = (parentContactList != null && parentContactList.size() > 0) ? parentContactList[0]: new Contact();
-        primaryContactFullName = parentContact.Name;
-        primaryContactEmail = parentContact.Email;
-
-        system.debug(' parentContact ==: ' + parentContact
-                      + '\n primaryContactFullName ==: ' + primaryContactFullName);
 
         if(membershipOppStrIdSet != null && membershipOppStrIdSet.size() > 0) {
             membershipOpportunityList = [
@@ -369,7 +351,7 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
                     for(Opportunity opp : OpportunityList) {
                         opp.OwnerId = opp.rC_Giving__Parent__r.OwnerId;
                     }
-                    //update OpportunityList;
+                    update OpportunityList;
                     new WithoutSharing().updateData(OpportunityList);
                 }
             }
@@ -428,7 +410,6 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
             ];
             system.debug('== opportunityTransactionChargeableList ====:  ' + opportunityTransactionChargeableList);
             boolean sendReciept = false;
-              List<PaypalResponseLog__c> lstpaypallog=new List<PaypalResponseLog__c>();
             for(Opportunity opportunityTransaction : opportunityTransactionChargeableList) {
                 system.debug('opportunityTransaction-->'+opportunityTransaction);
                 Boolean isStageOpen = 'Open'.equalsIgnoreCase(opportunityTransaction.StageName);
@@ -453,15 +434,12 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_NUMBER => cardNumber,
                     PaymentServicer_PaypalTransaction.CREDIT_CARD_CVV2 => securityCode,
                     PaymentServicer_PaypalTransaction.FULLNAME => cardHolderName,
-                    PaymentServicer_PaypalTransaction.CUSTOM_VAR => primaryContactFullName,
                     PaymentServicer_PaypalTransaction.ADDRESS => address,
                     PaymentServicer_PaypalTransaction.ADDR_CITY => city,
                     PaymentServicer_PaypalTransaction.ADDR_STATE => state,
                     PaymentServicer_PaypalTransaction.ADDR_COUNTRY_CODE => 'US',
                     PaymentServicer_PaypalTransaction.ZIPCODE => zipCode,
-                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount,
-                    PaymentServicer_PaypalTransaction.INVOICE_ID => '' + opportunityTransaction.id,
-                    PaymentServicer_PaypalTransaction.CONTACT_EMAIL => primaryContactEmail
+                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + opportunityTransaction.Amount
                 }, opportunityTransaction.rC_Giving__Parent__r.CampaignId);
 
                 // Success/failure?
@@ -479,50 +457,7 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
                 opportunityTransaction.rC_Connect__Response_Code__c = transactionResult.get(PaymentServicer_PaypalTransaction.TRANSACTIONID);
                 opportunityTransaction.rC_Connect__Response_Date_Time__c = DateTime.now();
                 opportunityTransaction.rC_Connect__Response_Message__c = transactionResult.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
-           
-                System.debug('opportunityTransaction.Id==>'+opportunityTransaction.Id);
-                /****************** Track Paypal Reponse Messages Log*******************/
-                PaypalResponseLog__c paypallog=new PaypalResponseLog__c();
-                paypallog.Response_Code__c=transactionResult.get(PaymentServicer_PaypalTransaction.TRANSACTIONID);
-                paypallog.Response_Date_Time__c=DateTime.now();
-                paypallog.Response_Message__c= transactionResult.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
-                paypallog.Transaction_Opportunity__c=opportunityTransaction.Id;
-                paypallog.Name='Girl registration Paypal Response';
-                System.debug('Try to Insert data into PaypalResponseLog__c ======' );
-                lstpaypallog.add(paypallog);
-                //insert paypallog;
-                System.debug('After inser data into PaypalResponseLog__c ==>'+paypallog);
-                /****************** Track Paypal Reponse Messages Log*******************/
-            
-            
             }
-
-                    System.debug('lstpaypallog.size() ==>'+lstpaypallog.size());
-            if(lstpaypallog!=null && lstpaypallog.size()>0)
-            {
-           // insert lstpaypallog;
-                Database.SaveResult[] srList = Database.insert(lstpaypallog, false);
-
-                    // Iterate through each returned result
-                    for (Database.SaveResult sr : srList) {
-                        if (sr.isSuccess()) {
-                            // Operation was successful, so get the ID of the record that was processed
-                            System.debug('Successfully inserted paypal log ID: ' + sr.getId());
-                        }
-                        else {
-                            // Operation failed, so get all errors                
-                            for(Database.Error err : sr.getErrors()) {
-                                System.debug('The following error has occurred.');                    
-                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
-                                System.debug('paypal log fields that affected this error: ' + err.getFields());
-                            }
-                        }
-                    }
-            
-            
-            }
-            // Done
-  /********************************* Track Paypal Reponse Messages Log*******************/         
             if(sendReciept) {
                 Contact con = [Select FirstName from Contact where ID=:contactId]; 
                 SendReceipt SR = new SendReceipt();
@@ -547,21 +482,20 @@ public with sharing class GirlPaymentProcessingController extends SobjectExtensi
             return null;
         }
 
-        /*/ Done
+        // Done
         List<Contact> parentContactList = [
             SELECT Name, Id
               FROM Contact
              WHERE Id = :parentContactId
-        ];*/
+        ];
 
-        //if (parentContactList.isEmpty() == false) {
-        if(parentContact != null && parentContact.Id != null){
+        if (parentContactList.isEmpty() == false) {
             GirlRegistrationUtilty.updateSiteURLAndContactForGirl(''
                 + '/Girl_DemographicsInformation'
                 + '?GirlContactId='+ contactId
                 + '&CouncilId=' + councilId
                 + '&CampaignMemberIds=' + campaignMembersId
-            , parentContact);
+            , parentContactList[0]);
         }
 
         PageReference demographicsInfoPage = Page.Girl_DemographicsInformation;

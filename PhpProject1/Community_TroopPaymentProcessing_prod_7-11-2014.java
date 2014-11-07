@@ -353,12 +353,12 @@ Map<String, String> transactionResult4membership = new PaymentServicer_PaypalTra
                     PaymentServicer_PaypalTransaction.ADDR_STATE => state,
                     PaymentServicer_PaypalTransaction.ADDR_COUNTRY_CODE => 'US',
                     PaymentServicer_PaypalTransaction.ZIPCODE => zipCode,
-                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + total_paypalamount4membership,
+                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + total_paypalamount4membership
                     
                     //code not in production so hide below 3 lines
-                    PaymentServicer_PaypalTransaction.CUSTOM_VAR => CurrentUser_ContactFullName ,
-                    PaymentServicer_PaypalTransaction.INVOICE_ID => '' + oppTransaction_id4_membership,
-                    PaymentServicer_PaypalTransaction.CONTACT_EMAIL => CurrentUser_ContactEmail 
+                    //PaymentServicer_PaypalTransaction.CUSTOM_VAR => CurrentUser_ContactFullName ,
+                    //PaymentServicer_PaypalTransaction.INVOICE_ID => '' + oppTransaction_id4_membership,
+                    //PaymentServicer_PaypalTransaction.CONTACT_EMAIL => CurrentUser_ContactEmail 
                 }, campaign_id4_membership);
         system.debug('step_2 :'+campaign_id4_membership);
                 
@@ -388,12 +388,12 @@ Map<String, String> transactionResult4council = new PaymentServicer_PaypalTransa
                     PaymentServicer_PaypalTransaction.ADDR_STATE => state,
                     PaymentServicer_PaypalTransaction.ADDR_COUNTRY_CODE => 'US',
                     PaymentServicer_PaypalTransaction.ZIPCODE => zipCode,
-                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + total_paypalamount4council,
+                    PaymentServicer_PaypalTransaction.TOTAL_AMOUNT => '' + total_paypalamount4council
                     
                     //code not in production so hide below 3 lines
-                    PaymentServicer_PaypalTransaction.CUSTOM_VAR => CurrentUser_ContactFullName ,
-                    PaymentServicer_PaypalTransaction.INVOICE_ID => '' + oppTransaction_id4_council,
-                    PaymentServicer_PaypalTransaction.CONTACT_EMAIL => CurrentUser_ContactEmail 
+                    //PaymentServicer_PaypalTransaction.CUSTOM_VAR => CurrentUser_ContactFullName ,
+                    //PaymentServicer_PaypalTransaction.INVOICE_ID => '' + oppTransaction_id4_council,
+                    //PaymentServicer_PaypalTransaction.CONTACT_EMAIL => CurrentUser_ContactEmail 
                 }, campaign_id4_council);
                  transactionid4council=transactionResult4council.get(PaymentServicer_PaypalTransaction.TRANSACTIONID);
                  response_message4council=transactionResult4council.get(PaymentServicer_PaypalTransaction.RESPONSEMESSAGE);
@@ -407,7 +407,7 @@ Map<String, String> transactionResult4council = new PaymentServicer_PaypalTransa
                 
                 }
                 
-                        List<PaypalResponseLog__c> lstpaypallog=new List<PaypalResponseLog__c>();
+                
              for(Opportunity opportunityTransaction : opportunityTransactionChargeableList) {
       
                 Boolean isStageOpen = 'Open'.equalsIgnoreCase(opportunityTransaction.StageName);
@@ -427,91 +427,36 @@ Map<String, String> transactionResult4council = new PaymentServicer_PaypalTransa
                 }
                 if((opportunityTransaction.rC_Giving__Parent__r.Item_Type__c=='Membership')&&(total_paypalamount4membership>0) && (campaign_id4_membership!=null || campaign_id4_membership !='')){
                 
-                            if(istransaction4membership=='true'){
-                                opportunityTransaction.StageName = 'Completed';
-                                membershipVariable = true; 
-                            }else{
-                                opportunityTransaction.StageName = 'Pending Failed';
-                            }
-                            
-                             opportunityTransaction.rC_Connect__Response_Code__c = transactionid4membership;
-                             opportunityTransaction.rC_Connect__Response_Date_Time__c = DateTime.now();
-                             opportunityTransaction.rC_Connect__Response_Message__c =response_message4membership;
-
-
-                               
-
+                    if(istransaction4membership=='true'){
+                    opportunityTransaction.StageName = 'Completed';
+                    membershipVariable = true; 
+                    }else{
+                    opportunityTransaction.StageName = 'Pending Failed';
+                    }
+                    
+                     opportunityTransaction.rC_Connect__Response_Code__c = transactionid4membership;
+                     opportunityTransaction.rC_Connect__Response_Date_Time__c = DateTime.now();
+                     opportunityTransaction.rC_Connect__Response_Message__c =response_message4membership;
                  }
                  if((opportunityTransaction.rC_Giving__Parent__r.Item_Type__c=='council service fee') &&(total_paypalamount4council>0) && (campaign_id4_council!=null || campaign_id4_council !='')){
                  
-                         if(istransaction4council=='true'){
-                                opportunityTransaction.StageName = 'Completed';
-                         }else{
-                                opportunityTransaction.StageName = 'Pending Failed';
-                         }
-                         
-                        opportunityTransaction.rC_Connect__Response_Code__c = transactionid4council;
-                        opportunityTransaction.rC_Connect__Response_Date_Time__c = DateTime.now();
-                        opportunityTransaction.rC_Connect__Response_Message__c = response_message4council;
-
-
-                                  
+                        if(istransaction4council=='true'){
+                    opportunityTransaction.StageName = 'Completed';
+                     }else{
+                    opportunityTransaction.StageName = 'Pending Failed';
+                     }
+                     
+            opportunityTransaction.rC_Connect__Response_Code__c = transactionid4council;
+            opportunityTransaction.rC_Connect__Response_Date_Time__c = DateTime.now();
+            opportunityTransaction.rC_Connect__Response_Message__c = response_message4council;
                      
                  }
              }
-                 
-                                /****************** Track Paypal Reponse Messages Log*******************/
-                                PaypalResponseLog__c paypallog=new PaypalResponseLog__c();
-                                paypallog.Response_Code__c=transactionid4membership;
-                                paypallog.Response_Date_Time__c=DateTime.now();
-                                paypallog.Response_Message__c= response_message4membership;
-                               // paypallog.Transaction_Opportunity__c=opportunityTransaction.Id;
-                                 paypallog.Troop_Volunteer__c=Contact_id ;
-                                paypallog.Name='Troop renewal membership Paypal Response';
-                                System.debug('Try to Insert data into PaypalResponseLog__c ======' );
-                                lstpaypallog.add(paypallog);
-                  
-                          
-                                PaypalResponseLog__c paypallog2=new PaypalResponseLog__c();
-                                paypallog2.Response_Code__c=transactionid4council;
-                                paypallog2.Response_Date_Time__c=DateTime.now();
-                                paypallog2.Response_Message__c= response_message4council;
-                               // paypallog2.Transaction_Opportunity__c=opportunityTransaction.Id;
-                                paypallog2.Troop_Volunteer__c=Contact_id ;
-                                paypallog2.Name='Troop renewal council Paypal Response';
-                                lstpaypallog.add(paypallog2);
-                            
-                System.debug('lstpaypallog.size() ==>'+lstpaypallog.size());
-            if(lstpaypallog!=null && lstpaypallog.size()>0)
-            {
-           // insert lstpaypallog;
-                Database.SaveResult[] srList = Database.insert(lstpaypallog, false);
-
-                    // Iterate through each returned result
-                    for (Database.SaveResult sr : srList) {
-                        if (sr.isSuccess()) {
-                            // Operation was successful, so get the ID of the record that was processed
-                            System.debug('Successfully inserted paypal log ID: ' + sr.getId());
-                        }
-                        else {
-                            // Operation failed, so get all errors                
-                            for(Database.Error err : sr.getErrors()) {
-                                System.debug('The following error has occurred.');                    
-                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
-                                System.debug('paypal log fields that affected this error: ' + err.getFields());
-                            }
-                        }
-                    }
-            
-            
-            }
-            // Done
-  /********************************* Track Paypal Reponse Messages Log*******************/
 
         } catch(System.Exception problem) {
             return addErrorMessage(problem);
         }
-                
+    
         // Update the transactions
         Savepoint savepoint = Database.setSavepoint();
 

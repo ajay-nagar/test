@@ -1,4 +1,4 @@
-public without sharing class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
+public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
     public String troopOrGroupName { get; set; }
     public String zipCode { get; set; }
@@ -26,8 +26,7 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
      public Boolean isunsure { get; set; }
      public ID deleteselectedrecordid { get; set; }
      public ID selectedcampaignidd {get; set; }
-     public  String customSiteUrl2 ;
-      public ID trackid;
+     
     public Community_Girl_TroopGroupRoleSearch () {
         //isunsure =false;
         showselectedcampaign =false;
@@ -40,11 +39,7 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
         pageNumberSet = new List<Integer>();
         parentCampaignWrapperList = new List<ParentCampaignWrapper>();
         parentCampaignWrapperList2 = new List<ParentCampaignWrapper>();
-            //=========tracking code=============================//
-        customSiteUrl2  = Label.community_login_URL;
-         if(Apexpages.currentPage().getParameters().containsKey('trackid'))
-             trackid = Apexpages.currentPage().getParameters().get('trackid');
-        //=========tracking code=============================//
+
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
             girlContactId = Apexpages.currentPage().getParameters().get('GirlContactId');
 
@@ -417,9 +412,7 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                 Boolean isPrimaryCampaignMember = false;
                 Boolean isPrimaryCampaignMemberForSelection = false;
                 Boolean isTroopContainsIRM = false;
-
                 map<ID,ID> AlreadyExistCampaignMemberMap = new map<ID,ID>();
-                
                 List<Contact> conactList = [Select Name, Id from Contact where Id = :girlContactId]; 
                 Contact contact = (conactList != null && conactList.size() > 0) ? conactList[0] : new Contact();
 
@@ -442,12 +435,17 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                     ];
 
                     if(campaignMemberForCurrentGirlList != null && campaignMemberForCurrentGirlList.size() > 0) {
-                        for(CampaignMember campaignMember :campaignMemberForCurrentGirlList) {
+                       /* for(CampaignMember campaignMember :campaignMemberForCurrentGirlList)
+                            if(campaignMember.Primary__c && campaignMember.Active__c)
+                                isPrimaryCampaignMember = true;*/
+                    for(CampaignMember campaignMember :campaignMemberForCurrentGirlList) {
                             if(campaignMember.Primary__c && campaignMember.Active__c)
                                 isPrimaryCampaignMember = true;
-                        AlreadyExistCampaignMemberMap.put(campaignMember.CampaignId,campaignMember.ContactId);
+                            AlreadyExistCampaignMemberMap.put(campaignMember.CampaignId,campaignMember.ContactId);
                             system.debug('Campaign Id==>' + campaignMember.CampaignId +'Contact Id==>'+campaignMember.ContactId);
-                        }
+                     }
+                        
+                        
                     }
                 }
 
@@ -470,7 +468,11 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                             }
                             else {
                                 if(!isPrimaryCampaignMember && !isPrimaryCampaignMemberForSelection && !isTroopContainsIRM) {
-                                    if(!AlreadyExistCampaignMemberMap.containsKey(wrapper.campaignId)){
+                                    /*CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = true, Active__c = false);
+                                    campaignMemberList.add(campaignMember);
+                                    isPrimaryCampaignMemberForSelection = true;*/
+                                   
+                                   if(!AlreadyExistCampaignMemberMap.containsKey(wrapper.campaignId)){
                                         CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = true, Active__c = false);
                                         campaignMemberList.add(campaignMember);
                                         isPrimaryCampaignMemberForSelection = true;
@@ -479,6 +481,7 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                                         CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = false, Active__c = false);
                                         campaignMemberList.add(campaignMember);
                                     }
+                                    
                                 }
                                 else {
                                         CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = false, Active__c = false);
@@ -508,15 +511,13 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                     String contactIdCampaignIdString = campaignMember.ContactId + '' + campaignMember.CampaignId;
                     contactIdCampaignId_CampaignMemberMap.put(contactIdCampaignIdString, campaignMember);
                 }
-              
 
                 for(CampaignMember campaignMember : campaignMemberList) {
                     String contactIdCampaignIdString = campaignMember.ContactId + '' + campaignMember.CampaignId;
                     if(contactIdCampaignId_CampaignMemberMap.containsKey(contactIdCampaignIdString)) {
                         campaignMemberIdSet.add(contactIdCampaignId_CampaignMemberMap.get(contactIdCampaignIdString).Id);
                     } else {
-                             campaignMember.Progress_Tracking__c=trackid   ;
-                            newCampaignMemberList.add(campaignMember);
+                        newCampaignMemberList.add(campaignMember);
                     }
                 }
 
@@ -524,7 +525,7 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                 try{
                    campaignMemberSaveresultList = Database.insert(newCampaignMemberList);
 
-                   // contact.Get_Involved_Complete__c = true;
+                    contact.Get_Involved_Complete__c = true;
                     update contact;
                 }
                 catch(DmlException dmlException) {
@@ -544,41 +545,10 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                 if(System.currentPagereference().getParameters().get('cmID') != null){
                 campaignMemberIds = campaignMemberIds + ',' + System.currentPagereference().getParameters().get('cmID');
                 }
-               //================================Progress tracking scenario 1=====================================//
                 if(contact != null)
-                    customSiteUrl2=customSiteUrl2+'/Community_Girl_JoinMembershipInformation' + '?GirlContactId='+girlContactId + '&ParentContactId='+parentContactId+'&CampaignMemberIds='+CampaignMemberIds+'&CouncilId='+CouncilId;
-                     
+                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_JoinMembershipInformation' + '?GirlContactId='+girlContactId + '&ParentContactId='+parentContactId+'&CampaignMemberIds='+CampaignMemberIds+'&CouncilId='+CouncilId, contact);
 
-                          List<String> campaignMemberIdSet2 = new List<String>();
-                                    campaignMemberIdSet2=campaignMemberIds.split(',');
-                         set<String> cmidset = new set<String>();
-                         for(String cm2 : campaignMemberIdSet2) 
-                                cmidset.add(cm2);
-                              List<CampaignMember> existingCampaignMemberList2 = [
-                              Select Id
-                         , ContactId
-                         , Progress_Tracking__c
-                      from CampaignMember 
-                     where ContactId = :girlContactId 
-                       and Id IN : cmidset
-                ];
-                         for(CampaignMember campaignMember2 : existingCampaignMemberList2) 
-                                campaignMember2.Progress_Tracking__c=trackid;
-                            update existingCampaignMemberList2;    
-                       
-                      
-                       if(trackid!=null)
-                        {
-                          Progress_Tracking__c track=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                            track.Status__c = 'Get Involved Complete'  ;
-                            track.URL__c    =customSiteUrl2+'&trackid='+trackid;
-                            update track;
-                        }   
-                       
-                 //================================Progress tracking scenario 1=====================================//
-               
-                
-                 if(campaignMemberSaveresultList != null) {
+                if(campaignMemberSaveresultList != null) {
                     for(Database.Saveresult sr : campaignMemberSaveresultList) {
                         if (sr.isSuccess()) {
                             Pagereference JoinMembershipInformationPage = System.Page.Community_Girl_JoinMembershipInformation;
@@ -586,8 +556,6 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                             JoinMembershipInformationPage.getParameters().put('ParentContactId', parentContactId);
                             JoinMembershipInformationPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                             JoinMembershipInformationPage.getParameters().put('CouncilId', councilId);
-                       if(trackid!=null)
-                                JoinMembershipInformationPage.getParameters().put('trackid',trackid);
                             JoinMembershipInformationPage.setRedirect(true);
                             return JoinMembershipInformationPage;
                         }
@@ -610,8 +578,6 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                     JoinMembershipInformationPage.getParameters().put('ParentContactId', parentContactId);
                     JoinMembershipInformationPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                     JoinMembershipInformationPage.getParameters().put('CouncilId', councilId);
-                     if(trackid!=null)
-                                JoinMembershipInformationPage.getParameters().put('trackid',trackid);
                     JoinMembershipInformationPage.setRedirect(true);
                     return JoinMembershipInformationPage;
                 }
@@ -675,28 +641,22 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                 List<CampaignMember> existingCampaignMemberList = [
                     Select Id
                          , ContactId
-                         , CampaignId ,Progress_Tracking__c
+                         , CampaignId
                       from CampaignMember 
                      where ContactId = :girlContactId 
                        and CampaignId IN :campaignIdSet
                 ];
-                List<CampaignMember> existingCampaignMemberList2;
+
                 for(CampaignMember campaignMember : existingCampaignMemberList) {
-                   // if(trackid !=null)
-                 //   campaignMember.Progress_Tracking__c=trackid   ;
-                    existingCampaignMemberList2.add(campaignMember);
                     String contactIdCampaignIdString = campaignMember.ContactId + '' + campaignMember.CampaignId;
                     contactIdCampaignId_CampaignMemberMap.put(contactIdCampaignIdString, campaignMember);
-                    
                 }
-            //  update existingCampaignMemberList2;
+
                 for(CampaignMember campaignMember : campaignMemberList) {
                     String contactIdCampaignIdString = campaignMember.ContactId + '' + campaignMember.CampaignId;
                     if(contactIdCampaignId_CampaignMemberMap.containsKey(contactIdCampaignIdString)) {
                         campaignMemberIdSet.add(contactIdCampaignId_CampaignMemberMap.get(contactIdCampaignIdString).Id);
                     } else {
-                        if(trackid !=null)
-                       campaignMember.Progress_Tracking__c=trackid   ; 
                         newCampaignMemberList.add(campaignMember);
                     }
                 }
@@ -707,7 +667,7 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                     if(taskList <> Null && taskList.size() > 0)
                         insert taskList; 
 
-                   // contact.Get_Involved_Complete__c = true;
+                    contact.Get_Involved_Complete__c = true;
                     update contact;
                 }
                 catch(DmlException dmlException) {
@@ -726,21 +686,10 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                         campaignMemberIds = campaignMemberIds == '' ?  string.valueOf(campaignMember.Id) : campaignMemberIds + ',' + string.valueOf(campaignMember.Id);
                     }
                 }
-                 //================================Progress tracking scenario 1=====================================//
-                if(contact != null)
-                    customSiteUrl2=customSiteUrl2+'/Community_Girl_JoinMembershipInformation' + '?GirlContactId='+girlContactId + '&ParentContactId='+parentContactId+'&CampaignMemberIds='+CampaignMemberIds+'&CouncilId='+CouncilId;
-                         
-                     if(trackid!=null)
-                        {
-                          Progress_Tracking__c track=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                            track.Status__c = 'Get Involved Complete'  ;
-                            track.URL__c    =customSiteUrl2+'&trackid='+trackid;
-                            update track;
-                        } 
-                          
-                        
 
-                 //================================Progress tracking scenario 1=====================================//
+                if(contact != null)
+                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_JoinMembershipInformation' + '?GirlContactId='+girlContactId + '&ParentContactId='+parentContactId+'&CampaignMemberIds='+CampaignMemberIds+'&CouncilId='+CouncilId, contact);
+
                 if(campaignMemberSaveresultList != null) {
                     for (Database.Saveresult sr : campaignMemberSaveresultList) {
                         if (sr.isSuccess()) {
@@ -749,8 +698,6 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                             JoinMembershipInformationPage.getParameters().put('ParentContactId', parentContactId);
                             JoinMembershipInformationPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                             JoinMembershipInformationPage.getParameters().put('CouncilId', councilId);
-                           if(trackid!=null)
-                                JoinMembershipInformationPage.getParameters().put('trackid',trackid);
                             JoinMembershipInformationPage.setRedirect(true);
                             return JoinMembershipInformationPage;
                         }
@@ -774,8 +721,6 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                     JoinMembershipInformationPage.getParameters().put('ParentContactId', parentContactId);
                     JoinMembershipInformationPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                     JoinMembershipInformationPage.getParameters().put('CouncilId', councilId);
-                 if(trackid!=null)
-                        JoinMembershipInformationPage.getParameters().put('trackid',trackid);
                     JoinMembershipInformationPage.setRedirect(true);
                     return JoinMembershipInformationPage;
                 }
@@ -1135,8 +1080,8 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
         public String campaignAccountId;
         public Id campaignId { get; set; }
         public String campaignParticipationType { get; set; }
-         public String campaignMeetingStartDatetimeStd { get; set; }
-         public String campaignMeetingtime { get; set; }
+        public String campaignMeetingStartDatetimeStd { get; set; }
+        public String campaignMeetingtime { get; set; }
         @TestVisible public ParentCampaignWrapper(Boolean campaignChecked, String strCampaignDistance, String strChildCampaignName, String strCampaignGrade, String strCampaignMeetingLocation, String strcampaignMeetingDay,String strcampaignMeetingDayfrequency, Date TroopStartDate,String MeetingStartTime, String strcampaignOpeningsRemaining, String strParentCampaignName, String strAccountId, String strVolunteers, String strCampaignId, String strCampaignParticipation) {//String strChildCampaignId,String strParticipation 
             isCampaignChecked = campaignChecked;
             campaignDistance = strCampaignDistance;
@@ -1167,20 +1112,18 @@ public without sharing class Community_Girl_TroopGroupRoleSearch extends Sobject
                     Integer mon=strCampaignMeetingStartDatetime.month();
                     Integer day=strCampaignMeetingStartDatetime.day();
                     Datetime myDate = datetime.newInstance(year, mon, day , hour, min, 0);
-                        campaignMeetingStartDatetimeStd = String.valueOf(myDate.getTime()); 
-                         */ 
+                    campaignMeetingStartDatetimeStd = String.valueOf(myDate.getTime()); 
+                */
                       Datetime   strCampaignMeetingStartDatetime= TroopStartDate; 
                       Datetime newDateTime = strCampaignMeetingStartDatetime.addDays(1);
                      String myDatetimeStr = newDateTime.format('MMMM d,  yyyy');
                    campaignMeetingStartDatetimeStd= myDatetimeStr; 
                     campaignMeetingtime =    MeetingStartTime;
+
             }else{
                  //campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
-              
                           campaignMeetingStartDatetimeStd = '';
-                   
-            
-            }
+                }
 
            // campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
             campaignOpeningsRemaining = strcampaignOpeningsRemaining;

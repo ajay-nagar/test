@@ -10,8 +10,7 @@ public without sharing class Community_Girl_DemographicsInformation extends Sobj
     public Contact currentContact;
     public Opportunity currentOpportunity;
     public set<string> campaignMemberIdSet;
-      public ID trackid;
-    public  String customSiteUrl2 ;
+    
     public List<SelectOption> lstAllCampaignFields { get; set; }
     public List<SelectOption> lstSelectedCampaignFields { get; set; }
     
@@ -19,11 +18,7 @@ public without sharing class Community_Girl_DemographicsInformation extends Sobj
         campaignMemberIdSet = new set<string>();
         lstAllCampaignFields = new List<SelectOption>();
         lstSelectedCampaignFields= new List<SelectOption>();
-          //=========tracking code=============================//
-         if(Apexpages.currentPage().getParameters().containsKey('trackid'))
-             trackid = Apexpages.currentPage().getParameters().get('trackid');
-          customSiteUrl2  = Label.community_login_URL;
-       //=========tracking code=============================//
+        
         if (Apexpages.currentPage().getParameters().containsKey('CouncilId')) {
             councilId = Apexpages.currentPage().getParameters().get('CouncilId');
              Girl_RegistrationHeaderController.councilAccount = GirlRegistrationUtilty.getCouncilAccount(Apexpages.currentPage().getParameters().get('CouncilId'));
@@ -52,7 +47,7 @@ public without sharing class Community_Girl_DemographicsInformation extends Sobj
         }
         if(currentContact.rC_Bios__Ethnicity__c != null)
         selectedEthnicity = currentContact.rC_Bios__Ethnicity__c;
-        String[] selectedCampaignFields = (currentContact != null && currentContact.Race__c != null) ? currentContact.Race__c.trim().split(';') : new String[]{};
+        String[] selectedCampaignFields = currentContact.Race__c.trim().split(';');
         for(String scf:selectedCampaignFields) {
            lstSelectedCampaignFields.add(new SelectOption(scf,scf));           
         }        
@@ -61,9 +56,9 @@ public without sharing class Community_Girl_DemographicsInformation extends Sobj
     public void getRaceOptionList() {
         Schema.DescribeFieldResult fieldResult = Contact.Race__c.getDescribe();
         List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
-        String[] selectedCampaignFields = (currentContact != null && currentContact.Race__c != null) ? currentContact.Race__c.trim().split(';') : new String[]{};
+        String[] selectedCampaignFields = currentContact.Race__c.trim().split(';');
         set<string> setValues =  new set<string>();
-        
+        //lstAllCampaignFields.add(new SelectOption('--None--', '--None--'));
         if(picklistEntries != null && picklistEntries.size() > 0){            
             for(Schema.PicklistEntry picklistValie : picklistEntries) {  
             setValues.add(picklistValie.getValue());                                  
@@ -126,34 +121,29 @@ public without sharing class Community_Girl_DemographicsInformation extends Sobj
                 for(CampaignMember campaignMember : campaignMemberList) {
                     if (campaignMember.Campaign.Background_Check_Needed__c == true)
                         isBackgroundCheck = true;
-                   
+                    
+                    isPrimary = (campaignMember.Primary__c == true) ? true : false;
+                    
+                    //campaignMember.Active__c = true;
+                    //campaignMember.Date_Active__c = system.today();
+
                     if (campaignMember.Campaign.Special_Handling__c == true)
                         isSpecialHandling = true;
                 }
 
+                //if(isPrimary == false)
+                    //campaignMemberList[0].Primary__c = true;
                 if(campaignMemberList <> NULL && campaignMemberList.size() > 0)
                     update campaignMemberList; 
                     
-              //  if(currentContact != null && currentContact.Id != null)
-               //     GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_DemographicsThankYou' + '?ContactId='+contactId+ '&CouncilId='+councilId+'&CampaignMemberIds='+campaignMemberIds+'&isBackgroundCheckFlag='+ string.ValueOf(isBackgroundCheck), currentContact);
-                  //=======================Tracking progress=====================================//
-            
-                 if(trackid!=null)
-                 {
-                      if(currentContact != null && currentContact.Id != null)
-                     customSiteUrl2=customSiteUrl2+'/Community_Girl_DemographicsThankYou' + '?ContactId='+contactId+ '&CouncilId='+councilId+'&CampaignMemberIds='+campaignMemberIds+'&isBackgroundCheckFlag='+ string.ValueOf(isBackgroundCheck)    ;
-                        Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                         tracking.URL__c    =customSiteUrl2+'&trackid='+trackid;
-                            update tracking;
-                }
-    //=======================Tracking progress=====================================//
+                if(currentContact != null && currentContact.Id != null)
+                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_DemographicsThankYou' + '?ContactId='+contactId+ '&CouncilId='+councilId+'&CampaignMemberIds='+campaignMemberIds+'&isBackgroundCheckFlag='+ string.ValueOf(isBackgroundCheck), currentContact);
+
                 PageReference landingPage = System.Page.Community_Girl_DemographicsThankYou;//new PageReference('/apex/');
                 landingPage.getParameters().put('isBackgroundCheckFlag', string.ValueOf(isBackgroundCheck));
                 landingPage.getParameters().put('GirlContactId', contactId);
                 landingPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                 landingPage.getParameters().put('CouncilId', councilId);
-                if(trackid != null)
-                landingPage.getParameters().put('trackid', trackid);
                 landingPage.setRedirect(true);
                 landingPage.setRedirect(true);
                 return landingPage;

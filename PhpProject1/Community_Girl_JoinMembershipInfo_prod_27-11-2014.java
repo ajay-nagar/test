@@ -1,6 +1,5 @@
 public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
-
-    public String paymentMethodType { get; set; }
+ public String paymentMethodType { get; set; }
     public String membershipProduct { get; set; }
     public String dateOfBirth { get; set; }
     public String girlPhone { get; set; }
@@ -98,8 +97,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
     private rC_Bios__Address__c parentAddress;
     private rC_Bios__Address__c girlAddress;
     private rC_Bios__Address__c secondaryAddress;
-    public ID trackid;
-    public  String customSiteUrl2 ;
+    
     private List<Contact> contacts;
     private User systemAdminUser;
     Double totalPrice = 0.00;
@@ -107,10 +105,9 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
     public static final string LIFETIME_MEMBERSHIP  = 'Lifetime Membership';
     
     private Opportunity opportunityServicefee;
-    private String membershipYear = '';
     private string oldCampaign = '';
     public Community_Girl_JoinMembershipInfo() {
-        paymentMethodType = 'Credit Card';
+         paymentMethodType = 'Credit Card';
         booleanOppMembershipOnPaper = false;
         booleanOpportunityGrantRequested = false;
         isGirlAbove13 = false;
@@ -120,8 +117,8 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         booleanTermsAndConditions = false;
         //booleanContactPhotoOptIn = true;
         booleanOppGrantRequested = false;
-        emailOptIn = false;
-        textOptIn = false;
+        //emailOptIn = false;
+        //textOptIn = false;
         totalPrice = 0.00;
         counterUnableToLockRow = 0;
         //termsAndCondition = 'I/we accept and abide by the <a href="http://www.girlscouts.org/program/basics/promise_law/">Girl Scout Promise and Law</a>.';
@@ -129,15 +126,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         PricebookEntryList = new PricebookEntry[]{};
         fillPricebookEntryList();
         councilAccount = new Account();
-        //=========tracking code=============================//
-         if(Apexpages.currentPage().getParameters().containsKey('trackid'))
-             trackid = Apexpages.currentPage().getParameters().get('trackid');
-            // Map<String, PublicSiteURL__c> siteUrlMap3 = PublicSiteURL__c.getAll();   
-        // if(!siteUrlMap3.isEmpty() && siteUrlMap3.ContainsKey('Girl_Registration'))
-        // customSiteUrl2 = siteUrlMap3.get('Girl_Registration').Volunteer_BaseURL__c;
-          customSiteUrl2  = Label.community_login_URL;
-       //=========tracking code=============================//
-        systemAdminUser = GirlRegistrationUtilty.getSystemAdminUser();
+        
         if(Apexpages.currentPage().getParameters().containsKey('ParentContactId'))
             parentContactId = Apexpages.currentPage().getParameters().get('ParentContactId');
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
@@ -183,6 +172,15 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         girlAddress = [Select Id,rC_Bios__City__c,rC_Bios__Country__c,rC_Bios__County__c,rC_Bios__Postal_Code__c,rC_Bios__State__c,rC_Bios__Street_Line_1__c,rC_Bios__Street_Line_2__c from rC_Bios__Address__c where ID = :girlContact.rC_Bios__Preferred_Mailing_Address__c];
         
         if(parentContact != null) {
+            systemAdminUser = [Select Id
+                 , LastName
+                 , IsActive
+                 , Profile.Name
+                 , Profile.Id
+                 , ProfileId  from User where Id = :parentContact.Account.OwnerId
+               and IsActive = true 
+               and UserRoleId != null
+            limit 1];
             primaryFirstName = parentContact.FirstName;
             primaryLastName = parentContact.LastName;
             primaryEmail = parentContact.rC_Bios__Home_Email__c;            
@@ -390,6 +388,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
                  , LastName
                  , Birthdate
                  , AccountId
+                 , Account.OwnerId
                  , Account.rC_Bios__Preferred_Contact__c
                  , rC_Bios__Home_Email__c
                  , rC_Bios__Gender__c
@@ -415,7 +414,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
                  , rC_Bios__Birth_Year__c
                  , Account.rC_Bios__Preferred_Contact__r.email
                  , rC_Bios__Role__c
-                 , Photo_Opt_In__c
+           , Photo_Opt_In__c
               From Contact 
              where Id = :strContactId 
              limit 1
@@ -461,7 +460,6 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             contactToUpdate.Email_Opt_In__c = primaryEmailOptIn;
             contactToUpdate.MobilePhone = (primaryMobilePhone != null && primaryMobilePhone.length() > 20) ? primaryMobilePhone.substring(0, 20) : primaryMobilePhone;
             contactToUpdate.Text_Phone_Opt_In__c = primaryTextOptIn;
-            //contactToUpdate.Photo_Opt_In__c = booleanContactPhotoOptIn;
             update contactToUpdate;
             return contactToUpdate;
         }
@@ -561,7 +559,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             secondaryContact.HomePhone = secondaryHomePhone;
             secondaryContact.Email_Opt_In__c = secondaryEmailOptIn;
             secondaryContact.Text_Phone_Opt_In__c = secondaryTextOptIn;
-            secondaryContact.Photo_Opt_In__c = booleanContactPhotoOptIn;
+           // secondaryContact.Photo_Opt_In__c = booleanContactPhotoOptIn;
             
             system.debug('=11====>'+secondaryContact);
             
@@ -751,6 +749,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
     }
     
     public PageReference submit() {        
+        
          if(paymentMethodType == 'Cash/Check'){
          booleanOppMembershipOnPaper = true;
         }else if(paymentMethodType == 'Financial Aid'){
@@ -758,8 +757,9 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         }
         counterUnableToLockRow++;
         Savepoint savepoint = Database.setSavepoint();
+
+        //Create G Email template Content
         
-        //Email template Content
         string sCouncil_Header_Urlc;
         string sService_Feec;
         string sAdult_Contact_First_Namec='';
@@ -773,9 +773,6 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
         string sOwner_Titlec='';
         string sOwner_Phonec='';
         string sOwner_Emailc='';
-        string sUrl='';
-
-        
         
         try {
         Opportunity newOpportunity;
@@ -863,11 +860,12 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             if(priceBookEntry != null && priceBookEntry.Product2.rC_Giving__End_Date__c != null)
             membershipYear = string.valueOf(priceBookEntry.Product2.rC_Giving__End_Date__c.year());
             if(membershipYear !=null && membershipYear != '') {
-            List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:girlContact.ID];// and Active__c=true];
+            List<campaignmember> lstCM = [Select Membership__r.Membership_year__c from campaignmember where ContactId =:girlContact.ID ];// and Active__c=true];
             if(lstCM.size()>0) {
             for(campaignmember cm:lstCM) {
             if(cm.Membership__r.Membership_year__c == membershipYear)
-             return addErrorMessageAndRollback(savepoint,'This membership is already active, Please select another membership.');
+            return addErrorMessageAndRollback(savepoint,'This membership is already active, Please select another membership.');
+           // return addErrorMessage('This membership is already active, Please select another membership.');
             }
             }
             }
@@ -890,7 +888,8 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             system.debug('== girlContact ==: ' + [select Id, Birthdate from Contact where Id =: girlContact.Id]);
             set<String> contactAddressIds = new set<String>();
             if(custodialFlag == true){
-                if(secondaryContact.id == null) {
+            if(secondaryContact.id == null) {
+                      
                     //======================= checking new secondary contact exists or not in same account========================================
                         if(secondaryFirstName!=null && secondaryFirstName!='' && secondaryLastName!=null && secondaryLastName !='' ){
                                     secondaryFirstName =secondaryFirstName.Trim();
@@ -1050,66 +1049,17 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             councilAccount = GirlRegistrationUtilty.getCouncilAccount(zip[0].Council__c);            
             }
             if (booleanOppMembershipOnPaper || booleanOpportunityGrantRequested) {
+                if (!Test.isRunningTest()) {
+                if(parentContact != null && parentContact.Id != null && councilAccount.Id != null)
+                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_ThankYou' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id+'&FinancialAidRequired='+String.valueOf(booleanOpportunityGrantRequested)+'&CashOrCheck='+String.valueOf(booleanOppMembershipOnPaper), parentContact);
+                }
                 
-                 //================================Progress tracking for financial aid and cash/check=============================//
-                customSiteUrl2=customSiteUrl2+'/Community_Girl_ThankYou';
-                if(girlContact != null && girlContact.Id != null && councilAccount.Id != null) 
-               customSiteUrl2=customSiteUrl2 + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id+'&FinancialAidRequired='+String.valueOf(booleanOpportunityGrantRequested)+'&CashOrCheck='+String.valueOf(booleanOppMembershipOnPaper)+'&ParentContactId='+parentContact.Id;
-                if(opportunityServicefee.Id != null)
-                     customSiteUrl2=customSiteUrl2+'&OpportunityServicefeeId='+opportunityServicefee.Id;
-               
-                       if(trackid!=null)
-                        {
-                           Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                                if(booleanOpportunityGrantRequested==true)//FinancialAidRequired
-                                 {      tracking.Status__c = 'Financial Aid Pending'  ; }
-                                if(booleanOppMembershipOnPaper==true)//CashOrCheck
-                                 {  tracking.Status__c = 'Cash/Check Pending'  ;    }
-                                if(parentContact != null && parentContact.Id != null)
-                                  tracking.URL__c    =customSiteUrl2+'&trackid='+trackid;
-                             
-                              tracking.Membership_Giving__c =newOpportunity.Id     ;
-                            update tracking;
-                        }else{
-                            /*
-                              Progress_Tracking__c tracking= new Progress_Tracking__c();
-                                  tracking.Contact__c =   girlContact.Id     ;
-                                  tracking.Parent__c  =  parentContact.Id       ;
-                                 
-                                    if(parentContact != null && parentContact.Id != null)
-                                      tracking.URL__c    =customSiteUrl2;
-                                     tracking.Membership_Giving__c =newOpportunity.Id     ;
-                                     
-                                     insert tracking;
-                                    
-                                    if(tracking != null && tracking.Id !=null)
-                                    {       tracking.URL__c     =   customSiteUrl2+'&trackid='+tracking.Id;
-                                              tracking.Type__c    =   'Renewal' ;
-                                             if(booleanOpportunityGrantRequested==true)//FinancialAidRequired
-                                             {      tracking.Status__c = 'Financial Aid Pending'  ; }
-                                            if(booleanOppMembershipOnPaper==true)//CashOrCheck
-                                             {  tracking.Status__c = 'Cash/Check Pending'  ;    }
-                                            update  tracking ;
-                                            trackid=tracking.Id;
-                                    }
-                                
-                                     if(campaignMemberList != null && campaignMemberList.size() > 0 && newOpportunity != null && trackid !=null)
-                                        {
-                                                for(CampaignMember campaignMember2 : campaignMemberList)
-                                                    campaignMember2.Progress_Tracking__c =trackid ;
-                                                update campaignMemberList;
-                                        }
-                        */
-                        }
-                        
-                //================================Progress tracking for financial aid and cash/check=============================//
-                
-            /****************************************** Custome Community Email G,H,I Start ******************************************************************/
-
+/************************************************************************************************************/
+if(newOpportunity!=null){
             sService_Feec= Girl_RegistrationHeaderController.councilAccount.Service_Fee__c!=null ? string.valueof(Girl_RegistrationHeaderController.councilAccount.Service_Fee__c) :null;
             sCouncil_Header_Urlc = Girl_RegistrationHeaderController.councilAccount.Council_Header_Url__c!=null?Girl_RegistrationHeaderController.councilAccount.Council_Header_Url__c:null;    
                 
-             if(newOpportunity!=null && newOpportunity.Id!=null){
+                
              Opportunity newopp=[select ID
             ,Adult_Contact_First_Name__c
             ,Girl_First_Name__c
@@ -1148,6 +1098,8 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
      logo = logo + '</div>';
             string EmailG='';
             EmailG +=logo;
+            
+            
             EmailG +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
             EmailG +='<p>Thank you for your interest in signing '+sGirl_First_Namec+' up for Girl Scouts.</p>';            
             EmailG +='<p>You’ve indicated that you need to pay with cash or check. If you’re writing a check, please include your confirmation number on it; for both cash and checks, please print this email and mail or bring it, along with payment, to:</p>';
@@ -1165,6 +1117,8 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             
             string EmailI='';
             EmailI +=logo;
+            
+            
             EmailI +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
             EmailI +='<p>Thank you for your interest in signing '+sGirl_First_Namec+' up for Girl Scouts.</p>';  
             EmailI +='<p>You indicated that you’d be paying the membership fee with cash or check, but we haven’t received anything from you yet. I just wanted to check in and see if you have questions or would like some help completing the registration process.</p>';          
@@ -1197,15 +1151,15 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
             EmailH +='';
                         
             system.debug('HEmail==>'+EmailH );
-
-            newOpportunity.Email_G__c = EmailG ; 
-            newOpportunity.Email_H__c = EmailH ; 
-            newOpportunity.Email_I__c = EmailI ; 
-            update newOpportunity;
-            }
-/****************************************** Custome Community Email G,H,I End ******************************************************************/
-   
                 
+                
+                //newOpportunity.Email_G__c = EmailG ; 
+                //newOpportunity.Email_H__c = EmailH ; 
+                //newOpportunity.Email_I__c = EmailI ; 
+                update newOpportunity;
+}
+/************************************************************************************************************/
+            
                 
                 Pagereference landingPage = System.Page.Community_Girl_ThankYou;//new Pagereference('/apex/');
                 if(booleanOpportunityGrantRequested != null)
@@ -1222,9 +1176,7 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
                     landingPage.getParameters().put('OpportunityServicefeeId',opportunityServicefee.Id);
                 if (councilAccount != null)
                     landingPage.getParameters().put('CouncilId', councilAccount.Id);
-                  if(trackid!=null)
-               landingPage.getParameters().put('trackid',trackid);
-               
+                
                 landingPage.setRedirect(true);
                 return landingPage;
             }
@@ -1238,145 +1190,13 @@ public class Community_Girl_JoinMembershipInfo extends SobjectExtension{
                 CampaignMember oldCampaignMember = [Select Id,Pending_Payment_URL__c from CampaignMember where ID = :oldCampaign]; 
                 oldCampaignMember.Pending_Payment_URL__c = paymenturlFinal;
                 update oldCampaignMember;
-                customSiteUrl2=customSiteUrl2+paymenturl;//tracking
             }
-              //================================Progress tracking for credit card=============================//
-                     if(trackid!=null)
-                        {
-                           Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                                  tracking.URL__c    =customSiteUrl2+'&trackid='+trackid;
-                                  tracking.Status__c = 'Membership Complete'  ; 
-                              tracking.Membership_Giving__c =newOpportunity.Id     ;
-                            update tracking;
-                        }else{
-                            /*
-                              Progress_Tracking__c tracking= new Progress_Tracking__c();
-                                  tracking.Contact__c =   girlContact.Id     ;
-                                  tracking.Parent__c  =  parentContact.Id       ;
-                                      tracking.URL__c    =customSiteUrl2;
-                                     tracking.Membership_Giving__c =newOpportunity.Id     ;
-                                     
-                                     insert tracking;
-                                    
-                                    if(tracking != null && tracking.Id !=null)
-                                    {       tracking.URL__c     =   customSiteUrl2+'&trackid='+tracking.Id;
-                                            tracking.Type__c    =   'Renewal' ;
-                                            tracking.Status__c = 'Membership Complete'  ;
-                                            update  tracking ;
-                                            trackid=tracking.Id;
-                                    }
-                                    if(campaignMemberList != null && campaignMemberList.size() > 0 && newOpportunity != null && trackid !=null)
-                                        {
-                                                for(CampaignMember campaignMember2 : campaignMemberList)
-                                                    campaignMember2.Progress_Tracking__c =trackid ;
-                                                update campaignMemberList;
-                                        }
-
-                        */
-                        }
-                        
-                //================================Progress tracking for credit card=============================//
-              /***************************************** Community Email J,K,L Start *******************************************************************/    
-                
-           sService_Feec= Girl_RegistrationHeaderController.councilAccount.Service_Fee__c!=null ? string.valueof(Girl_RegistrationHeaderController.councilAccount.Service_Fee__c) :null;
-            sCouncil_Header_Urlc = Girl_RegistrationHeaderController.councilAccount.Council_Header_Url__c!=null?Girl_RegistrationHeaderController.councilAccount.Council_Header_Url__c:null;    
-                
-                
-             Opportunity newopp=[select ID
-            ,Adult_Contact_First_Name__c
-            ,Girl_First_Name__c
-            ,Council_Name__c
-            ,Council_Address__c
-            ,Contact__r.Name
-            ,Auto_Giving__c
-            ,rC_Giving__Giving_Amount__c
-            ,Owner.Name
-            ,Owner_Title__c
-            ,Owner_Phone__c
-            ,Owner_Email__c 
-            from Opportunity where Id=:newOpportunity.Id
-            limit 1
-            ];
-            
-            Progress_Tracking__c newpt = [Select Id,URL__c From Progress_Tracking__c Where Membership_Giving__c =: newOpportunity.Id Limit 1];
-                            
-            sAdult_Contact_First_Namec=newopp.Adult_Contact_First_Name__c!=null?newopp.Adult_Contact_First_Name__c:'';
-            sGirl_First_Namec=newopp.Girl_First_Name__c!=null?newopp.Girl_First_Name__c:'';
-            sCouncil_Namec=newopp.Council_Name__c!=null?newopp.Council_Name__c:'';
-            sCouncil_Addressc=newopp.Council_Address__c!=null?newopp.Council_Address__c:'';
-            sContactrName=newopp.Contact__r.Name!=null?newopp.Contact__r.Name:'';
-            sAuto_Givingc=newopp.Auto_Giving__c!=null?newopp.Auto_Giving__c:'';
-            srC_GivingGiving_Amountc=string.valueof(sService_Feec==null?newopp.rC_Giving__Giving_Amount__c:(newopp.rC_Giving__Giving_Amount__c+Decimal.ValueOf(sService_Feec)));
-            sOwnerName=newopp.Owner.Name!=null?newopp.Owner.Name:'';
-            sOwner_Titlec=newopp.Owner_Title__c!=null?newopp.Owner_Title__c:'';
-            sOwner_Phonec=newopp.Owner_Phone__c!=null?newopp.Owner_Phone__c:'';
-            sOwner_Emailc=newopp.Owner_Email__c!=null?newopp.Owner_Email__c:'';
-            sUrl=newpt.URL__c!=null?newpt.URL__c:'';
-            
-            
-            
-            string logo = '<div style="padding-left:10px;height:103px;background-color:#00AE58;">';
-            if(sCouncil_Header_Urlc != null) {
-                logo = logo + '<img src="' + sCouncil_Header_Urlc + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
-            } else {
-                logo = logo + '<img src="' + Label.DefaultCouncilLogo + '" style="float:left;padding-top:5px;background-color:#00AE58;"/>';
-            }
-             logo = logo + '</div>';
-             
-                string EmailJ='';
-                EmailJ +=logo;
-                EmailJ +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
-                EmailJ +='<p>Now that you&apos;ve chosen your troop/group preferences and started the registration process for '+sGirl_First_Namec+', we know you&apos;re both excited to start the fun. How do you do that? The next step is to complete the <a href="'+sUrl+'">membership payment</a>.</p>';            
-                EmailJ +='<p>Once we receive the membership fee, '+sGirl_First_Namec+' will be all set. Her spot in her troop/group will be confirmed and her next year will be bright with possibility and countless new adventures. </p>';
-                EmailJ +='<p>If you have any questions, be sure to let me know. I&apos;m happy to answer them for you.</p>';
-                EmailJ +='<p>Have a great day!</p>';
-                EmailJ +='<p>'+sOwnerName+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';
-                EmailJ +='';
-                EmailJ +='';
-                        
-            system.debug('JEmail==>'+EmailJ );
-            
-                string EmailK='';
-                EmailK +=logo;
-                EmailK +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
-                EmailK +='<p>We&apos;re as excited as you are to get '+sGirl_First_Namec+' officially on board with her new troop/group! Up next: Complete the <a href="'+sUrl+'">membership payment</a> as an official member.</p>';            
-                EmailK +='<p>Once we receive the membership fee, we&apos;ll confirm '+sGirl_First_Namec+'&apos;s spot in her troop/group and she&apos;ll be on her way to amazing adventures, new friends, and endless possibilities at Girl Scouts.</p>';
-                EmailK +='<p>Please feel free to contact me with any questions. I&apos;m happy to answer them for you.</p>';
-                EmailK +='<p>Have a great day!</p>';
-                EmailK +='<p>'+sOwnerName+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';
-                EmailK +='';
-                EmailK +='';
-                            
-                system.debug('KEmail==>'+EmailK );
-            
-                string EmailL='';
-                EmailL +=logo;
-                EmailL +='<p>Hi ' + sAdult_Contact_First_Namec +',</p>';
-                EmailL +='<p>We really appreciate you starting the membership registration process for '+sGirl_First_Namec+'. We&apos;re excited for her to start the fun and adventures that are waiting for her. But first, we need to finish up the <a href="'+sUrl+'">membership payment</a> to make her as an official member of Girl Scouts. </p>';  
-                EmailL +='<p>Registration is simple. We&apos;ll be able to confirm '+sGirl_First_Namec+'&apos;s spot in her troop/group as soon as we collect the membership fee. </p>';          
-                EmailL +='<p>If you need me to talk you through the process, just let me know. I&apos;m here to help.</p>';
-                EmailL +='<p>Have a great day!</p>';
-                EmailL +='<p>'+sOwnerName+'<br/>'+sOwner_Phonec+'<br/>'+sOwner_Emailc+'</p>';
-                
-                EmailL +='';
-                            
-                system.debug('LEmail==>'+EmailL);
-
-                newOpportunity.Email_J__c = EmailJ ; 
-                newOpportunity.Email_K__c = EmailK ; 
-                newOpportunity.Email_L__c = EmailL ; 
-                update newOpportunity;
-         /************************************************ Community Email J,K,L End ************************************************************/
-                
-                
-            Pagereference paymentProcessingPage = System.Page.Community_Girl_PaymentProcessing;
+            Pagereference paymentProcessingPage = System.Page.Community_Girl_PaymentProcessing;//new Pagereference('/apex/');
             paymentProcessingPage.getParameters().put('GirlContactId', girlContact.Id);
             paymentProcessingPage.getParameters().put('CampaignMemberIds',campaignMembers);
 
             if(councilAccount != null)
                 paymentProcessingPage.getParameters().put('CouncilId', councilAccount.Id);
-              if(trackid!=null)
-               paymentProcessingPage.getParameters().put('trackid',trackid);
             if(newOpportunity.Id != null)
                 paymentProcessingPage.getParameters().put('OpportunityId', newOpportunity.Id);
             if(opportunityServicefee != null)
@@ -1508,7 +1328,7 @@ system.debug('mailingPostalCodeToZipCodeMap#######'+mailingPostalCodeToZipCodeMa
     
     public Opportunity createMembershipOpportunity(String recordTypeId, Contact contact,PricebookEntry priceBookEntry) {
         String campaignName = '';
-        membershipYear = string.valueOf(system.today().year());
+        String membershipYear = string.valueOf(system.today().year());
 
         if(priceBookEntry != null && priceBookEntry.Product2.Name.toUpperCase().contains('LIFETIME')) {
             campaignName = LIFETIME_MEMBERSHIP;
@@ -1588,7 +1408,7 @@ system.debug('mailingPostalCodeToZipCodeMap#######'+mailingPostalCodeToZipCodeMa
            os.OpportunityId = opportunity.id; // *** ERROR - not writable ***
            os.OpportunityAccessLevel = 'Read';
            os.UserOrGroupId = UserInfo.getUserId();
-           //insert os;
+           insert os;
         
         updateOpportunityType(opportunity, priceBookEntry, contact);   
         
@@ -1842,7 +1662,7 @@ system.debug('mailingPostalCodeToZipCodeMap#######'+mailingPostalCodeToZipCodeMa
     public void updateCouncilAccount(Account councilAccount, Boolean booleanOppGrantRequested) {
         //councilAccount.Volunteer_Financial_Aid_Available__c = booleanOppGrantRequested;
         //update councilAccount;
-    } 
+    }
     public List<SelectOption> getItems() {
         List<SelectOption> options = new List<SelectOption>(); 
         options.add(new SelectOption('Credit Card','Credit Card.'));
@@ -1850,5 +1670,5 @@ system.debug('mailingPostalCodeToZipCodeMap#######'+mailingPostalCodeToZipCodeMa
         if(booleanOppGrantRequested == true)
         options.add(new SelectOption('Financial Aid','I request financial assistance for membership registration.')); 
          return options; 
-    }   
+    }       
 }

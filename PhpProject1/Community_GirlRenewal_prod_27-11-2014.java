@@ -1,7 +1,6 @@
 public without sharing class Community_GirlRenewal{
-
-    //Declare variables
-     private integer counter=0;  //keeps track of the offset
+//Declare variables
+    private integer counter=0;  //keeps track of the offset
     private integer list_size=10; //sets the page size or number of rows
     public integer total_size; //used to show user the total size of the list
     public List<CampaignMember> CMtoShow { get; set; }
@@ -15,7 +14,6 @@ public without sharing class Community_GirlRenewal{
     public string CTP { get; set; }
     public List<WrapperClass> wrapperList{get;set;}
     private Contact con;
-    public  String customSiteUrl2 ;
     public Community_GirlRenewal() {
         user = [
          SELECT id
@@ -28,13 +26,12 @@ public without sharing class Community_GirlRenewal{
         if(con.AccountID != NULL){
             contacts = [Select ID from contact where AccountID = :con.AccountID];
         }        
-        
         for(Contact cons:contacts){
             setCon.add(cons.ID);
         }  
-         total_size = [Select count() from CampaignMember where Active__c = true and Assignment_Type__c = 'Girl' and Display_Renewal__c = true and ContactID IN:setCon];
+        total_size = [Select count() from CampaignMember where Active__c = true and Assignment_Type__c = 'Girl' and Display_Renewal__c = true and ContactID IN:setCon];
         /*
-        CMtoShow = [Select ID,Pending_Payment_URL__c,ContactID,Contact.Name,Campaign.Name,Continue_This_Position__c,Membership__r.Grant_Requested__c,Membership__r.Membership_on_Paper__c,Membership__r.StageName from CampaignMember where Active__c = true and Assignment_Type__c = 'Girl' and Display_Renewal__c = true and ContactID IN:setCon limit: list_size offset: counter];
+        CMtoShow = [Select ID,Pending_Payment_URL__c,ContactID,Contact.Name,Campaign.Name,Continue_This_Position__c,Membership__r.Grant_Requested__c,Membership__r.Membership_on_Paper__c,Membership__r.StageName from CampaignMember where Active__c = true and Assignment_Type__c = 'Girl' and Display_Renewal__c = true and ContactID IN:setCon];
         system.debug('List Size... ' +CMtoShow.size());        
         wrapperList = new List<WrapperClass>();
         if(CMtoShow.size()>0) {
@@ -42,11 +39,10 @@ public without sharing class Community_GirlRenewal{
                 WrapperClass w = new WrapperClass(cm);
                 wrapperList.add(w);
             }
-        }
-      */
+        }*/
       pagenationRecord();
     }
-    /** Pagenation Code **/
+      /** Pagenation Code **/
      
      public void pagenationRecord(){
      CMtoShow = [Select ID,Pending_Payment_URL__c,ContactID,Contact.Name,Campaign.Name,Continue_This_Position__c,Membership__r.Grant_Requested__c,Membership__r.Membership_on_Paper__c,Membership__r.StageName from CampaignMember where Active__c = true and Assignment_Type__c = 'Girl' and Display_Renewal__c = true and ContactID IN:setCon ORDER BY Contact.Name limit: list_size offset: counter];
@@ -108,10 +104,8 @@ public without sharing class Community_GirlRenewal{
          return (total_size/list_size);
       }
    }
+   /** Pagenation Code End**/
     
-  
-    
-    /** Pagenation Code End**/
     public class WrapperClass {
         public String girlName{get;set;}
         public String campaignName{get;set;}
@@ -154,61 +148,34 @@ public without sharing class Community_GirlRenewal{
         String zipCodeToMatch = (conMember.MailingPostalCode != null && conMember.MailingPostalCode.length() > 5) ? conMember.MailingPostalCode.substring(0, 5) + '%' : conMember.MailingPostalCode + '%';
         system.debug('zipCodeToMatch... '+zipCodeToMatch);
         zip = [Select Council__c from Zip_Code__c where name like:zipCodeToMatch];
-         
-        //==================progress tracking ===================================================//  
-                 customSiteUrl2  = Label.community_login_URL;
-                  Progress_Tracking__c track;
-                  Id parentid = user.ContactId ;
-                  Id girl_id  = System.currentPagereference().getParameters().get('contactID') ;
-                  List<Progress_Tracking__c> tracklist =[Select Id,Contact__c ,Parent__c ,Type__c,URL__c ,Status__c from Progress_Tracking__c where Contact__c = :girl_id and Parent__c = :parentid and Type__c = 'Renewal'];
-                        if(tracklist != null && tracklist.size()>0){
-                               track = tracklist[0];      
-                        }else{
-                                track= new Progress_Tracking__c();
-                                track.Contact__c =   System.currentPagereference().getParameters().get('contactID') ;
-                                track.Parent__c  =   user.ContactId    ;
-                                track.Type__c    =   'Renewal' ;
-                                insert track;
-                        }
-                        track.Status__c = 'Get Started Complete'  ;
+        
+        if(CM.Pending_Payment_URL__c !=null) {
+           string urlPayment = CM.Pending_Payment_URL__c.substring(4); 
+           page = new PageReference(urlPayment);                
+           page.setRedirect(false);
+           return page;
+        }
 
-            //==================progress tracking ===================================================//  
         if(cmpCTP == 'Yes') {
-                if(CM.Pending_Payment_URL__c !=null) {
-                    string urlPayment = CM.Pending_Payment_URL__c.substring(4); 
-                            if(track.Id != null)
-                                urlPayment=urlPayment+'&trackid='+track.Id;
-                             track.URL__c     =   urlPayment;
-                              track.Status__c = 'Get Started Complete'  ;
-                             update track;
-                    page = new PageReference(urlPayment); 
-                    page.setRedirect(false);
-                    return page;
-                }
-                if(addOpp == 'Yes'){
-                    page = System.Page.Community_Girl_TroopOrGroupRoleSearch;
-                    if(zip.size() > 0 && zip[0].Council__c != null)
-                    page.getParameters().put('CouncilId', zip[0].Council__c);
-                    page.getParameters().put('GirlContactId', System.currentPagereference().getParameters().get('contactID'));
-                    page.getParameters().put('ParentContactId', user.ContactId);
-                    page.getParameters().put('cmID', System.currentPagereference().getParameters().get('cmID'));
-                    if(track.Id != null)
-                        page.getParameters().put('trackid', track.Id);
-                    page.setRedirect(false);
-
-                } else {
-                    page = System.Page.Community_Girl_JoinMembershipInformation;
-                    if(zip.size() > 0 && zip[0].Council__c != null)
-                    page.getParameters().put('CouncilId', zip[0].Council__c);
-                    page.getParameters().put('GirlContactId', System.currentPagereference().getParameters().get('contactID'));
-                    page.getParameters().put('ParentContactId', user.ContactId);
-                    page.getParameters().put('CampaignMemberIds', System.currentPagereference().getParameters().get('cmID'));
-                    if(track.Id != null)
-                        page.getParameters().put('trackid', track.Id);
-                }   
-                CM.Continue_This_Position__c = 'Yes';    
-                CM.Renewal_Date__c = Date.Today();        
-                Update CM;     
+            if(addOpp == 'Yes'){
+            page = System.Page.Community_Girl_TroopOrGroupRoleSearch;
+            if(zip.size() > 0 && zip[0].Council__c != null)
+            page.getParameters().put('CouncilId', zip[0].Council__c);
+            page.getParameters().put('GirlContactId', System.currentPagereference().getParameters().get('contactID'));
+            page.getParameters().put('ParentContactId', user.ContactId);
+            page.getParameters().put('cmID', System.currentPagereference().getParameters().get('cmID'));
+            page.setRedirect(false);
+            } else {
+            page = System.Page.Community_Girl_JoinMembershipInformation;
+            if(zip.size() > 0 && zip[0].Council__c != null)
+            page.getParameters().put('CouncilId', zip[0].Council__c);
+            page.getParameters().put('GirlContactId', System.currentPagereference().getParameters().get('contactID'));
+            page.getParameters().put('ParentContactId', user.ContactId);
+            page.getParameters().put('CampaignMemberIds', System.currentPagereference().getParameters().get('cmID'));
+            }   
+            CM.Continue_This_Position__c = 'Yes';    
+            CM.Renewal_Date__c = Date.Today();        
+            Update CM;     
         } else if(cmpCTP == 'No but i had like to review other Girl Scout opportunities'){
             
             if(OP.Product2.rC_Giving__End_Date__c!=null)
@@ -222,29 +189,20 @@ public without sharing class Community_GirlRenewal{
             page.getParameters().put('CouncilId', zip[0].Council__c);
             page.getParameters().put('GirlContactId', System.currentPagereference().getParameters().get('contactID'));
             page.getParameters().put('ParentContactId', user.ContactId);
-            if(track.Id != null)
-                page.getParameters().put('trackid', track.Id);
             page.setRedirect(false);
         } else {
-                if(OP.Product2.rC_Giving__End_Date__c!=null)
-                        CM.End_Date__c = OP.Product2.rC_Giving__End_Date__c;
-                CM.Display_Renewal__c = false;
-                CM.Continue_This_Position__c = 'No, my girl will not be continuing with Girl Scouts.';            
-                Update CM;
-                page = System.Page.Community_GirlThanks;
-                track.Status__c = 'Did Not Renew'  ;
-                if(track.Id != null)
-                            page.getParameters().put('trackid', track.Id);
-                page.setRedirect(false);
+            if(OP.Product2.rC_Giving__End_Date__c!=null)
+            CM.End_Date__c = OP.Product2.rC_Giving__End_Date__c;
+            CM.Display_Renewal__c = false;
+            CM.Continue_This_Position__c = 'No, my girl will not be continuing with Girl Scouts.';            
+            Update CM;
+            page = System.Page.Community_GirlThanks;
+            page.setRedirect(false);
         }
         con.rC_Bios__Role__c = 'Adult';
         con.Secondary_Role__c = 'Parent';
         con.Girl_Registration__c = true;
         update con;
-        customSiteUrl2=customSiteUrl2+page.getUrl().substring(5);
-         track.URL__c     =   customSiteUrl2;
-           
-         update track;
         return page;    
-    }    
+    }   
 }

@@ -14,8 +14,7 @@ public without sharing class Community_Girl_ThankYouPage extends SobjectExtensio
     public String SalesforceIdentifier {get; set;}
     public String AmountDue {get; set;}
     public String currentPageUrl { get; set; } 
-    public ID trackid;
-    public  String customSiteUrl2 ;
+    
     public Account councilAccount;
     public Opportunity memberOpportunity;
     public Contact contact;
@@ -24,11 +23,7 @@ public without sharing class Community_Girl_ThankYouPage extends SobjectExtensio
         
         councilAccount = new Account();
         memberOpportunity = new Opportunity();
-                //=========tracking code=============================//
-         if(Apexpages.currentPage().getParameters().containsKey('trackid'))
-             trackid = Apexpages.currentPage().getParameters().get('trackid');
-          customSiteUrl2  = Label.community_login_URL;
-       //=========tracking code=============================//
+        
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
             contactId = Apexpages.currentPage().getParameters().get('GirlContactId');
         
@@ -131,19 +126,9 @@ public without sharing class Community_Girl_ThankYouPage extends SobjectExtensio
             List<Contact> contactList = [Select Id, Name, GirlFlowPageURL__c, IsGirlFlowPageDone__c from Contact Where Id = :contactId];
             Contact contact = (contactList != null && contactList.size() > 0) ? contactList[0]: new Contact();
     
-           // if(contact != null && contact.Id != null)
-             //   GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_DemographicsInformation' + '?GirlContactId='+contactId + '&CouncilId='+CouncilId+'&CampaignMemberIds='+CampaignMemberIds+'&OpportunityId='+OpportunityId, contact);
-       //=======================Tracking progress=====================================//
-            
-                 if(trackid!=null)
-                 {
-                     if(contact != null && contact.Id != null)
-                     customSiteUrl2=customSiteUrl2+'/Community_Girl_DemographicsInformation' + '?GirlContactId='+contactId + '&CouncilId='+CouncilId+'&CampaignMemberIds='+CampaignMemberIds+'&OpportunityId='+OpportunityId    ;
-                        Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                         tracking.URL__c    =customSiteUrl2+'&trackid='+trackid;
-                            update tracking;
-                }
-    //=======================Tracking progress=====================================//
+            if(contact != null && contact.Id != null)
+                GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Community_Girl_DemographicsInformation' + '?GirlContactId='+contactId + '&CouncilId='+CouncilId+'&CampaignMemberIds='+CampaignMemberIds+'&OpportunityId='+OpportunityId, contact);
+                
             Pagereference paymentProcessingPage = System.Page.Community_Girl_DemographicsInformation;//new Pagereference('/apex/');
             if(CouncilId != null)
                 paymentProcessingPage.getParameters().put('CouncilId', CouncilId);
@@ -153,8 +138,6 @@ public without sharing class Community_Girl_ThankYouPage extends SobjectExtensio
                 paymentProcessingPage.getParameters().put('OpportunityId', OpportunityId);
             if(contactId != null)
                 paymentProcessingPage.getParameters().put('GirlContactId', contactId);
-            if(trackid != null)
-                paymentProcessingPage.getParameters().put('trackid', trackid);
                 
             paymentProcessingPage.setRedirect(true);
             return paymentProcessingPage;
@@ -174,8 +157,6 @@ public without sharing class Community_Girl_ThankYouPage extends SobjectExtensio
         pagereference.getParameters().put('CashOrCheck', String.valueOf(isCashOrCheck));
         pagereference.getParameters().put('FinancialAidRequired', String.valueOf(isFinancialAidRequired));
         pagereference.getParameters().put('ParentContactId', parentContactId);
-        if(trackid != null)
-        pagereference.getParameters().put('trackid', trackid);
          
         system.debug(' '+String.valueOf(pagereference));
         

@@ -20,8 +20,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
      public ID deleteselectedrecordid { get; set; }
      public ID selectedcampaignidd {get; set; }
     public static final Map<String, Schema.FieldSet> FIELDSETS_CAMPAIGN = SObjectType.Campaign.FieldSets.getMap();
-    public ID trackid;
-    public  String customSiteUrl2 ;
+    
     private String contactId;
     private String girlContactId;
     private String parentContactId;
@@ -40,13 +39,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         pageNumberSet = new List<Integer>();
         parentCampaignWrapperList = new List<ParentCampaignWrapper>();
          parentCampaignWrapperList2 = new List<ParentCampaignWrapper>();
-    //=========tracking code=============================//
-         if(Apexpages.currentPage().getParameters().containsKey('trackid'))
-             trackid = Apexpages.currentPage().getParameters().get('trackid');
-             Map<String, PublicSiteURL__c> siteUrlMap3 = PublicSiteURL__c.getAll();   
-         if(!siteUrlMap3.isEmpty() && siteUrlMap3.ContainsKey('Girl_Registration'))
-         customSiteUrl2 = siteUrlMap3.get('Girl_Registration').Volunteer_BaseURL__c;
-//=========tracking code=============================//
+
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
             girlContactId = Apexpages.currentPage().getParameters().get('GirlContactId');
 
@@ -382,7 +375,6 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                 Boolean isPrimaryCampaignMember = false;
                 Boolean isPrimaryCampaignMemberForSelection = false;
                 Boolean isTroopContainsIRM = false;
-                
                 map<ID,ID> AlreadyExistCampaignMemberMap = new map<ID,ID>();
                 List<Contact> conactList = [Select Name, Id from Contact where Id = :girlContactId]; 
                 Contact contact = (conactList != null && conactList.size() > 0) ? conactList[0] : new Contact();
@@ -406,13 +398,16 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                     ];
 
                     if(campaignMemberForCurrentGirlList != null && campaignMemberForCurrentGirlList.size() > 0) {
-                        for(CampaignMember campaignMember :campaignMemberForCurrentGirlList) {
+                        /*for(CampaignMember campaignMember :campaignMemberForCurrentGirlList)
+                            if(campaignMember.Primary__c && campaignMember.Active__c)
+                                isPrimaryCampaignMember = true;*/
+                      for(CampaignMember campaignMember :campaignMemberForCurrentGirlList) {
                             if(campaignMember.Primary__c && campaignMember.Active__c)
                                 isPrimaryCampaignMember = true;
-                                
                             AlreadyExistCampaignMemberMap.put(campaignMember.CampaignId,campaignMember.ContactId);
                             system.debug('Campaign Id==>' + campaignMember.CampaignId +'Contact Id==>'+campaignMember.ContactId);
-                        }
+                      }
+                     
                     }
                 }
 
@@ -442,16 +437,21 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                                 System.debug('!isTroopContainsIRM=>'+!isTroopContainsIRM);
                                 
                                 if(!isPrimaryCampaignMember && !isPrimaryCampaignMemberForSelection && !isTroopContainsIRM) {
+                                    /*CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = true, Active__c = false);
+                                    campaignMemberList.add(campaignMember);
+                                    isPrimaryCampaignMemberForSelection = true;
+                                    System.debug('****CampaignMember Mark Primary****'+campaignMember.Primary__c );*/
+                                    
                                     if(!AlreadyExistCampaignMemberMap.containsKey(wrapper.campaignId)){
                                         CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = true, Active__c = false);
                                         campaignMemberList.add(campaignMember);
                                         isPrimaryCampaignMemberForSelection = true;
-                                        System.debug('****CampaignMember Mark Primary****'+campaignMember.Primary__c );
                                     }
                                     else {
-                                    CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = false, Active__c = false);
-                                    campaignMemberList.add(campaignMember);
+                                        CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = false, Active__c = false);
+                                        campaignMemberList.add(campaignMember);
                                     }
+                                    
                                 }
                                 else {
                                     CampaignMember campaignMember = new CampaignMember(ContactId = girlContactId, CampaignId= wrapper.campaignId, Account__c = wrapper.campaignAccountId, Primary__c = false, Active__c = false);
@@ -489,7 +489,6 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                     if(contactIdCampaignId_CampaignMemberMap.containsKey(contactIdCampaignIdString)) {
                         campaignMemberIdSet.add(contactIdCampaignId_CampaignMemberMap.get(contactIdCampaignIdString).Id);
                     } else {
-                        campaignMember.Progress_Tracking__c=trackid   ;
                         newCampaignMemberList.add(campaignMember);
                         System.debug('**** Add CampaignMember to newCampaignMemberList then check CM primary ==>'+campaignMember.Primary__c );
                     }
@@ -511,20 +510,17 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                 }
                 
                 if(parentContactId != null) {
-                  
-                       //================================Progress tracking scenario 1=====================================//
-                        if(trackid!=null)
-                        {
-                          Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                            tracking.Status__c = 'Get Involved Complete'  ;
-                            tracking.URL__c    =customSiteUrl2+'/Girl_JoinMembershipInformation?ParentContactId='+parentContactId+ '&GirlContactId='+girlContactId+'&CampaignMemberIds='+campaignMemberIds+'&CouncilId='+councilId+'&trackid='+trackid;
-                            update tracking;
-                        }   
-                       //================================Progress tracking scenario 1=====================================//
-                    
+                    List<Contact> parentconactList = [Select Name, Id ,Get_Involved_Complete__c from Contact where Id = :parentContactId]; 
+                    Contact parentContact = (parentconactList != null && parentconactList.size() > 0) ? parentconactList[0] : new Contact();
+                    parentContact.Get_Involved_Complete__c = true;
+                    update parentContact;
+                    if(parentContact != null && parentContact.Id != null)
+                        GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_JoinMembershipInformation' + '?GirlContactId='+girlContactId + '&ParentContactId='+parentContactId+'&CampaignMemberIds='+CampaignMemberIds+'&CouncilId='+CouncilId, parentContact);
                 }
                 if(campaignMemberSaveresultList != null) {
                 
+                
+              
                     for(Database.Saveresult sr : campaignMemberSaveresultList) {
                         if (sr.isSuccess()) {
                             
@@ -534,8 +530,6 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                             JoinMembershipInformationPage.getParameters().put('ParentContactId', parentContactId);
                             JoinMembershipInformationPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                             JoinMembershipInformationPage.getParameters().put('CouncilId', councilId);
-                             if(trackid!=null)
-                             JoinMembershipInformationPage.getParameters().put('trackid', trackid);
                             JoinMembershipInformationPage.setRedirect(true);
                             return JoinMembershipInformationPage;
                         }
@@ -559,8 +553,6 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                     JoinMembershipInformationPage.getParameters().put('ParentContactId', parentContactId);
                     JoinMembershipInformationPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                     JoinMembershipInformationPage.getParameters().put('CouncilId', councilId);
-                     if(trackid!=null)
-                 JoinMembershipInformationPage.getParameters().put('trackid', trackid);
                     JoinMembershipInformationPage.setRedirect(true);
                     return JoinMembershipInformationPage;
                 }
@@ -614,7 +606,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
 
                         if(whyAreYouUnsure != null && whyAreYouUnsure != '')
                             campaignMember.Why_are_you_unsure__c = whyAreYouUnsure;
-                              campaignMember.Progress_Tracking__c=trackid   ; 
+
                         campaignMemberList.add(campaignMember);
 
                         Task task = new Task(Subject = 'Unsure-'+ contact.Name , WhoId = girlContactId,  OwnerId = contact.OwnerId, WhatId = wrapper.campaignId);
@@ -638,11 +630,9 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
 
                 for(CampaignMember campaignMember : campaignMemberList) {
                     String contactIdCampaignIdString = campaignMember.ContactId + '' + campaignMember.CampaignId;
-                   
                     if(contactIdCampaignId_CampaignMemberMap.containsKey(contactIdCampaignIdString)) {
                         campaignMemberIdSet.add(contactIdCampaignId_CampaignMemberMap.get(contactIdCampaignIdString).Id);
                     } else {
-                          campaignMember.Progress_Tracking__c=trackid   ; 
                         newCampaignMemberList.add(campaignMember);
                     }
                 }
@@ -671,18 +661,19 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                 }
 
                 if(parentContactId != null) {
-                
-                     //================================Progress tracking scenario 1=====================================//
-                         if(trackid!=null)
-                        {
-                        Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid]; 
-                            tracking.Status__c = 'Get Involved Complete'  ;
-                        tracking.URL__c    =customSiteUrl2+'/Girl_JoinMembershipInformation?ParentContactId='+parentContactId+ '&GirlContactId='+girlContactId+'&CampaignMemberIds='+campaignMemberIds+'&CouncilId='+councilId+'&trackid='+trackid;
-                            update tracking;
-                        }   
-                       //================================Progress tracking scenario 1=====================================//
+                    List<Contact> parentconactList = [Select Name, Id from Contact where Id = :parentContactId]; 
+                    Contact parentContact = (parentconactList != null && parentconactList.size() > 0) ? parentconactList[0] : new Contact();
+                    try{
+                        parentContact.Get_Involved_Complete__c = true;
+                        update parentContact;
+                    }catch(DmlException dmlException) {
+                        return addErrorMessageAndRollback(savepoint,dmlException.getMessage());
+                    }
                     
-                 }
+                    
+                    if(parentContact != null && parentContact.Id != null)
+                        GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_JoinMembershipInformation' + '?GirlContactId='+girlContactId + '&ParentContactId='+parentContactId+'&CampaignMemberIds='+CampaignMemberIds+'&CouncilId='+CouncilId, parentContact);
+                }
                 if(campaignMemberSaveresultList != null) {
                     for (Database.Saveresult sr : campaignMemberSaveresultList) {
                         if (sr.isSuccess()) {
@@ -692,8 +683,6 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                             JoinMembershipInformationPage.getParameters().put('ParentContactId', parentContactId);
                             JoinMembershipInformationPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                             JoinMembershipInformationPage.getParameters().put('CouncilId', councilId);
-                             if(trackid!=null)
-                             JoinMembershipInformationPage.getParameters().put('trackid', trackid);
                             JoinMembershipInformationPage.setRedirect(true);
                             return JoinMembershipInformationPage;
                         }
@@ -717,8 +706,6 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                     JoinMembershipInformationPage.getParameters().put('ParentContactId', parentContactId);
                     JoinMembershipInformationPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                     JoinMembershipInformationPage.getParameters().put('CouncilId', councilId);
-                     if(trackid!=null)
-                    JoinMembershipInformationPage.getParameters().put('trackid', trackid);
                     JoinMembershipInformationPage.setRedirect(true);
                     return JoinMembershipInformationPage;
                 }
@@ -779,7 +766,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
         else if(troopOrGroupName != null && troopOrGroupName != '') {
             List<Campaign> allCampaignList;
                 if(councilId !=null && councilId !='')
-                {  String ttroopOrGroupName= '%' + String.escapeSingleQuotes(troopOrGroupName) +'%';
+                {
                  allCampaignList = [
                                 Select Grade__c
                                      , Meeting_Day_s__c
@@ -798,7 +785,7 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                                      , RecordTypeId
                                      , Council_Code__c 
                                   From Campaign 
-                                 where Name LIKE :ttroopOrGroupName
+                                 where Name = :troopOrGroupName
                                    and Display_on_Website__c = true
                                    and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
                                    and Account__c = :councilId
@@ -968,27 +955,17 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
 
         Savepoint savepoint = Database.setSavepoint();
 
-        try{ Decimal councilcode;
-             String searchQueri;
-            List<Account> acclst=[select Household_Council_Code__c from account where account.Id=:councilId2 ];
-            for(Account acc: acclst)
-            {
-            councilcode=acc.Household_Council_Code__c;
-            }
-             searchQueri = 'Select ParentId,Account__c,Council_Code__c,Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true and RecordTypeId = \'' + recTypeId + '\' order by Name limit 100' ;
-            
+        try{
+            String searchQueri = 'Select ParentId,Account__c, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true and RecordTypeId = \'' + recTypeId + '\' order by Name limit 100' ;
             campaignList = database.query(searchQueri);
 
             if(!campaignList.isEmpty())
-            {   
-                
                 for(Campaign campaign : campaignList)
                 { 
-                    if(councilcode== campaign.Council_Code__c)
+                    if(campaign.Account__c==councilId2)
                     nameList.add(campaign.Name);
                 }
-              JSONString = JSON.serialize(nameList);
-            }
+            JSONString = JSON.serialize(nameList);
         } catch(System.exception pException) {
             system.debug('pException.getMessage==>'+pException.getMessage());
             //return addErrorMessageAndRollback(savepoint, pException);
@@ -1119,7 +1096,8 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                  // system.debug('Str0======>'+Str0 +'TroopStartDate:'+TroopStartDate+'strCampaignMeetingStartDatetime:'+strCampaignMeetingStartDatetime);
                  // DateTime st =Datetime.parse(Str0);
                  //campaignMeetingStartDatetimeStd = String.valueOf(st.getTime());
-                /*    String Str0 = MeetingStartTime;//convert in 24 hours format
+                /*  Datetime   strCampaignMeetingStartDatetime= TroopStartDate;
+                    String Str0 = MeetingStartTime;//convert in 24 hours format
                     String[] strarr = Str0.split(' ');
                     Integer hour = Integer.valueof(strarr.get(0).split(':').get(0));
                     Integer min = Integer.valueof(strarr.get(0).split(':').get(1));
@@ -1130,17 +1108,17 @@ public with sharing class Girl_TroopGroupRoleSearchController extends SobjectExt
                     Integer year=strCampaignMeetingStartDatetime.year();
                     Integer mon=strCampaignMeetingStartDatetime.month();
                     Integer day=strCampaignMeetingStartDatetime.day();
-                    Datetime myDate = datetime.newInstance(year, mon, day , hour, min, 0);  
-                   campaignMeetingStartDatetimeStd = String.valueOf(myDate.getTime());
-                  */ 
-                      Datetime   strCampaignMeetingStartDatetime= TroopStartDate; 
+                    Datetime myDate = datetime.newInstance(year, mon, day , hour, min, 0);
+                    campaignMeetingStartDatetimeStd = String.valueOf(myDate.getTime()); 
+                */
+                        Datetime   strCampaignMeetingStartDatetime= TroopStartDate; 
                      String myDatetimeStr = strCampaignMeetingStartDatetime.format('MMMM d,  yyyy');
                     campaignMeetingStartDatetimeStd= myDatetimeStr; 
-                    campaignMeetingtime =    MeetingStartTime; 
+                    campaignMeetingtime =    MeetingStartTime;
             }else{
-               //  campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
+                // campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
                           campaignMeetingStartDatetimeStd = '';
-                 }
+            }
 
            // campaignMeetingStartDatetime = strCampaignMeetingStartDatetime;
             campaignOpeningsRemaining = strcampaignOpeningsRemaining;

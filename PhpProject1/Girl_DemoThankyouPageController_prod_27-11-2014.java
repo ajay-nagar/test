@@ -1,5 +1,5 @@
 public with sharing class Girl_DemoThankyouPageController  extends SobjectExtension{
-    public String isBackgroundCheck;
+  public String isBackgroundCheck;
     public boolean isBackgroundCheckFlag {get;set;}
     
     public String contactId;
@@ -12,15 +12,15 @@ public with sharing class Girl_DemoThankyouPageController  extends SobjectExtens
     public Girl_DemoThankyouPageController(){
         
         if(Apexpages.currentPage().getParameters().ContainsKey('GirlContactId'))
-           contactId = Apexpages.currentPage().getParameters().get('GirlContactId');
-           
+         contactId = Apexpages.currentPage().getParameters().get('GirlContactId');
+         
         if(Apexpages.currentPage().getParameters().ContainsKey('ParentContactId'))
             parentContactId = Apexpages.currentPage().getParameters().get('ParentContactId');
             
         if(Apexpages.currentPage().getParameters().ContainsKey('CampaignMemberIds'))
             campaignMemberIds = Apexpages.currentPage().getParameters().get('CampaignMemberIds');
-        
-        if(Apexpages.currentPage().getParameters().ContainsKey('isBackgroundCheckFlag'))
+      
+      if(Apexpages.currentPage().getParameters().ContainsKey('isBackgroundCheckFlag'))
             if(Apexpages.currentPage().getParameters().get('isBackgroundCheckFlag') <> NULL)
                 isBackgroundCheck = Apexpages.currentPage().getParameters().get('isBackgroundCheckFlag');
         

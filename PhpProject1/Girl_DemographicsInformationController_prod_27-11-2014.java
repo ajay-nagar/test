@@ -10,8 +10,7 @@ public with sharing class Girl_DemographicsInformationController extends Sobject
     public Contact currentContact;
     public Opportunity currentOpportunity;
     public set<string> campaignMemberIdSet;
-    public ID trackid;
-    public  String customSiteUrl2 ;
+    
     public List<SelectOption> lstAllCampaignFields { get; set; }
     public List<SelectOption> lstSelectedCampaignFields { get; set; }
     
@@ -21,13 +20,7 @@ public with sharing class Girl_DemographicsInformationController extends Sobject
         campaignMemberIdSet = new set<string>();
         lstAllCampaignFields = new List<SelectOption>();
         lstSelectedCampaignFields= new List<SelectOption>();
-         //=========tracking code=============================//
-         if(Apexpages.currentPage().getParameters().containsKey('trackid'))
-             trackid = Apexpages.currentPage().getParameters().get('trackid');
-             Map<String, PublicSiteURL__c> siteUrlMap3 = PublicSiteURL__c.getAll();   
-         if(!siteUrlMap3.isEmpty() && siteUrlMap3.ContainsKey('Girl_Registration'))
-         customSiteUrl2 = siteUrlMap3.get('Girl_Registration').Volunteer_BaseURL__c;
-       //=========tracking code=============================//
+        
         if (Apexpages.currentPage().getParameters().containsKey('ParentContactId'))
             parentContactId = Apexpages.currentPage().getParameters().get('ParentContactId');
         
@@ -133,7 +126,7 @@ public with sharing class Girl_DemographicsInformationController extends Sobject
                     if (campaignMember.Campaign.Special_Handling__c == true)
                         isSpecialHandling = true;
                 }
-                    //remove on 30-10-2014
+
                 //if(isPrimary == false)
                     //campaignMemberList[0].Primary__c = true;
                 if(campaignMemberList <> NULL && campaignMemberList.size() > 0)
@@ -143,25 +136,15 @@ public with sharing class Girl_DemographicsInformationController extends Sobject
                 Contact parentContact = (parentconactList != null && parentconactList.size() > 0) ? parentconactList[0] : new Contact();
                     
                 if(parentContact != null && parentContact.Id != null) {
-                 //   GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_DemographicsThankYou' + '?ContactId='+contactId+ '&CouncilId='+councilId+'&CampaignMemberIds='+campaignMemberIds+'&isBackgroundCheckFlag='+ string.ValueOf(isBackgroundCheck)+'&ParentContactId='+parentContact.Id, parentContact);
-               
-                      //=======================Tracking progress =====================================//
-                        if(trackid!=null)
-                        {
-                           Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                                tracking.URL__c    =customSiteUrl2+ '/Girl_DemographicsThankYou' + '?ContactId='+contactId+ '&CouncilId='+councilId+'&CampaignMemberIds='+campaignMemberIds+'&isBackgroundCheckFlag='+ string.ValueOf(isBackgroundCheck)+'&ParentContactId='+parentContact.Id+'&trackid='+trackid  ;
-                                   update tracking;
-                        }
-                         //=======================Tracking progress =====================================//
+                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_DemographicsThankYou' + '?ContactId='+contactId+ '&CouncilId='+councilId+'&CampaignMemberIds='+campaignMemberIds+'&isBackgroundCheckFlag='+ string.ValueOf(isBackgroundCheck)+'&ParentContactId='+parentContact.Id, parentContact);
                 }
+                
                 PageReference landingPage = Page.Girl_DemographicsThankYou;//new PageReference('/apex/Girl_DemographicsThankYou');
                 landingPage.getParameters().put('isBackgroundCheckFlag', string.ValueOf(isBackgroundCheck));
                 landingPage.getParameters().put('GirlContactId', contactId);
                 landingPage.getParameters().put('CampaignMemberIds', campaignMemberIds);
                 landingPage.getParameters().put('CouncilId', councilId);
                 landingPage.getParameters().put('ParentContactId', parentContact.Id );
-                if(trackid!=null)
-                landingPage.getParameters().put('trackid',trackid);
                 landingPage.setRedirect(true);
                 landingPage.setRedirect(true);
                 return landingPage;

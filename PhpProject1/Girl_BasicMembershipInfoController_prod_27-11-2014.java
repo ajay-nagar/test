@@ -1,4 +1,4 @@
-public without sharing class Girl_BasicMembershipInfoController extends SobjectExtension{
+public with sharing class Girl_BasicMembershipInfoController extends SobjectExtension{
     public String firstName { get; set; }
     public String lastName { get; set; }
     public String schoolAttend { get; set; }
@@ -15,7 +15,7 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
     public String gradeFallValue { get; set; }
     public String girlSchoolAttending {get; set;}
     public String schoolAttendedId;
-    public boolean isgirlrenewaleligible {get; set;}
+
     public Integer countTemp { get; set; }
 
     public static boolean isEventVisible { get; set; }
@@ -50,7 +50,6 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
         //schoolAttendedId = this.contact.School_Attending__c;
         isEventVisible = false;
         visibleAboutUs = false;
-        isgirlrenewaleligible=false;
         countTemp = 0;
         contactsToUpdateSet = new set<Contact>();
         //heardAboutUs = null;
@@ -61,7 +60,7 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
     }
 
     public void  eventCodeBlank() {
-        eventCode = '';
+      eventCode = '';
         visibleAboutUs = true;
         isEventVisible = true;
         countTemp = 1;
@@ -219,11 +218,6 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
                     system.debug('matchingGirlContact ===: ' + matchingGirlContact );
 
                     if (matchingContact.AccountId == matchingGirlContact.AccountId) {
-                        //================================= tracking old girl=========================//
-                        List<CampaignMember> cmrenewable=[select Id from CampaignMember where contact.Id=: matchingGirlContact.Id and Display_Renewal__c=true];
-                        if(cmrenewable.size()>0 && cmrenewable!= null)
-                            isgirlrenewaleligible=true;
-                        //================================= tracking old girl=========================//
                         matchingContact = updateExistingContact(matchingContact);
                         matchingAccount = updateExistingAccount(matchingContact);
 
@@ -287,91 +281,54 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
                 //CampaignMember campaignMember = GirlRegistrationUtilty.createCampaignMember(matchingCampaign, matchingGirlContact, 'null', 0);
             }
             
-            //================================Progress tracking scenario 1=====================================//
-            if(matchingGirlContact != null && matchingGirlContact.Id != null && matchingContact != null && matchingContact.Id != null)
-            {   
-                    String customSiteUrl2 = '';
-                        Map<String, PublicSiteURL__c> siteUrlMap3 = PublicSiteURL__c.getAll();
-                        if(!siteUrlMap3.isEmpty() && siteUrlMap3.ContainsKey('Girl_Registration'))
-                            customSiteUrl2 = siteUrlMap3.get('Girl_Registration').Volunteer_BaseURL__c;
-                        
-                        if (zipCodeList <> NULL && zipCodeList.size() > 0 && councilAccount <> NULL){
-                              customSiteUrl2    =   customSiteUrl2 + '/Girl_TroopOrGroupRoleSearch' + '?ParentContactId='+matchingContact.Id + '&CouncilId='+councilAccount.Id+'&GirlContactId='+matchingGirlContact.Id;
-                         }else{
-                              customSiteUrl2     =   customSiteUrl2 + '/Girl_TroopOrGroupRoleSearch' + '?ParentContactId='+matchingContact.Id +'&GirlContactId='+matchingGirlContact.Id; 
-                         }
+            if (zipCodeList <> NULL && zipCodeList.size() > 0 && councilAccount <> NULL) {
+system.debug('222222');
+                if(matchingGirlContact != null && matchingGirlContact.Id != null && matchingContact != null && matchingContact.Id != null && councilAccount != null && councilAccount.Id != null )
+                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_TroopOrGroupRoleSearch' + '?ParentContactId='+matchingContact.Id + '&CouncilId='+councilAccount.Id+'&GirlContactId='+matchingGirlContact.Id, matchingContact);
 
+                //PageReference troopOrGroupSearch = new PageReference('/apex/Girl_TroopOrGroupRoleSearch');
+                PageReference troopOrGroupSearch = Page.Girl_TroopOrGroupRoleSearch;
+                if(matchingContact != null && matchingContact.Id != null)
+                    troopOrGroupSearch.getParameters().put('ParentContactId', matchingContact.Id);
+                if(matchingGirlContact != null && matchingGirlContact.Id != null)
+                    troopOrGroupSearch.getParameters().put('GirlContactId', matchingGirlContact.Id);
+                if(councilAccount != null && councilAccount.Id != null)
+                    troopOrGroupSearch.getParameters().put('CouncilId', councilAccount.Id);
+                troopOrGroupSearch.setRedirect(true);
+system.debug('matchingGirlContact@@@@@@@@@@@@@@@@'+matchingGirlContact);
+system.debug('matchingContact@@@@@@@@@@@@@@@@'+matchingContact);
+                return troopOrGroupSearch;
 
-                        Progress_Tracking__c track;
-                                String oldurl ;
-                                String girlname=firstName+' '+lastName; 
-                                String parentname=parentFirstName+' '+parentSecondName;
-                                 List<Progress_Tracking__c> tracklist =[Select Id, URL__c,Contact__c,Parent__c, Status__c,Type__c from Progress_Tracking__c where Contact__r.Name = :girlname and Parent__r.Name = :parentname and Parent__r.Email=:parentEmail ];
-                        
-                         if(tracklist != null && tracklist.size()>0){
-                                   track = tracklist[0];   
-                                   oldurl=tracklist[0].URL__c;
-                                   if(oldurl!= null && oldurl !='' && track.Type__c=='Registration' && isgirlrenewaleligible==false )
-                                   {
-                                          PageReference reference=new PageReference(oldurl);
-                                         reference.setRedirect(true);
-                                        return reference;
-                                   
-                                   }
-                                    if(oldurl!= null && oldurl !='' && track.Type__c=='Renewal' && isgirlrenewaleligible==true )
-                                   {    
-                                        PageReference troopOrGroupSearch = Page.Gotocommunity;
-                                            if(track != null && track.Id !=null)
-                                                troopOrGroupSearch.getParameters().put('trackid',track.Id);
-                                         troopOrGroupSearch.setRedirect(true);
-                                         return troopOrGroupSearch;
+            } else {
+system.debug('33333');
+                String updateSiteUrlForGirl = '/Girl_TroopOrGroupRoleSearch';
 
-                                      
-                                   
-                                   }
-                        }else{      
+                if(matchingContact != null && matchingContact.Id != null) {
+                    updateSiteUrlForGirl = (updateSiteUrlForGirl != null && updateSiteUrlForGirl != '' && !updateSiteUrlForGirl.contains('Girl_TroopOrGroupRoleSearch?'))
+                                           ? updateSiteUrlForGirl + '?ParentContactId=' + matchingContact.Id
+                                           : updateSiteUrlForGirl + '&ParentContactId=' + matchingContact.Id;
+                }
 
-                                    if(isgirlrenewaleligible==true ){
-                                            PageReference troopOrGroupSearch = Page.Gotocommunity;
-                                            troopOrGroupSearch.setRedirect(true);
-                                            return troopOrGroupSearch;
-                                    
-                                    }else{
-                                            track= new Progress_Tracking__c();
-                                            track.Contact__c =    matchingGirlContact.Id;
-                                            track.Parent__c  =  matchingContact.Id;
-                                            track.URL__c     =   customSiteUrl2;
-                                            insert track;
-                                        }
-                        }
-                        if(track != null && track.Id !=null)
-                        {        
-                                track.URL__c     =   customSiteUrl2+'&trackid='+track.Id;
-                                // if(tracklist != null && tracklist.size()>0 && oldurl!= null && oldurl !='' )
-                                //track.URL__c     =    oldurl;
-                                track.Status__c  = 'Get Started Complete';
-                                track.Type__c    =   'Registration'      ;
-                                update track;
-                        }
-                        
-                              PageReference troopOrGroupSearch = Page.Girl_TroopOrGroupRoleSearch;
-                                if(matchingContact != null && matchingContact.Id != null)
-                                    troopOrGroupSearch.getParameters().put('ParentContactId', matchingContact.Id);
-                                if(matchingGirlContact != null && matchingGirlContact.Id != null)
-                                    troopOrGroupSearch.getParameters().put('GirlContactId', matchingGirlContact.Id);
-                        if (zipCodeList <> NULL && zipCodeList.size() > 0 && councilAccount <> NULL) {
-                                if(councilAccount != null && councilAccount.Id != null)
-                                    troopOrGroupSearch.getParameters().put('CouncilId', councilAccount.Id);
-                        } 
-                                if(track != null && track.Id !=null)
-                                troopOrGroupSearch.getParameters().put('trackid',track.Id);
-                        
-                           troopOrGroupSearch.setRedirect(true);
-                           system.debug('matchingGirlContact@@@@@@@@@@@@@@@@'+matchingGirlContact);
-                           system.debug('matchingContact@@@@@@@@@@@@@@@@'+matchingContact);
-                           return troopOrGroupSearch;
-             }
-                //================================Progress tracking=====================================//
+                if(matchingGirlContact != null && matchingGirlContact.Id != null) {
+                    updateSiteUrlForGirl = (updateSiteUrlForGirl != null && updateSiteUrlForGirl != '' && !updateSiteUrlForGirl.contains('Girl_TroopOrGroupRoleSearch?'))
+                                           ? updateSiteUrlForGirl + '?GirlContactId=' + matchingGirlContact.Id
+                                           : updateSiteUrlForGirl + '&GirlContactId=' + matchingGirlContact.Id;
+                }
+
+                GirlRegistrationUtilty.updateSiteURLAndContactForGirl(updateSiteUrlForGirl, matchingContact);
+
+                //PageReference troopOrGroupSearch = new PageReference('/apex/Girl_TroopOrGroupRoleSearch');
+                PageReference troopOrGroupSearch = Page.Girl_TroopOrGroupRoleSearch;
+
+                if(matchingContact != null && matchingContact.Id != null)
+                    troopOrGroupSearch.getParameters().put('ParentContactId', matchingContact.Id);
+
+                if(matchingGirlContact != null && matchingGirlContact.Id != null)
+                    troopOrGroupSearch.getParameters().put('GirlContactId', matchingGirlContact.Id);
+
+                troopOrGroupSearch.setRedirect(true);
+                return troopOrGroupSearch;
+            }
         } catch(System.exception pException) {
             system.debug('4444'+pException);
             visibleAboutUs = false;
@@ -429,13 +386,13 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
     }
 
     public Contact getMatchingContact(String firstName, String lastName, String email, String strRole) {
-         system.debug('*****firstName====*********'+firstName);
-          system.debug('*****lastName====*********'+lastName);
-           system.debug('*****email====*********'+email);
-            system.debug('*****strRole====*********'+strRole);
-            firstName =firstName.Trim();
-            lastName=lastName.Trim();
-             email=email.Trim();
+       system.debug('*****firstName====*********'+firstName);
+        system.debug('*****lastName====*********'+lastName);
+         system.debug('*****email====*********'+email);
+          system.debug('*****strRole====*********'+strRole);
+          firstName =firstName.Trim();
+          lastName=lastName.Trim();
+          email=email.Trim();
         List<Contact> contactList = [
             Select Id
                  , FirstName
@@ -549,13 +506,10 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
         contact.Grade__c = gradeFallValue;
         contact.rC_Bios__Role__c = 'Adult';
         contact.rC_Bios__Preferred_Contact__c = true;
-        if(contact.Secondary_Role__c == null)
-        contact.Welcome_Complete__c = true;
-        System.debug('createNewParentContact- SecondaryRole... '+contact.Secondary_Role__c);
         if(contact.Secondary_Role__c != 'Volunteer')
         contact.Welcome_Complete__c = true;
         contact.Secondary_Role__c = 'Parent';
-       // contact.Get_Started_Complete__c = true;
+        contact.Get_Started_Complete__c = true;
 
         if (matchingZipCode != null && matchingZipCode.Recruiter__c != null && matchingZipCode.Recruiter__r.UserRoleId != null && matchingZipCode.Recruiter__r.IsActive)
             contact = GirlRegistrationUtilty.upsertContactOwner(contact, matchingZipCode.Recruiter__c);
@@ -702,16 +656,13 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
             contact.MailingPostalCode = zipCode;
             contact.How_did_you_hear_about_us__c = (heardAboutUs != null) ? heardAboutUs : '';
             contact.rC_Bios__Role__c = 'Adult';
-            if(contact.Secondary_Role__c == null)
-            contact.Welcome_Complete__c = true;
-            System.debug('convertLead- SecondaryRole... '+contact.Secondary_Role__c);
             if(contact.Secondary_Role__c != 'Volunteer')
             contact.Welcome_Complete__c = true;
             contact.Secondary_Role__c = 'Parent';
             if(account != null && account.Id != null)
                 contact.AccountId = account.id;
 
-        //    contact.Get_Started_Complete__c = true;
+            contact.Get_Started_Complete__c = true;
 
             //contact.rC_Bios__Secondary_Contact__c = false;
 
@@ -738,10 +689,8 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
             contact.Grade__c = gradeFallValue;
             contact.How_did_you_hear_about_us__c = heardAboutUs;
             contact.rC_Bios__Role__c = 'Adult';
-           // contact.Get_Started_Complete__c = true;
-            System.debug('updateExistingContact- SecondaryRole... '+contact.Secondary_Role__c);
-            if(contact.Secondary_Role__c == null)
-            contact.Welcome_Complete__c = true;
+
+            contact.Get_Started_Complete__c = true;
             if(contact.Secondary_Role__c != 'Volunteer')
             contact.Welcome_Complete__c = true;
             contact.Secondary_Role__c = 'Parent';
@@ -848,7 +797,7 @@ public without sharing class Girl_BasicMembershipInfoController extends SobjectE
         return null;
     }
 
-    @RemoteAction
+     @RemoteAction
     public static List<String> searchSchools(String strZipCode, String searchText) {
         Savepoint savepoint = Database.setSavepoint();
 

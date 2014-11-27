@@ -1,6 +1,5 @@
 public with sharing class Girl_JoinMembershipInfoController extends SobjectExtension{
-
-    public String paymentMethodType                     { get; set; }
+public String paymentMethodType                     { get; set; }
     public String membershipProduct                     { get; set; }
     public String dateOfBirth                           { get; set; }
     public String girlPhone                             { get; set; }
@@ -104,8 +103,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
     private map<Id, PricebookEntry> priceBookEntryMap;
 
     String errorMessage = '';
-     public ID trackid;
-    public  String customSiteUrl2 ;
+
     public static final string LIFETIME_MEMBERSHIP          = 'Lifetime Membership';
     public static final string COUNCIL_SERVICE_FEE          = 'Council Service Fee';
     public static final string GIRL_SCOUTS_USA_PRICEBOOK    = 'Girl Scouts USA';
@@ -129,13 +127,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
         secondaryEmailOptIn = true;
 
         textOptIn = false;
-        //=========tracking code=============================//
-         if(Apexpages.currentPage().getParameters().containsKey('trackid'))
-             trackid = Apexpages.currentPage().getParameters().get('trackid');
-             Map<String, PublicSiteURL__c> siteUrlMap3 = PublicSiteURL__c.getAll();   
-         if(!siteUrlMap3.isEmpty() && siteUrlMap3.ContainsKey('Girl_Registration'))
-         customSiteUrl2 = siteUrlMap3.get('Girl_Registration').Volunteer_BaseURL__c;
-       //=========tracking code=============================//
+
         termsAndCondition = 'I/we accept and abide by the Girl Scout Promise and Law.';
         priceBookEntryMap = new map<Id, PricebookEntry>();
         PricebookEntryList = new PricebookEntry[]{};
@@ -635,13 +627,11 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
     }
 
     public PageReference submit() {
-
-        if(paymentMethodType == 'Cash/Check'){
+       if(paymentMethodType == 'Cash/Check'){
          booleanOppMembershipOnPaper = true;
         }else if(paymentMethodType == 'Financial Aid'){
          booleanOpportunityGrantRequested = true;
         }
-        
         counterUnableToLockRow++;
         string membershipYear = '';
 
@@ -968,8 +958,8 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
                 OpportunityContactRole opportunityContactRole = createOpportunityContactRole(girlContact, newOpportunity);
 
             if (booleanOppMembershipOnPaper || booleanOpportunityGrantRequested) {
-               // if(parentContact != null && parentContact.Id != null)
-                   // GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_ThankYou' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id+'&FinancialAidRequired='+String.valueOf(booleanOpportunityGrantRequested)+'&CashOrCheck='+String.valueOf(booleanOppMembershipOnPaper)+'&ParentContactId='+parentContact.Id, parentContact);
+                if(parentContact != null && parentContact.Id != null)
+                    GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_ThankYou' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id+'&FinancialAidRequired='+String.valueOf(booleanOpportunityGrantRequested)+'&CashOrCheck='+String.valueOf(booleanOppMembershipOnPaper)+'&ParentContactId='+parentContact.Id, parentContact);
 
                 Pagereference landingPage = Page.Girl_ThankYou;
                 if(booleanOpportunityGrantRequested != null)
@@ -986,8 +976,6 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
                     landingPage.getParameters().put('CampaignMemberIds',campaignMembers);
                 if(councilMembershipOpp != null && councilMembershipOpp.Id != null)
                     landingPage.getParameters().put('CouncilMembershipOpp',councilMembershipOpp.Id);
-                 if(trackid!=null)
-                     landingPage.getParameters().put('trackid',trackid);
                 if(newOpportunity != null) {
                     landingPage.getParameters().put('OpportunityId',newOpportunity.Id);
                 }else {
@@ -996,42 +984,29 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
                 if (councilAccount != null)
                     landingPage.getParameters().put('CouncilId', councilAccount.Id);
 
-                //=======================Tracking progress for cash/check and financial aid=====================================//
-                        if(trackid!=null)
-                        {
-                           Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                                if(booleanOpportunityGrantRequested==true)//FinancialAidRequired
-                                 {      tracking.Status__c = 'Financial Aid Pending'  ; }
-                                if(booleanOppMembershipOnPaper==true)//CashOrCheck
-                                 {  tracking.Status__c = 'Cash/Check Pending'  ;    }
-                                if(parentContact != null && parentContact.Id != null)
-                                  tracking.URL__c    =customSiteUrl2+'/Girl_ThankYou' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id+'&FinancialAidRequired='+String.valueOf(booleanOpportunityGrantRequested)+'&CashOrCheck='+String.valueOf(booleanOppMembershipOnPaper)+'&ParentContactId='+parentContact.Id+'&trackid='+trackid;
-                             
-                              tracking.Membership_Giving__c =newOpportunity.Id     ;
-                            update tracking;
-                        }
-
-                //=======================Tracking progress for cash/check and financial aid=====================================//
-
                 landingPage.setRedirect(true);
                 return landingPage;
             }
 
             if(parentContact != null && parentContact.Id != null && girlContact != null && girlContact.Id != null && councilAccount != null && councilAccount.Id != null && newOpportunity != null && newOpportunity.Id != null)
             {
+            
               if(councilMembershipOpp == null){
-                customSiteUrl2=customSiteUrl2+'/Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id + '&ParentContactId='+parentContact.Id;
+                GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id + '&ParentContactId='+parentContact.Id, parentContact);
                 }else{
-                customSiteUrl2=customSiteUrl2+'/Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id + '&ParentContactId='+parentContact.Id+'&CouncilMembershipOppId='+councilMembershipOpp.Id;
+                GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_PaymentProcessing' + '?GirlContactId='+girlContact.Id + '&CouncilId='+councilAccount.Id+'&CampaignMemberIds='+campaignMembers+'&OpportunityId='+newOpportunity.Id + '&ParentContactId='+parentContact.Id+'&CouncilMembershipOppId='+councilMembershipOpp.Id, parentContact);
                 } 
+            
+            
+            
+            
             }
 
             Pagereference paymentProcessingPage = Page.Girl_PaymentProcessing;
             paymentProcessingPage.getParameters().put('GirlContactId', girlContact.Id);
             paymentProcessingPage.getParameters().put('CampaignMemberIds',campaignMembers);
             paymentProcessingPage.getParameters().put('ParentContactId', parentContact.Id);
-             if(trackid!=null)
-               paymentProcessingPage.getParameters().put('trackid',trackid);
+
             if(councilAccount != null)
                 paymentProcessingPage.getParameters().put('CouncilId', councilAccount.Id);
             if(councilMembershipOpp != null && councilMembershipOpp.Id != null)
@@ -1041,19 +1016,7 @@ public with sharing class Girl_JoinMembershipInfoController extends SobjectExten
                 paymentProcessingPage.getParameters().put('OpportunityId', newOpportunity.Id);
             else
                  return addErrorMessageAndRollback(savepoint,'Membership Opportunity not created.');
-            
 
-            //=======================Tracking progress for payment by credit card=====================================//
-                 if(trackid!=null)
-                        {
-                          Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                            tracking.Status__c = 'Membership Complete'  ;
-                            tracking.URL__c    =customSiteUrl2+'&trackid='+trackid;
-                            tracking.Membership_Giving__c   =newOpportunity.Id     ;
-                            update tracking;
-                        }
-
-            //=======================Tracking progress for credit card=====================================//
             paymentProcessingPage.setRedirect(true);
             return paymentProcessingPage;
         } catch(System.exception pException) {

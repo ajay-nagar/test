@@ -14,8 +14,7 @@ public with sharing class Girl_ThankYouPageController extends SobjectExtension{
     public String SalesforceIdentifier {get; set;}
     public String AmountDue {get; set;}
     public String currentPageUrl { get; set; } 
-     public ID trackid;
-    public  String customSiteUrl2 ;
+    
     public Account councilAccount;
     public Opportunity memberOpportunity;
     public Contact contact;
@@ -24,13 +23,7 @@ public with sharing class Girl_ThankYouPageController extends SobjectExtension{
         
         councilAccount = new Account();
         memberOpportunity = new Opportunity();
-          //=========tracking code=============================//
-         if(Apexpages.currentPage().getParameters().containsKey('trackid'))
-             trackid = Apexpages.currentPage().getParameters().get('trackid');
-             Map<String, PublicSiteURL__c> siteUrlMap3 = PublicSiteURL__c.getAll();   
-         if(!siteUrlMap3.isEmpty() && siteUrlMap3.ContainsKey('Girl_Registration'))
-         customSiteUrl2 = siteUrlMap3.get('Girl_Registration').Volunteer_BaseURL__c;
-       //=========tracking code=============================//
+        
         if(Apexpages.currentPage().getParameters().containsKey('GirlContactId'))
             contactId = Apexpages.currentPage().getParameters().get('GirlContactId');
         
@@ -61,17 +54,17 @@ public with sharing class Girl_ThankYouPageController extends SobjectExtension{
             if(councilAccount.BillingStreet != null && councilAccount.BillingState  != null && 
                councilAccount.BillingPostalCode != null && councilAccount.BillingCountry != null && councilAccount.BillingCity!= null)
             CouncilMailingAddress = councilAccount.BillingStreet + ', ' + councilAccount.BillingCity + ', ' + councilAccount.BillingState + ', ' + councilAccount.BillingCountry + ', ' + councilAccount.BillingPostalCode;
-            system.debug('memberOpportunity.Auto_Giving__c====>'+ memberOpportunity.Auto_Giving__c);
+          system.debug('memberOpportunity.Auto_Giving__c====>'+ memberOpportunity.Auto_Giving__c);
             if(memberOpportunity.Auto_Giving__c != null ){
-                SalesforceIdentifier = String.valueOf(memberOpportunity.Auto_Giving__c);
+              SalesforceIdentifier = String.valueOf(memberOpportunity.Auto_Giving__c);
                 system.debug('SalesforceIdentifier====>'+ SalesforceIdentifier);
             }
             if(memberOpportunity.rC_Giving__Giving_Amount__c != null){  
                 if(councilAccount.Service_Fee__c != null){
-                    AmountDue = String.valueOf(memberOpportunity.rC_Giving__Giving_Amount__c + councilAccount.Service_Fee__c);
+                  AmountDue = String.valueOf(memberOpportunity.rC_Giving__Giving_Amount__c + councilAccount.Service_Fee__c);
                 }
                 else{
-                    AmountDue = String.valueOf(memberOpportunity.rC_Giving__Giving_Amount__c);
+                  AmountDue = String.valueOf(memberOpportunity.rC_Giving__Giving_Amount__c);
                 }
             }
             
@@ -136,17 +129,9 @@ public with sharing class Girl_ThankYouPageController extends SobjectExtension{
             List<Contact> parentContactList = [Select Id, Name, GirlFlowPageURL__c, IsGirlFlowPageDone__c from Contact Where Id = :parentContactId];
             Contact parentContact = (parentContactList != null && parentContactList.size() > 0) ? parentContactList[0]: new Contact();
             
-        
-              //  GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_DemographicsInformation' + '?GirlContactId='+contactId + '&CouncilId='+CouncilId+'&CampaignMemberIds='+CampaignMemberIds+'&OpportunityId='+OpportunityId+'&ParentContactId='+parentContact.Id, parentContact);
-               //=======================Tracking progress =====================================//
-                        if(trackid!=null)
-                        {
-                           Progress_Tracking__c tracking=[Select Status__c,URL__c,Id from Progress_Tracking__c where Id= :trackid];
-                                   if(parentContact != null && parentContact.Id != null)
-                                tracking.URL__c    =customSiteUrl2+ '/Girl_DemographicsInformation' + '?GirlContactId='+contactId + '&CouncilId='+CouncilId+'&CampaignMemberIds='+CampaignMemberIds+'&OpportunityId='+OpportunityId+'&ParentContactId='+parentContact.Id+'&trackid='+trackid  ;
-                                   update tracking;
-                        }
-                         //=======================Tracking progress =====================================//  
+            if(parentContact != null && parentContact.Id != null)
+                GirlRegistrationUtilty.updateSiteURLAndContactForGirl('/Girl_DemographicsInformation' + '?GirlContactId='+contactId + '&CouncilId='+CouncilId+'&CampaignMemberIds='+CampaignMemberIds+'&OpportunityId='+OpportunityId+'&ParentContactId='+parentContact.Id, parentContact);
+                
             Pagereference paymentProcessingPage = Page.Girl_DemographicsInformation;//new Pagereference('/apex/Girl_DemographicsInformation');
             if(CouncilId != null)
                 paymentProcessingPage.getParameters().put('CouncilId', CouncilId);
@@ -158,8 +143,6 @@ public with sharing class Girl_ThankYouPageController extends SobjectExtension{
                 paymentProcessingPage.getParameters().put('GirlContactId', contactId);
             if(parentContact.Id != null)
                 paymentProcessingPage.getParameters().put('ParentContactId', parentContactId);
-            if(trackid!=null)
-                paymentProcessingPage.getParameters().put('trackid',trackid);
                 
             paymentProcessingPage.setRedirect(true);
             return paymentProcessingPage;
@@ -170,7 +153,7 @@ public with sharing class Girl_ThankYouPageController extends SobjectExtension{
     }
     
     public pagereference printPage(){
-        system.debug('==Url=======>'+Url.getSalesforceBaseUrl().toExternalForm());
+      system.debug('==Url=======>'+Url.getSalesforceBaseUrl().toExternalForm());
         
         Pagereference pagereference = Page.GirlPayByCashThankYouPDF;
         pagereference.getParameters().put('ContactId', contactId);
@@ -180,8 +163,7 @@ public with sharing class Girl_ThankYouPageController extends SobjectExtension{
         pagereference.getParameters().put('CashOrCheck', String.valueOf(isCashOrCheck));
         pagereference.getParameters().put('FinancialAidRequired', String.valueOf(isFinancialAidRequired));
         pagereference.getParameters().put('ParentContactId', parentContactId);
-         if(trackid!=null)
-        pagereference.getParameters().put('trackid',trackid);
+         
         system.debug(' '+String.valueOf(pagereference));
         
         List<String> pageReferenceList = String.valueOf(pagereference).split('\\[');
@@ -190,9 +172,9 @@ public with sharing class Girl_ThankYouPageController extends SobjectExtension{
             currentPageUrl = Url.getSalesforceBaseUrl().toExternalForm() +'/girl' +pageReferenceList[1].remove(']');
             system.debug('str############'+currentPageUrl);
         }
-        
-        
-        /*
+      
+      
+      /*
         system.debug('=========>'+currentPageUrl);
         
         if(currentPageUrl != null && currentPageUrl != '' && currentPageUrl.contains('Girl_ThankYou')){

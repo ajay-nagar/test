@@ -748,12 +748,11 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
     public List<ParentCampaignWrapper> obtainParentCampaignWrapperList() {
         List<ParentCampaignWrapper> innerParentCampaignWrapperList = new List<ParentCampaignWrapper>();
-        String ttroopOrGroupName= '%' + String.escapeSingleQuotes(troopOrGroupName) +'%';
+
         if(troopOrGroupName != null &&  troopOrGroupName != '' && zipCode != null && zipCode != '') {
-            List<Campaign> allChildCampaignWithZipCodeList;
-                
-                     allChildCampaignWithZipCodeList = [
-                     Select Id
+
+            List<Campaign> allChildCampaignWithZipCodeList = [
+                Select Id
                      , Name
                      , Council_Code__c
                      , Participation__c
@@ -770,7 +769,8 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                      , Account__c
                      , Girl_Openings_Remaining__c
                   From Campaign 
-                 where Name LIKE :ttroopOrGroupName
+                 where Zip_Code__c != null
+                   and Name = :troopOrGroupName
                    and Display_on_Website__c = true
                    and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
             ];
@@ -799,7 +799,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                                      , RecordTypeId
                                      , Council_Code__c 
                                   From Campaign 
-                                 where Name LIKE :ttroopOrGroupName
+                                 where Name = :troopOrGroupName
                                    and Display_on_Website__c = true
                                    and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
                           and Account__c = :councilId
@@ -824,7 +824,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
                              , RecordTypeId
                              , Council_Code__c 
                           From Campaign 
-                         where Name LIKE :ttroopOrGroupName
+                         where Name = :troopOrGroupName
                            and Display_on_Website__c = true
                            and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_PROJECT_RECORDTYPE)
                                 ];
@@ -953,7 +953,7 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
         return null;
     }
 
-     @RemoteAction
+    @RemoteAction
     public static List<String> searchCampaingNames(String searchtext1,String councilId2) {
         String JSONString;
         List<Campaign> campaignList = new List<Campaign>();
@@ -962,27 +962,17 @@ public class Community_Girl_TroopGroupRoleSearch extends SobjectExtension {
 
         Savepoint savepoint = Database.setSavepoint();
 
-        try{ Decimal councilcode;
-             String searchQueri;
-            List<Account> acclst=[select Household_Council_Code__c from account where account.Id=:councilId2 ];
-            for(Account acc: acclst)
-            {
-            councilcode=acc.Household_Council_Code__c;
-            }
-             searchQueri = 'Select ParentId,Account__c,Council_Code__c,Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true and RecordTypeId = \'' + recTypeId + '\' order by Name limit 100' ;
-            
+        try{
+            String searchQueri = 'Select ParentId,Account__c, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true and RecordTypeId = \'' + recTypeId + '\' order by Name' ;
             campaignList = database.query(searchQueri);
 
             if(!campaignList.isEmpty())
-            {   
-                
                 for(Campaign campaign : campaignList)
                 { 
-                    if(councilcode== campaign.Council_Code__c)
+                    if(campaign.Account__c==councilId2)
                     nameList.add(campaign.Name);
                 }
-              JSONString = JSON.serialize(nameList);
-            }
+            JSONString = JSON.serialize(nameList);
         } catch(System.exception pException) {
             system.debug('pException.getMessage==>'+pException.getMessage());
             //return addErrorMessageAndRollback(savepoint, pException);

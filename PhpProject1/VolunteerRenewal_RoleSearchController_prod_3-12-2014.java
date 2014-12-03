@@ -795,7 +795,7 @@ public PageReference deleteselectedrecord(){
     public List<ParentCampaignWrapper> obtainParentCampaignWrapperList() {
 
         List<ParentCampaignWrapper> innerParentCampaignWrapperList = new List<ParentCampaignWrapper>();
-        String ttroopOrGroupName= '%' + String.escapeSingleQuotes(troopOrGroupName) +'%';
+
         if(troopOrGroupName != null &&  troopOrGroupName != '' && zipCode != null && zipCode != '') {
             searchByCampaignName = false;
             /*L ist<Campaign> allChildCampaignWithZipCodeList = GirlRegistrationUtilty.lstCampaign(troopOrGroupName, 'TroopAndZip');
@@ -853,7 +853,7 @@ public PageReference deleteselectedrecord(){
                              , GS_Volunteers_Required__c 
                              ,Volunteer_Openings_Remaining__c
                           From Campaign 
-                         where (Name LIKE :ttroopOrGroupName OR Parent.Name LIKE :ttroopOrGroupName)
+                         where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
                            and Display_on_Website__c = true
                            and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
                            and Parent.Name !='unsure'
@@ -880,7 +880,7 @@ public PageReference deleteselectedrecord(){
                              , GS_Volunteers_Required__c 
                              ,Volunteer_Openings_Remaining__c
                           From Campaign 
-                         where (Name LIKE :ttroopOrGroupName OR Parent.Name LIKE :ttroopOrGroupName)
+                         where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
                            and Display_on_Website__c = true
                            and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
                            and Parent.Name !='unsure'
@@ -1026,24 +1026,20 @@ public PageReference deleteselectedrecord(){
         return null;
     }
 
-   @RemoteAction
+    @RemoteAction
     public static List<String> searchCampaingNames(String searchtext1,String councilId22) {
-        Decimal councilcode;
+
         String JSONString1;
         List<Campaign> campaignList = new List<Campaign>();
         List<String> nameList = new List<String>();
-        List<Account> acclst=[select Household_Council_Code__c from account where account.Id=:councilId22];
-            for(Account acc: acclst)
-            {
-            councilcode=acc.Household_Council_Code__c;
-            }
-        String searchQueri = 'Select Project_Council_Code__c,Parent.Account__c,Account__c ,ParentId, Name From Campaign Where (Name Like \'%'+searchText1+'%\' OR Parent.Name Like \'%'+searchText1+'%\' ) and Display_on_Website__c = true order by Name limit 100' ;
+
+        String searchQueri = 'Select Parent.Account__c,Account__c ,ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true order by Name limit 100' ;
         campaignList = VolunteerRenewalUtility.remoteCampaignList(searchQueri);//database.query(searchQueri);
         system.debug('***campaignList***'+campaignList);
         if(campaignList != null && campaignList.size() > 0) {
             for(Campaign campaign : campaignList)
             {
-           if(councilcode== campaign.Project_Council_Code__c)
+            if(campaign.Parent.Account__c==councilId22 ||campaign.Account__c==councilId22 )
             nameList.add(campaign.Name);
              }
 

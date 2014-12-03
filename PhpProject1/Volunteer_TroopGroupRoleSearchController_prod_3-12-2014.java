@@ -825,7 +825,7 @@ for(Campaign campaign : unsureCampaignList){
     public List<ParentCampaignWrapper> obtainParentCampaignWrapperList() {
 
         List<ParentCampaignWrapper> innerParentCampaignWrapperList = new List<ParentCampaignWrapper>();
-           String ttroopOrGroupName= '%' + String.escapeSingleQuotes(troopOrGroupName) +'%';
+
         if(troopOrGroupName != null &&  troopOrGroupName != '' && zipCode != null && zipCode != '') {
             searchByCampaignName = false;
             /*List<Campaign> allChildCampaignWithZipCodeList = VolunteerRegistrationUtilty.getListOfAllCampaign(troopOrGroupName,'TroopNameAndZipCode');
@@ -877,7 +877,7 @@ for(Campaign campaign : unsureCampaignList){
                              , Council_Code__c 
                              , GS_Volunteers_Required__c 
                           From Campaign 
-                        where (Name LIKE :ttroopOrGroupName OR Parent.Name LIKE :ttroopOrGroupName)
+                         where (Name = :troopOrGroupName OR Parent.Name = :troopOrGroupName)
                            and Display_on_Website__c = true
                            and RecordTypeId = :GirlRegistrationUtilty.getCampaignRecordTypeId(GirlRegistrationUtilty.VOLUNTEER_JOBS_RECORDTYPE)
                            and Parent.Name !='unsure'
@@ -1038,26 +1038,23 @@ for(Campaign campaign : unsureCampaignList){
         return null;
     }
 
-      @RemoteAction
+    @RemoteAction
     public static List<String> searchCampaingNames(String searchtext1,String councilId2 ) {
         String JSONString1;
-        Decimal councilcode;
         List<Campaign> campaignList = new List<Campaign>();
         List<String> nameList = new List<String>();
         String searchQueri='';
-          List<Account> acclst=[select Household_Council_Code__c from account where account.Id=:councilId2 ];
-            for(Account acc: acclst)
-            {
-            councilcode=acc.Household_Council_Code__c;
-            }
+
        // searchQueri = 'Select ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\' and (Parent.Account__c ='+'\'' +councilId+ '\' or Account__c ='+ councilId+')  and Display_on_Website__c = true order by Name limit 100' ;
-             searchQueri = 'Select Project_Council_Code__c,Parent.Account__c,Account__c, ParentId, Name From Campaign Where (Name Like \'%'+searchText1+'%\' OR Parent.Name Like \'%'+searchText1+'%\')  and Display_on_Website__c = true order by Name limit 100' ;
+             searchQueri = 'Select Parent.Account__c,Account__c, ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true order by Name limit 100' ;
                campaignList = database.query(searchQueri);
            
+            
+
         if(campaignList != null && campaignList.size() > 0) {
             for(Campaign campaign : campaignList)
             {
-           if(councilcode== campaign.Project_Council_Code__c)
+            if(campaign.Parent.Account__c==councilId2 ||campaign.Account__c==councilId2 )
             nameList.add(campaign.Name);
              }
             JSONString1 = JSON.serialize(nameList);

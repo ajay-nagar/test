@@ -590,8 +590,7 @@ public without sharing class VolunteerRegistrationUtilty {
         String unsure = 'Unsure';
         String selectQuery = 'Select Parent.Participation__c, Parent.Troop_Start_Date__c,Parent.Meeting_Start_Time__c, Parent.Meeting_Frequency__c,Parent.Name, ParentId, Parent.Grade__c, Parent.Meeting_Day_s__c , Parent.Meeting_Location__c, Parent.rC_Volunteers__Required_Volunteer_Count__c, Parent.Display_on_Website__c,  Parent.Zip_Code__c, Parent.Account__c, Id, Name, Zip_Code__c, Council_Code__c, GS_Volunteers_Required__c, Volunteer_Openings_Remaining__c From Campaign';
         String whereClause = ' where ';
-       // String troopName = '(Name = ' +'\'' + troopOrGroupName + '\' OR Parent.Name= '+'\'' + troopOrGroupName + '\')';
-        String troopName = '(Name Like \'%'+troopOrGroupName+'%\'  OR Parent.Name Like \'%'+troopOrGroupName+'%\')';
+        String troopName = '(Name = ' +'\'' + troopOrGroupName + '\' OR Parent.Name= '+'\'' + troopOrGroupName + '\')';
         String zipCode = ' Zip_Code__c != null';
         String parentZipCode=' Parent.Zip_Code__c != null';
         String displayWebSite = ' and Display_on_Website__c = true '; 

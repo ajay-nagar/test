@@ -743,17 +743,16 @@ public with sharing class VolunteerCatalog_TroopSearchController extends Sobject
         return null;
     }
 
-       @RemoteAction
+    @RemoteAction
     public static List<String> searchCampaingNames(String searchtext1) {
 
         String JSONString1;
         List<Campaign> campaignList = new List<Campaign>();
         List<String> nameList = new List<String>();
 
-        String searchQueri = 'Select ParentId, Name From Campaign Where (Name Like \'%'+searchText1+'%\' OR Parent.Name Like \'%'+searchText1+'%\') and Display_on_Website__c = true order by Name' ;
+        String searchQueri = 'Select ParentId, Name From Campaign Where Name Like \'%'+searchText1+'%\'  and Display_on_Website__c = true order by Name' ;
         campaignList = database.query(searchQueri);
-        system.debug('campaignList==>'+campaignList );
-        system.debug('searchQueri==>'+searchQueri );
+
         if(campaignList != null && campaignList.size() > 0) {
             for(Campaign campaign : campaignList)
             nameList.add(campaign.Name);
